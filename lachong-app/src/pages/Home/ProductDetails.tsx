@@ -1,0 +1,194 @@
+import React, { useEffect, useState } from "react";
+import { useLocation, useParams, Link } from "react-router-dom";
+import { productService } from "../../services/product.service";
+import "../../assets/styles/ProductDetails.css";
+import Icon from "../../assets/icons/Icon";
+
+const normalizeImageUrl = (url?: string) => {
+    if (!url) return "https://via.placeholder.com/400x300?text=No+Image";
+    if (/^https?:\/\//i.test(url)) return url;
+    const base = (import.meta.env.VITE_API_BASE_URL as string) || "";
+    return base ? base.replace(/\/$/, "") + "/" + url.replace(/^\//, "") : url;
+};
+
+export default function ProductDetail() {
+    // lấy id từ cả param lẫn query string để tương thích
+    const { id: paramId } = useParams<{ id?: string }>();
+    const location = useLocation();
+    const searchId = new URLSearchParams(location.search).get("id");
+    const id = paramId || searchId;
+
+    const [product, setProduct] = useState<any>(null);
+    const [selectedImage, setSelectedImage] = useState<string>("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!id) {
+            setError("ID sản phẩm không hợp lệ");
+            setProduct(null);
+            return;
+        }
+
+        let mounted = true;
+
+        const fetchProduct = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                console.log("[ProductDetail] Fetching product id:", id);
+
+                const res = await productService.getProductById(id as string);
+                console.log("[ProductDetail] API response:", res);
+
+                // Backend trả về { message, product }
+                const productData = res?.data?.product ?? null;
+                console.log("[ProductDetail] extracted product:", productData);
+
+                if (!productData) {
+                    if (mounted) {
+                        setProduct(null);
+                        setError("Không tìm thấy sản phẩm");
+                    }
+                } else {
+                    if (mounted) {
+                        setProduct(productData);
+                        setError(null);
+                        // Set ảnh đầu tiên làm ảnh mặc định
+                        const firstImage = productData.imageUrl || productData.image || (productData.images && productData.images[0]);
+                        setSelectedImage(firstImage || "");
+                    }
+                }
+            } catch (err: any) {
+                console.error("[ProductDetail] fetch error:", err);
+                const msg = err?.response?.data?.message || err?.response?.statusText || err?.message || "Không tải được sản phẩm";
+                if (mounted) {
+                    setError(msg);
+                    setProduct(null);
+                }
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        };
+
+        fetchProduct();
+
+        return () => {
+            mounted = false;
+        };
+    }, [id]);
+
+    if (loading) {
+        return (
+            <div className="product-detail-page">
+                <div className="product-detail-status">Đang tải sản phẩm...</div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="product-detail-page">
+                <div className="product-detail-status error">{error}</div>
+                <Link to="/product" className="product-detail-back">← Quay lại danh sách sản phẩm</Link>
+            </div>
+        );
+    }
+
+    if (!product) {
+        return (
+            <div className="product-detail-page">
+                <div className="product-detail-status">Không tìm thấy sản phẩm.</div>
+                <Link to="/product" className="product-detail-back">← Quay lại danh sách sản phẩm</Link>
+            </div>
+        );
+    }
+
+    const priceAfterDiscount = (product.discountPercent && product.discountPercent > 0)
+        ? Math.round((product.price || 0) * (1 - product.discountPercent / 100))
+        : (product.discount && product.discount > 0)
+            ? Math.round((product.price || 0) * (1 - product.discount / 100))
+            : product.price;
+
+    const storeName =
+        product.storeName ||
+        product.store?.storeName ||
+        product.store?.name ||
+        product.storeId?.storeName ||
+        product.storeId?.name ||
+        "Lac Hong Store";
+
+    const productImages = product.images || [];
+    const mainImage = selectedImage || product.imageUrl || product.image || (productImages.length > 0 ? productImages[0] : "");
+    const discountValue = product.discountPercent || product.discount || 0;
+
+    return (
+        <div className="product-detail-page">
+            <div className="product-detail-container">
+                <div className="product-detail-main">
+                    <div className="product-detail-left">
+                        <div className="product-detail-image-wrap">
+                            {discountValue > 0 && (
+                                <span className="product-detail-badge">-{discountValue}%</span>
+                            )}
+                            <img src={normalizeImageUrl(mainImage)} alt={product.productName || product.name} />
+                        </div>
+
+                        {productImages.length > 0 && (
+                            <div className="product-detail-thumbnails">
+                                {productImages.map((img: string, idx: number) => (
+                                    <div
+                                        key={idx}
+                                        className={`thumbnail ${selectedImage === img ? 'active' : ''}`}
+                                        onClick={() => setSelectedImage(img)}
+                                    >
+                                        <img src={normalizeImageUrl(img)} alt={`${product.productName || product.name} ${idx + 1}`} />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        <div className="product-detail-store">
+                            <i className="bi bi-shop" /> {storeName}
+                        </div>
+                    </div>
+
+                    <div className="product-detail-info">
+                        <h1 className="product-detail-title">{product.productName || product.name}</h1>
+
+                        <div className="product-detail-prices">
+                            {discountValue > 0 ? (
+                                <>
+                                    <span className="price-old">{(product.price ?? 0).toLocaleString()} VND</span>
+                                    <span className="price-new">{(priceAfterDiscount ?? 0).toLocaleString()} VND</span>
+                                </>
+                            ) : (
+                                <span className="price-new">{(product.price ?? 0).toLocaleString()} VND</span>
+                            )}
+                        </div>
+
+                        {product.description && (
+                            <div className="product-detail-desc">
+                                <h3>Mô tả sản phẩm</h3>
+                                <p>{product.description}</p>
+                            </div>
+                        )}
+
+                        {product.category && (
+                            <div className="product-detail-meta">
+                                <strong>Danh mục:</strong> {product.category.name || product.category}
+                            </div>
+                        )}
+                        {product.material && (
+                            <div className="product-detail-meta">
+                                <strong>Chất liệu:</strong> {product.material.name || product.material}
+                            </div>
+                        )}
+                        <button onClick={() => { }} className="product-detail-add-to-cart"><Icon name="cart" /> Thêm vào giỏ hàng</button>
+
+                        <Link to="/product" className="product-detail-back">← Quay lại danh sách sản phẩm</Link>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}

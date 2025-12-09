@@ -1,0 +1,43 @@
+/* ⭐ Container chính - flexbox */
+.store-layout {
+    display: flex;
+    gap: 0;
+    min-height: 100vh;
+    background-color: #f5f5f5;
+}
+
+/* ⭐ Sidebar - bên TRÁI */
+.store-sidebar-wrapper {
+    width: 250px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    background-color: #fff;
+    border-right: 1px solid #ddd;
+}
+
+.store-main-wrapper {
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    width: 2000px;
+    margin-left: 10px;
+}
+
+/* ⭐ Responsive Mobile */
+@media (max-width: 768px) {
+    .store-layout {
+        flex-direction: column;
+    }
+
+    .store-sidebar-wrapper {
+        width: 100%;
+        height: auto;
+        position: static;
+        border-right: none;
+        border-bottom: 1px solid #ddd;
+    }
+}
