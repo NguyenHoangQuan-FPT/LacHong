@@ -1,3 +1,4 @@
+import { get } from "http";
 import axiosClient from "../api/axiosClient";
 
 export const storeService = {
@@ -10,5 +11,11 @@ export const storeService = {
                 'Content-Type': 'multipart/form-data'
             }
         });
+    },
+    getStoreById: (id: string) => {
+        return axiosClient.get(`/store/${id}`);
+    },
+    getProductsByStoreId: (id: string) => {
+        return axiosClient.get(`/store/${id}/products`);
     }
 }

@@ -1,0 +1,204 @@
+.sidebar-customer-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px 40px;
+}
+
+.sidebar-customer-container {
+    max-width: 2000px;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 20px;
+}
+
+/* === Sidebar bên trái === */
+.sidebar-customer-left {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 20px 18px;
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sidebar-customer-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 4px;
+}
+
+.sidebar-customer-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sidebar-customer-tab {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 999px;
+    border: none;
+    outline: none;
+    background: transparent;
+    text-align: left;
+    font-size: 14px;
+    color: #4b5563;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease,
+        transform 0.1s ease;
+}
+
+.sidebar-customer-tab:hover {
+    background: #e5edff;
+    color: #1d4ed8;
+}
+
+.sidebar-customer-tab.active {
+    background: linear-gradient(90deg, var(--primary), var(--soft));
+    color: #ffffff;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+    transform: translateY(-1px);
+}
+
+/* === Nội dung bên phải === */
+.sidebar-customer-right {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 20px 22px;
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+    min-height: 320px;
+    height: fit-content;
+}
+
+.sidebar-customer-panel h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 8px;
+}
+
+.sidebar-customer-panel>p {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 18px;
+}
+
+.sidebar-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    background: #fee;
+    border-radius: 12px;
+    color: #e74c3c;
+    font-size: 1rem;
+    font-weight: 500;
+    text-align: center;
+    padding: 2rem;
+}
+
+/* Các section form đơn giản */
+.sidebar-customer-section {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 12px;
+}
+
+.sidebar-customer-section label {
+    font-size: 13px;
+    color: #4b5563;
+    margin-bottom: 4px;
+}
+
+.sidebar-customer-section input {
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sidebar-customer-section input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.3);
+}
+
+/* Demo list sản phẩm */
+.sidebar-customer-products-demo {
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    padding: 10px 12px;
+    background: #f9fafb;
+}
+
+.product-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 14px;
+    color: #374151;
+    border-bottom: 1px solid rgba(209, 213, 219, 0.6);
+}
+
+.product-row:last-child {
+    border-bottom: none;
+}
+
+.product-name {
+    font-weight: 500;
+}
+
+.product-price {
+    font-weight: 600;
+    color: #e11d48;
+}
+
+/* === Responsive === */
+@media (max-width: 900px) {
+    .sidebar-store-container {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .sidebar-store-left {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .sidebar-store-menu {
+        flex-direction: row;
+        gap: 10px;
+    }
+
+    .sidebar-store-tab {
+        text-align: center;
+    }
+}
+
+@media (max-width: 640px) {
+    .sidebar-store-page {
+        padding: 20px 10px 30px;
+    }
+
+    .sidebar-store-left {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .sidebar-store-menu {
+        width: 100%;
+    }
+
+    .sidebar-store-tab {
+        width: 100%;
+    }
+
+    .sidebar-store-right {
+        padding: 16px 14px;
+    }
+}

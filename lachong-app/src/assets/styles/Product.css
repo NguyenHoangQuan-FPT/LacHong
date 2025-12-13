@@ -88,6 +88,7 @@
     align-items: center;
     gap: 8px;
     padding: 8px;
+    margin-top: 30px;
     background: var(--glass);
     border-radius: 12px;
     border: 1px solid rgba(99, 102, 241, 0.06);
@@ -196,11 +197,10 @@
     color: #b91c1c;
 }
 
-/* PRODUCT GRID (match Home card styles) */
 .product-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 18px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
 }
 
 /* Card */
@@ -227,12 +227,12 @@
     position: absolute;
     top: 12px;
     left: 12px;
-    background: linear-gradient(90deg, var(--primary), var(--soft));
-    color: #fff;
-    padding: 6px 8px;
-    border-radius: 8px;
-    font-weight: 800;
-    font-size: 0.85rem;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #fee2e2;
+    color: #b91c1c;
+    font-size: 0.8rem;
+    font-weight: 600;
 }
 
 .product-unavailable,
@@ -293,7 +293,7 @@
 
 .price-new {
     font-weight: 800;
-    color: var(--text);
+    color: rgb(79, 70, 229);
 }
 
 /* Store / seller */

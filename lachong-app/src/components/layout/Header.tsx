@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../../assets/styles/Header.css";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import Icon from "../../assets/icons/Icon";
 
 export default function Header() {
     const location = useLocation();
@@ -104,7 +105,9 @@ export default function Header() {
                         {user ? (
                             <div className="user-menu">
                                 <span className="user-name">
-                                    👤 {user.name || user.email || "User"}
+                                    <Link to="/customer/profile" className="profile-link">
+                                        <Icon name="profile" size={16} />
+                                    </Link>
                                 </span>
                                 <button
                                     onClick={handleLogout}

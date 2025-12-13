@@ -2,7 +2,26 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "../../assets/styles/HomePage.css";
 import { productService } from "../../services/product.service";
+import Icon from "../../assets/icons/Icon";
 
+export type ProductItem = {
+    _id?: string;
+    name?: string;
+    productName?: string;
+    price?: number;
+    discount?: number;
+    discountPercent?: number;
+    image?: string;
+    imageUrl?: string;
+    storeName?: string;
+    store?: any;
+    storeId?: any;
+    stock?: number;
+    status?: boolean;
+    category?: any;
+    material?: any;
+    [key: string]: any;
+};
 const BANNERS = [
     {
         img: "/images/Banner/Banner.jpg",
@@ -17,12 +36,43 @@ const BANNERS = [
         text: <>Handmade <span>with Love</span></>,
     },
 ];
+const resolveStoreName = (p: ProductItem): string => {
+    // 1. Nếu product có storeName trực tiếp
+    if (p.storeName && String(p.storeName).trim()) return String(p.storeName);
+
+    // 2. Ưu tiên đọc từ storeId.storeName (theo dữ liệu bạn gửi)
+    if (p.storeId && typeof p.storeId === "object") {
+        if (p.storeId.storeName && String(p.storeId.storeName).trim()) {
+            return String(p.storeId.storeName);
+        }
+    }
+
+    // 3. Nếu API sau này có field store, cũng xử lý luôn
+    const store = p.store ?? p.storeId ?? null;
+    if (store && typeof store === "object") {
+        const candidates = [
+            store.storeName,
+            store.name,
+            store.title,
+            store.store_name,
+            store.fullName,
+            store.displayName,
+        ];
+        for (const c of candidates) {
+            if (c && String(c).trim()) return String(c);
+        }
+    }
+
+    // 4. Fallback
+    return "Lac Hong Store";
+};
 
 export default function Homepage() {
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [bannerIdx, setBannerIdx] = useState(0);
+
 
     const handlePrevBanner = () => {
         setBannerIdx(idx => (idx === 0 ? BANNERS.length - 1 : idx - 1));
@@ -38,6 +88,8 @@ export default function Homepage() {
             .then((res: any) => {
                 const data = res?.data ?? res;
                 const list = data?.products ?? data?.data ?? (Array.isArray(data) ? data : []);
+                console.log("Products list >>>", list); // 👈 thêm dòng này
+
                 setProducts(list);
             })
             .catch((err: any) => {
@@ -62,7 +114,7 @@ export default function Homepage() {
                     </div>
                     <Link to="/product" className="explore-btn">Explore</Link>
                     <div className="banner-products">
-                        <img src=".." alt="p1" />
+                        <img src="./images/Banner/product1.jpg" alt="p1" />
                         <img src="./images/Banner/product2.jpg" alt="p2" />
                         <img src="./images/Banner/product3.jpg" alt="p3" />
                     </div>
@@ -105,7 +157,7 @@ export default function Homepage() {
                                                 <span className="productpage-price" style={{ textDecoration: "line-through", color: "#888" }}>
                                                     {Number(p.price).toLocaleString()}.000 VND
                                                 </span>
-                                                <span className="price" style={{ color: "#000000" }}>
+                                                <span className="price" >
                                                     {Math.round(Number(p.price) * (1 - (Number(p.discountPercent) || 0) / 100)).toLocaleString()}.000 VND
                                                 </span>
                                             </>
@@ -113,10 +165,9 @@ export default function Homepage() {
                                             <span className="price">{Number(p.price).toLocaleString()}.000 VND</span>
                                         )}
                                     </div>
-                                    <div>
-                                        <span className="productpage-ad">Ad by Lac Hong seller</span>
-                                        <div className="productpage-stock">{p.stock ?? 0} in stock</div>
-                                    </div>
+                                </div>
+                                <div className="productpage-store">
+                                    <i className="bi bi-shop" /> {resolveStoreName(p)}
                                 </div>
                             </div>
                         ))}

@@ -48,16 +48,14 @@
 .header-top,
 .main-header,
 .main-header .header-top,
-.main-header>.header-top,
-.lg-card,
-.ur-card,
-.br-card {
+.main-header>.header-top {
     max-width: 100% !important;
     width: 100% !important;
     margin: 0 !important;
     padding-left: 16px !important;
     padding-right: 16px !important;
     box-sizing: border-box;
+    height: 100px;
 }
 
 /* Tùy chọn: nếu muốn header/fixed bar không che nội dung khi cố định,

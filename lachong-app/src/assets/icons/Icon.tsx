@@ -4,6 +4,10 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 export type IconName =
     | 'plus'
     | 'pencil'
+
+
+
+
     | 'trash'
     | 'box'
     | 'exclamation-circle'
@@ -11,6 +15,7 @@ export type IconName =
     | 'arrow-repeat'
     | 'profile'
     | 'cart'
+    | 'shop'
     | 'logout';
 
 interface IconProps extends React.HTMLAttributes<HTMLElement> {
@@ -24,13 +29,14 @@ interface IconProps extends React.HTMLAttributes<HTMLElement> {
  */
 const ICON_CLASS_MAP: Record<IconName, string> = {
     plus: 'bi-plus-lg',
-    pencil: 'bi-pencil-square',
+    pencil: 'bi-pencil',
     trash: 'bi-trash',
     box: 'bi-box-seam',
     eye: 'bi-eye',
-    profile: 'bi-person-circle',
+    profile: 'bi-person-fill',
     logout: 'bi-box-arrow-right',
     cart: 'bi-cart3',
+    shop: 'bi-shop',
     'exclamation-circle': 'bi-exclamation-circle',
     'arrow-repeat': 'bi-arrow-repeat',
 };

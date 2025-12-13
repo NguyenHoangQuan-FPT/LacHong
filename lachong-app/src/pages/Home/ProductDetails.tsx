@@ -1,8 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { useLocation, useParams, Link } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { useLocation, useParams, Link, useNavigate } from "react-router-dom";
 import { productService } from "../../services/product.service";
+import { cartService } from "../../services/cart.service";
+import { ToastContainer, toast } from "react-toastify";
 import "../../assets/styles/ProductDetails.css";
 import Icon from "../../assets/icons/Icon";
+import ProductRelated from "../../components/product/ProductRelated";
+import ProductReview from "../../components/product/ProductReview";
 
 const normalizeImageUrl = (url?: string) => {
     if (!url) return "https://via.placeholder.com/400x300?text=No+Image";
@@ -17,10 +21,13 @@ export default function ProductDetail() {
     const location = useLocation();
     const searchId = new URLSearchParams(location.search).get("id");
     const id = paramId || searchId;
+    const navigate = useNavigate();
 
     const [product, setProduct] = useState<any>(null);
     const [selectedImage, setSelectedImage] = useState<string>("");
+    const [quantity, setQuantity] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [addingToCart, setAddingToCart] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -54,9 +61,9 @@ export default function ProductDetail() {
                     if (mounted) {
                         setProduct(productData);
                         setError(null);
-                        // Set ảnh đầu tiên làm ảnh mặc định
                         const firstImage = productData.imageUrl || productData.image || (productData.images && productData.images[0]);
                         setSelectedImage(firstImage || "");
+                        window.scrollTo(0, 0);
                     }
                 }
             } catch (err: any) {
@@ -77,6 +84,14 @@ export default function ProductDetail() {
             mounted = false;
         };
     }, [id]);
+
+    const getCategoryId = (cate: any) => {
+        if (!cate) return null;
+        if (typeof cate === "string") return cate;
+        return cate._id || cate.id || null;
+    };
+
+    const currentCategoryId = useMemo(() => getCategoryId(product?.category), [product?.category]);
 
     if (loading) {
         return (
@@ -121,6 +136,13 @@ export default function ProductDetail() {
     const productImages = product.images || [];
     const mainImage = selectedImage || product.imageUrl || product.image || (productImages.length > 0 ? productImages[0] : "");
     const discountValue = product.discountPercent || product.discount || 0;
+    const storeIdValue =
+        (typeof product.storeId === "object"
+            ? product.storeId._id || product.storeId.id
+            : product.storeId) ||
+        (typeof product.store === "object"
+            ? product.store._id || product.store.id
+            : undefined);
 
     return (
         <div className="product-detail-page">
@@ -129,7 +151,7 @@ export default function ProductDetail() {
                     <div className="product-detail-left">
                         <div className="product-detail-image-wrap">
                             {discountValue > 0 && (
-                                <span className="product-detail-badge">-{discountValue}%</span>
+                                <span className="product-detail-badge">{discountValue}% off</span>
                             )}
                             <img src={normalizeImageUrl(mainImage)} alt={product.productName || product.name} />
                         </div>
@@ -148,7 +170,9 @@ export default function ProductDetail() {
                             </div>
                         )}
                         <div className="product-detail-store">
-                            <i className="bi bi-shop" /> {storeName}
+                            <Link to={storeIdValue ? `/store/${storeIdValue}` : "/store"} className="store-link">
+                                <i className="bi bi-shop" /> {storeName}
+                            </Link>
                         </div>
                     </div>
 
@@ -183,12 +207,41 @@ export default function ProductDetail() {
                                 <strong>Chất liệu:</strong> {product.material.name || product.material}
                             </div>
                         )}
-                        <button onClick={() => { }} className="product-detail-add-to-cart"><Icon name="cart" /> Thêm vào giỏ hàng</button>
+
+                        <div className="product-detail-actions">
+                            <div className="quantity-control">
+                                <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>−</button>
+                                <input type="number" min="1" value={quantity} onChange={e => setQuantity(Math.max(1, Number(e.target.value)))} />
+                                <button onClick={() => setQuantity(quantity + 1)}>+</button>
+                            </div>
+                            <button
+                                onClick={async () => {
+                                    if (!id || !product) return;
+                                    setAddingToCart(true);
+                                    try {
+                                        await cartService.addToCart(id, quantity);
+                                        toast.success("Đã thêm sản phẩm vào giỏ!");
+                                        setQuantity(1);
+                                    } catch (err: any) {
+                                        toast.error(err?.response?.data?.message || "Không thể thêm vào giỏ");
+                                    } finally {
+                                        setAddingToCart(false);
+                                    }
+                                }}
+                                disabled={addingToCart}
+                                className="product-detail-add-to-cart"
+                            >
+                                <Icon name="cart" /> {addingToCart ? "Đang thêm..." : "Thêm vào giỏ hàng"}
+                            </button>
+                        </div>
 
                         <Link to="/product" className="product-detail-back">← Quay lại danh sách sản phẩm</Link>
                     </div>
                 </div>
             </div>
+            <ProductReview productId={id as string} />
+            <ProductRelated product={product} currentCategoryId={currentCategoryId} />
+            <ToastContainer toastStyle={{ color: "white" }} autoClose={1000} />
         </div>
     );
 }

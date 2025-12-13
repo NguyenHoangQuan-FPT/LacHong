@@ -1,0 +1,296 @@
+.store-page {
+    max-width: 1200px;
+    margin: 24px auto;
+    padding: 0 16px;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    color: #222;
+}
+
+/* Trạng thái */
+.store-status {
+    padding: 24px;
+    text-align: center;
+    font-size: 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+}
+
+.store-status.error {
+    color: #b91c1c;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+}
+
+/* Hàng header trên cùng */
+.store-header-row {
+    display: grid;
+    grid-template-columns: minmax(0, 2.5fr) minmax(0, 1.5fr) minmax(0, 1.5fr);
+    gap: 16px;
+    align-items: stretch;
+    margin-bottom: 24px;
+}
+
+/* Banner trái */
+.store-banner {
+    background: linear-gradient(90deg, var(--primary), var(--soft));
+    border-radius: 12px;
+    padding: 16px 18px;
+    color: #fff;
+    box-shadow: 0 10px 30px rgba(166, 155, 212, 0.3);
+    display: flex;
+    align-items: center;
+}
+
+.store-banner-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.store-banner-avatar {
+    width: 82px;
+    height: 82px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid rgba(255, 255, 255, 0.9);
+    flex-shrink: 0;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.35);
+    background: #fff;
+}
+
+.store-banner-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.store-banner-info {
+    min-width: 0;
+}
+
+.store-banner-name {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.store-banner-sub {
+    margin: 0 0 10px 0;
+    font-size: 13px;
+    opacity: 0.93;
+}
+
+/* Nút actions */
+.store-banner-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.btn-store-primary,
+.btn-store-outline,
+.btn-store-secondary {
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+        background-color 0.18s ease,
+        color 0.18s ease,
+        transform 0.08s ease,
+        box-shadow 0.12s ease,
+        border-color 0.18s ease;
+    white-space: nowrap;
+}
+
+.btn-store-primary {
+    background: #fff;
+    color: #000000;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.15);
+}
+
+.btn-store-primary:hover {
+    background: #fffbeb;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.2);
+}
+
+.btn-store-outline {
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+.btn-store-outline:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.btn-store-secondary {
+    background: #ffffff;
+    color: #000000;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.45);
+}
+
+.btn-store-secondary:hover {
+    background: #020617;
+    transform: translateY(-1px);
+}
+
+/* Cột thống kê */
+.store-stats-col {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.store-stat-item {
+    display: flex;
+    align-items: baseline;
+    font-size: 13px;
+}
+
+.store-stat-label {
+    min-width: 120px;
+    color: #6b7280;
+}
+
+.store-stat-value {
+    font-weight: 600;
+    color: #111827;
+}
+
+.store-stat-extra {
+    margin-left: 6px;
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+/* Phần chi tiết phía dưới */
+.store-detail-sections {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.3fr);
+    gap: 16px;
+}
+
+.store-section {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 16px 18px;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+}
+
+.store-section h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #111827;
+}
+
+.store-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.store-section li {
+    font-size: 13px;
+    padding: 4px 0;
+    color: #374151;
+    display: flex;
+    gap: 6px;
+}
+
+.store-section li span:first-child {
+    min-width: 70px;
+    color: #6b7280;
+}
+
+/* Link social */
+.store-section a {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.store-section a:hover {
+    text-decoration: underline;
+}
+
+/* Nền tổng thể */
+body {
+    background: #f3f4f6;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .store-header-row {
+        grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.2fr);
+    }
+
+    .store-detail-sections {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .store-page {
+        margin-top: 16px;
+    }
+
+    .store-header-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .store-banner {
+        padding: 14px;
+    }
+
+    .store-banner-left {
+        align-items: flex-start;
+    }
+
+    .store-banner-avatar {
+        width: 72px;
+        height: 72px;
+    }
+
+    .store-banner-name {
+        font-size: 18px;
+    }
+
+    .store-detail-sections {
+        gap: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .store-banner-actions {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .btn-store-primary,
+    .btn-store-outline,
+    .btn-store-secondary {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .store-section {
+        padding: 12px 14px;
+    }
+}

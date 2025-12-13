@@ -13,4 +13,7 @@ export const productService = {
     getProductById: (id: string) => {
         return axiosClient.get(`/products/${id}`);
     },
+    getRelatedProducts: (categoryId: string, productId: string) => {
+        return axiosClient.get(`/products/related/${categoryId}/${productId}`);
+    },
 };

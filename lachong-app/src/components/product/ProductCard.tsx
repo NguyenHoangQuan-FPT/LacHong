@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import "../../assets/styles/ProductCard.css";
 
 export type ProductItem = {
     _id?: string;
@@ -55,7 +56,7 @@ export default function ProductCard({ product }: { product: ProductItem }) {
 
     return (
         <div className="product-card">
-            {discount > 0 && <span className="product-badge">-{discount}%</span>}
+            {discount > 0 && <span className="product-badge">{discount}% off</span>}
             {!product.status && <span className="product-unavailable">Ngừng bán</span>}
             {product.stock === 0 && <span className="product-out">Hết hàng</span>}
 
@@ -69,10 +70,10 @@ export default function ProductCard({ product }: { product: ProductItem }) {
                     {discount > 0 ? (
                         <>
                             <span className="price-old">{priceVal.toLocaleString()} VND</span>
-                            <span className="price-new">{priceAfter.toLocaleString()} VND</span>
+                            <span className="price-card">{priceAfter.toLocaleString()} VND</span>
                         </>
                     ) : (
-                        <span className="price-new">{priceVal.toLocaleString()} VND</span>
+                        <span className="price-card">{priceVal.toLocaleString()} VND</span>
                     )}
                 </div>
                 <div className="product-store">

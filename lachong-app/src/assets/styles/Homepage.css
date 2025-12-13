@@ -22,6 +22,15 @@
     box-sizing: border-box;
 }
 
+.productpage-store {
+    font-size: 0.85rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+}
+
 /* Carousel arrows */
 .custom-carousel-arrow {
     position: absolute;
@@ -33,6 +42,7 @@
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.92);
     border: 1px solid rgba(15, 23, 42, 0.06);
+    color: #000;
     display: inline-flex;
     align-items: center;
     justify-content: center;

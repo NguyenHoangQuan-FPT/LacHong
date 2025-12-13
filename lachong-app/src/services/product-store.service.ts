@@ -1,8 +1,6 @@
-import type { get } from "http";
 import axiosClient from "../api/axiosClient";
 
 export const productStoreService = {
-    // Lấy sản phẩm của store
     getStoreProducts: () => {
         return axiosClient.get(`/store/products`);
     },

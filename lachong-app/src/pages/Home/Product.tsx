@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { productService } from "../../services/product.service";
-import ProductCard, { ProductItem } from "../../components/product/ProductCard";
+import ProductCard from "../../components/product/ProductCard";
+import type { ProductItem } from "../../components/product/ProductCard";
 import "../../assets/styles/Product.css";
 
 type Category = { _id?: string; id?: string; name?: string };
@@ -66,8 +67,10 @@ export default function Product() {
         return products.filter((p) => {
             const name = (p.productName || p.name || "").toString().toLowerCase();
             const matchSearch = !term || name.includes(term);
-            const matchCategory = !selectedCategory || (p.category && (p.category._id === selectedCategory || p.category.id === selectedCategory));
-            const matchMaterial = !selectedMaterial || (p.material && (p.material._id === selectedMaterial || p.material.id === selectedMaterial));
+            const categoryId = (p as any)?.category?._id || (p as any)?.category?.id || (p as any)?.category;
+            const materialId = (p as any)?.material?._id || (p as any)?.material?.id || (p as any)?.material;
+            const matchCategory = !selectedCategory || String(categoryId) === String(selectedCategory);
+            const matchMaterial = !selectedMaterial || String(materialId) === String(selectedMaterial);
             const price = Number(p.price || 0);
             const matchPrice = priceFilter === 0 ? true : price <= priceFilter;
             return matchSearch && matchCategory && matchMaterial && matchPrice;
