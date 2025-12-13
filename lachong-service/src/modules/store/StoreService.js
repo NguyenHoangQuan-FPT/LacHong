@@ -217,3 +217,43 @@ exports.deleteProductByStore = async (req, res) => {
         res.status(500).json({ message: "Internal server error." });
     }
 }
+
+exports.getStoreById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const store = await Store.findById(id);
+        if (!store) {
+            return res.status(404).json({ message: "Store not found." });
+        }
+
+        res.status(200).json({
+            message: "Store retrieved successfully.",
+            store
+        });
+    } catch (error) {
+        console.error("Error getting store by id:", error);
+        res.status(500).json({ message: "Internal server error." });
+    }
+};
+
+exports.getProductsByStoreId = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const store = await Store.findById(id);
+        if (!store) {
+            return res.status(404).json({ message: "Store not found." });
+        }
+
+        const products = await Product.find({ storeId: store._id });
+
+        res.status(200).json({
+            message: "Products retrieved successfully.",
+            products
+        });
+    } catch (error) {
+        console.error("Error getting products by store id:", error);
+        res.status(500).json({ message: "Internal server error." });
+    }
+};

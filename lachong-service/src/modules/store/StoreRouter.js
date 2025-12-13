@@ -16,5 +16,7 @@ router.post(
 router.get("/store/products", verifyStoreToken, StoreService.getProductsByStore);
 router.delete("/store/product/:id", verifyStoreToken, StoreService.deleteProductByStore);
 router.get("/store/product/:id", verifyStoreToken, StoreService.getProductById);
+router.get("/store/:id", StoreService.getStoreById);
+router.get("/store/:id/products", StoreService.getProductsByStoreId);
 
 module.exports = router;

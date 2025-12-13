@@ -30,3 +30,21 @@ exports.getProductById = async (req, res) => {
         res.status(500).json({ message: "Internal server error." });
     }
 }
+
+exports.getRelatedProducts = async (req, res) => {
+    try {
+        const { categoryId, productId } = req.params;
+        const relatedProducts = await Product.find({
+            category: categoryId,
+            _id: { $ne: productId }
+        }).limit(10).lean().exec();
+
+        res.status(200).json({
+            message: "Related products retrieved successfully.",
+            relatedProducts
+        });
+    } catch (error) {
+        console.error("Error getting related products:", error);
+        res.status(500).json({ message: "Internal server error." });
+    }
+}

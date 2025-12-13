@@ -4,8 +4,8 @@ const customerSchema = new mongoose.Schema({
     fullName: { type: String },
     email: { type: String, required: true, unique: true },
     phone: { type: String },
-    address: { type: String },
     accountId: { type: mongoose.Schema.Types.ObjectId, ref: 'Account' },
+    addresses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Address' }],
     createdAt: { type: Date, default: Date.now },
     status: { type: Boolean, default: true }
 }, {
