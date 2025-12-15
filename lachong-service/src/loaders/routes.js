@@ -14,6 +14,7 @@ const ReviewRouter = require('../modules/review/ReviewRouter');
 const PostRouter = require('../modules/post/PostRouter');
 const CommentRouter = require('../modules/comment/CommentRouter');
 const LikeRouter = require('../modules/like/LikeRouter');
+const LikeCommentRouter = require('../modules/likeComment/LikeCommentRouter');
 
 const initRoute = (app) => {
 
@@ -31,6 +32,7 @@ const initRoute = (app) => {
     app.use('/api/v1/', PostRouter);
     app.use('/api/v1/', CommentRouter);
     app.use('/api/v1/', LikeRouter);
+    app.use('/api/v1/', LikeCommentRouter);
 
 }
 

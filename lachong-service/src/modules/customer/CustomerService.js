@@ -24,7 +24,6 @@ exports.updateProfileCustomer = async (req, res) => {
         if (!accountId) {
             return res.status(401).json({ message: "Unauthorized." });
         }
-        console.log(accountId);
 
         const { fullName, phone, address } = req.body;
 
@@ -32,10 +31,13 @@ exports.updateProfileCustomer = async (req, res) => {
         if (!customer) {
             return res.status(404).json({ message: "Customer not found." });
         }
+
+        const avatar = (req.file && req.file.path) ? req.file.path : customer.avatar;
         const updateProfile = await Customer.findByIdAndUpdate(customer._id, {
             fullName: fullName || customer.fullName,
             phone: phone || customer.phone,
-            address: address || customer.address
+            address: address || customer.address,
+            avatar
         }, { new: true });
 
         res.status(200).json({

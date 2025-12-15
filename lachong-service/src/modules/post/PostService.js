@@ -3,7 +3,7 @@ const Customer = require('../../models/model/Customer');
 
 exports.getAllPosts = async (req, res) => {
     try {
-        const posts = await Post.find().populate('customer', 'fullName').lean().exec();
+        const posts = await Post.find().populate('customer', 'fullName avatar').lean().exec();
         res.status(200).json({
             message: "Posts retrieved successfully.",
             posts
@@ -46,9 +46,15 @@ exports.createPost = async (req, res) => {
             updatedAt: new Date()
         });
         await newPost.save();
+
+        const created = await Post.findById(newPost._id)
+            .populate('customer', 'fullName avatar')
+            .lean()
+            .exec();
+
         res.status(201).json({
             message: "Post created successfully.",
-            post: newPost
+            post: created || newPost
         });
     } catch (error) {
         console.error("Error creating post:", error);
@@ -87,9 +93,14 @@ exports.updatePost = async (req, res) => {
         post.updatedAt = new Date();
         await post.save();
 
+        const updated = await Post.findById(post._id)
+            .populate('customer', 'fullName avatar')
+            .lean()
+            .exec();
+
         res.status(200).json({
             message: "Post updated successfully.",
-            post
+            post: updated || post
         });
     } catch (error) {
         console.error("Error updating post:", error);

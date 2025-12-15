@@ -2,8 +2,35 @@ const Comment = require('../../models/model/Comment');
 const Post = require('../../models/model/Post');
 const Customer = require('../../models/model/Customer');
 
+const normalizeId = (value) => {
+    if (value === undefined || value === null || value === '') return null;
+    return value;
+};
+
+const buildCommentTree = (comments) => {
+    const byId = new Map();
+    const roots = [];
+
+    for (const comment of comments) {
+        comment.replies = [];
+        byId.set(String(comment._id), comment);
+    }
+
+    for (const comment of comments) {
+        const parentId = comment.parentComment ? String(comment.parentComment) : null;
+        if (parentId && byId.has(parentId)) {
+            byId.get(parentId).replies.push(comment);
+        } else {
+            roots.push(comment);
+        }
+    }
+
+    return roots;
+};
+
 exports.addComment = async (req, res) => {
     const { postId, content } = req.body;
+    const parentCommentId = normalizeId(req.body.parentCommentId ?? req.body.parentComment);
     const accountId = req.user?.id;
 
     if (!accountId) {
@@ -11,6 +38,14 @@ exports.addComment = async (req, res) => {
     }
 
     try {
+        if (!postId) {
+            return res.status(400).json({ message: "postId is required." });
+        }
+
+        if (!content || String(content).trim() === '') {
+            return res.status(400).json({ message: "Content cannot be empty." });
+        }
+
         const customer = await Customer.findOne({ accountId });
         if (!customer) {
             return res.status(404).json({ message: "Customer not found." });
@@ -21,17 +56,35 @@ exports.addComment = async (req, res) => {
             return res.status(404).json({ message: "Post not found." });
         }
 
+        let parentComment = null;
+        if (parentCommentId) {
+            parentComment = await Comment.findById(parentCommentId);
+            if (!parentComment) {
+                return res.status(404).json({ message: "Parent comment not found." });
+            }
+
+            if (String(parentComment.post) !== String(postId)) {
+                return res.status(400).json({ message: "Parent comment does not belong to this post." });
+            }
+        }
+
         const newComment = new Comment({
             post: postId,
             customer: customer._id,
-            content
+            parentComment: parentComment ? parentComment._id : null,
+            content: String(content).trim()
         });
 
         await newComment.save();
 
+        const created = await Comment.findById(newComment._id)
+            .populate('customer', 'fullName avatar')
+            .lean()
+            .exec();
+
         res.status(201).json({
             message: "Comment added successfully.",
-            comment: newComment
+            comment: created
         });
     } catch (error) {
         console.error("Error adding comment:", error);
@@ -44,12 +97,16 @@ exports.getCommentsByPostId = async (req, res) => {
         const { postId } = req.params;
         const comments = await Comment.find({ post: postId })
             .populate('customer', 'fullName avatar')
+            .sort({ createdAt: 1 })
             .lean()
             .exec();
 
+        const commentTree = buildCommentTree(comments);
+
         res.status(200).json({
             message: "Comments retrieved successfully.",
-            comments
+            comments,
+            commentTree
         });
     } catch (error) {
         console.error("Error getting comments:", error);
@@ -79,6 +136,18 @@ exports.deleteComment = async (req, res) => {
         // Only the owner of the comment can delete it
         if (String(comment.customer) !== String(customer._id)) {
             return res.status(403).json({ message: "You can only delete your own comment." });
+        }
+
+        // If this comment has replies, soft-delete to avoid orphan threads
+        const hasReplies = await Comment.exists({ parentComment: id });
+        if (hasReplies) {
+            comment.content = 'Bình luận đã bị xoá';
+            comment.updatedAt = new Date();
+            await comment.save();
+
+            return res.status(200).json({
+                message: "Comment deleted successfully."
+            });
         }
 
         await Comment.findByIdAndDelete(id);
