@@ -46,16 +46,6 @@ app.use(cors({
     credentials: true
 }));
 
-// Ensure DB is connected (cached across invocations in serverless).
-app.use(async (req, res, next) => {
-    try {
-        await connectMongoDB();
-        next();
-    } catch (error) {
-        next(error);
-    }
-});
-
 // Health/root endpoints (useful when opening the domain in a browser)
 app.get('/', (req, res) => {
     res.status(200).json({
@@ -67,6 +57,22 @@ app.get('/', (req, res) => {
 
 app.get('/api', (req, res) => {
     res.status(200).json({ message: 'Lac Hong Service is running.' });
+});
+
+// Ensure DB is connected (cached across invocations in serverless).
+// Skip DB connect for simple health endpoints to avoid "blank" timeouts.
+app.use(async (req, res, next) => {
+    if (req.path === '/' || req.path === '/api') return next();
+
+    try {
+        await connectMongoDB();
+        next();
+    } catch (error) {
+        return res.status(503).json({
+            message: 'Database unavailable',
+            error: error?.message || String(error)
+        });
+    }
 });
 
 // App routes
