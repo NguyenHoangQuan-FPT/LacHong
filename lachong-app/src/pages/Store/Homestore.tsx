@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
 import '../../assets/styles/Homestore.css';
-import { FiPackage, FiShoppingCart, FiTrendingUp, FiStar, FiMoreHorizontal } from 'react-icons/fi';
+import { FiPackage, FiShoppingCart, FiTrendingUp, FiStar } from 'react-icons/fi';
 
 export default function Homestore() {
-    const [activeTab, setActiveTab] = useState('overview');
 
     // Sample data
     const stats = [

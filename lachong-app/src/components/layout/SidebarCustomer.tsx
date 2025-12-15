@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useState } from "react";
 import "../../assets/styles/SidebarCustomer.css";
 import ProfileCustomer from "../../pages/Home/ProfileCustomer";
 import Address from "../../pages/Home/Address";

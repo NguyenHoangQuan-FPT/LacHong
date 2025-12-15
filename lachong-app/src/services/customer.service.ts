@@ -4,8 +4,12 @@ const customerService = {
     getProfileCustomer: () => {
         return axiosClient.get("/customer");
     },
-    updateProfileCustomer: (data: any) => {
-        return axiosClient.put("/customer", data);
+    updateProfileCustomer: (payload: FormData) => {
+        return axiosClient.put("/customer", payload, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
     },
 };
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { productStoreService } from '../../services/product-store.service';
 import { Link } from 'react-router-dom';
 import '../../assets/styles/ProductStore.css';

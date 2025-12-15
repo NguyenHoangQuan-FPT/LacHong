@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "../../assets/styles/HomePage.css";
 import { productService } from "../../services/product.service";
-import Icon from "../../assets/icons/Icon";
 
 export type ProductItem = {
     _id?: string;

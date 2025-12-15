@@ -1,4 +1,3 @@
-import { get } from "http";
 import axiosClient from "../api/axiosClient";
 
 export const storeService = {

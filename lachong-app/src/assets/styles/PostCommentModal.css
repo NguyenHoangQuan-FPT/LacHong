@@ -1,0 +1,406 @@
+/* Styles for PostCommentsModal
+   Place this file at: src/assets/styles/PostCommentModal.css (or the path you import from)
+   Clean, responsive modal with nested comment styling and action menus.
+*/
+
+:root {
+    --backdrop-bg: rgba(0, 0, 0, 0.55);
+    --modal-bg: #ffffff;
+    --surface: #f7f8fa;
+    --muted: #6b7280;
+    --text: #111827;
+    --accent: #1565d8;
+    --danger: #dc2626;
+    --bubble: #fbfdff;
+    --border: #e6e9ee;
+    --shadow: 0 8px 28px rgba(17, 24, 39, 0.12);
+    --radius: 10px;
+    --avatar-bg: linear-gradient(135deg, #dfe9f3 0%, #ffffff 100%);
+}
+
+.post-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: var(--backdrop-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+    padding: 20px;
+}
+
+.post-modal {
+    background: #ececec;
+    border-radius: 10px;
+    padding: 18px;
+    width: 1000px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* Header */
+.post-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), transparent);
+}
+
+.post-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.post-modal-close {
+    background: transparent;
+    border: none;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 6px 8px;
+    border-radius: 6px;
+}
+
+.post-modal-close:hover {
+    background: var(--surface);
+    color: var(--text);
+}
+
+/* Post title */
+.post-comments-modal-posttitle {
+    padding: 12px 18px;
+    font-size: 14px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+}
+
+/* Comments area */
+.post-comments {
+    padding: 12px 16px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    /* Keep room for input at bottom */
+    max-height: calc(90vh - 160px);
+}
+
+/* Single comment */
+.post-comment {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.post-comment-reply {
+    margin-left: 46px;
+    /* indent replies */
+}
+
+/* Avatar placeholder */
+.post-comment-avatar {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    border-radius: 50%;
+    background: var(--avatar-bg);
+    border: 1px solid #e9eef6;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) inset;
+    overflow: hidden;
+}
+
+.post-comment-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+
+}
+
+/* Body and bubble */
+.post-comment-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.post-comment-bubble {
+    background: var(--bubble);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Author and content */
+.post-comment-author {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.post-comment-text {
+    font-size: 14px;
+    color: #111827;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.35;
+}
+
+/* Actions (like, reply, menu) */
+.post-comment-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 2px;
+}
+
+.post-comment-like-btn,
+.post-comment-reply-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.post-comment-like-btn:hover,
+.post-comment-reply-btn:hover {
+    background: var(--surface);
+    color: var(--text);
+}
+
+.post-comment-like-btn.active {
+    color: var(--accent);
+    font-weight: 600;
+    background: rgba(21, 101, 216, 0.06);
+    border-color: rgba(21, 101, 216, 0.12);
+}
+
+/* Icon button used for more options */
+.post-icon-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    color: var(--muted);
+}
+
+.post-icon-btn:hover {
+    background: var(--surface);
+    color: var(--text);
+}
+
+/* Actions menu */
+.post-actions-menu-wrap {
+    position: relative;
+    margin-left: 4px;
+}
+
+.post-actions-menu {
+    position: absolute;
+    top: 36px;
+    right: 0;
+    width: 160px;
+    background: var(--modal-bg);
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 30px rgba(2, 6, 23, 0.08);
+    border-radius: 8px;
+    padding: 6px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.post-actions-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: transparent;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 13px;
+    border-radius: 6px;
+}
+
+.post-actions-menu-item:hover {
+    background: var(--surface);
+}
+
+.post-actions-menu-item.danger {
+    color: var(--danger);
+}
+
+/* Children (replies list) */
+.post-comment-children {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Show more / collapse */
+.post-comment-show-more {
+    align-self: flex-start;
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 6px;
+}
+
+.post-comment-show-more:hover {
+    background: rgba(21, 101, 216, 0.06);
+}
+
+/* Form at bottom */
+.post-comment-form {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding-top: 6px;
+    border-top: 1px solid transparent;
+    margin-top: 4px;
+}
+
+/* Input column */
+.post-comment-input-col {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Replying / editing banner */
+.post-replying-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff7ed;
+    border: 1px solid #ffedd5;
+    color: #92400e;
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.post-replying-banner strong {
+    color: #7c2d12;
+}
+
+.post-reply-cancel {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 6px;
+}
+
+.post-reply-cancel:hover {
+    background: var(--surface);
+    color: var(--text);
+}
+
+/* Input and send */
+.post-comment-input-wrap {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.post-comment-input {
+    flex: 1;
+    min-width: 0;
+    background: #fff;
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+.post-comment-input:focus {
+    border-color: rgba(21, 101, 216, 0.28);
+    box-shadow: 0 4px 18px rgba(21, 101, 216, 0.07);
+}
+
+.post-send-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.post-send-btn[disabled] {
+    opacity: 0.48;
+    cursor: not-allowed;
+    background: linear-gradient(180deg, #bcd7ff, #9ac6ff);
+}
+
+/* Smaller avatars for replies */
+.post-comment-reply .post-comment-avatar {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+}
+
+/* Small screens */
+@media (max-width: 520px) {
+    .post-modal {
+        max-width: 100%;
+        height: 100%;
+        border-radius: 0;
+        max-height: 100vh;
+    }
+
+    .post-comments {
+        padding: 10px;
+        max-height: calc(100vh - 140px);
+    }
+
+    .post-comments-modal-posttitle {
+        display: none;
+    }
+}
+
+/* Disabled states */
+button[disabled],
+.post-send-btn[disabled] {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+/* Utility */
+.hidden {
+    display: none !important;
+}

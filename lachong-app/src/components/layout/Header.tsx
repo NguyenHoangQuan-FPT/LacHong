@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import "../../assets/styles/Header.css";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Icon from "../../assets/icons/Icon";

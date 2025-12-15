@@ -1,12 +1,25 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import customerService from "../../services/customer.service";
 import "../../assets/styles/ProfileCustomer.css";
+
+function normalizeImageUrl(url?: string | null): string | null {
+    if (!url) return null;
+    if (/^https?:\/\//i.test(url)) return url;
+    const apiBase = (import.meta.env.VITE_API_BASE_URL as string) || "";
+    const assetBase = apiBase.replace(/\/api\/v\d+\/?$/, "").replace(/\/$/, "");
+    return assetBase ? assetBase + "/" + String(url).replace(/^\//, "") : url;
+}
 
 export default function ProfileCustomer() {
     const [profile, setProfile] = useState<any | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
+
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
+    const [avatarSaving, setAvatarSaving] = useState(false);
+    const [avatarLoadError, setAvatarLoadError] = useState(false);
 
     // editable fields
     const [name, setName] = useState("");
@@ -42,6 +55,21 @@ export default function ProfileCustomer() {
             })
             .finally(() => setLoading(false));
     }, []);
+
+    useEffect(() => {
+        if (!avatarFile) {
+            setAvatarPreviewUrl(null);
+            return;
+        }
+        const url = URL.createObjectURL(avatarFile);
+        setAvatarPreviewUrl(url);
+        return () => URL.revokeObjectURL(url);
+    }, [avatarFile]);
+
+    useEffect(() => {
+        // reset image error when profile avatar or preview changes
+        setAvatarLoadError(false);
+    }, [avatarPreviewUrl, profile?.avatar]);
 
     // load provinces on mount
     useEffect(() => {
@@ -111,15 +139,17 @@ export default function ProfileCustomer() {
             ].filter(Boolean);
 
             const payload = {
-                // common fields
-                name,
                 fullName: name,
-                email,
                 phone,
-                phoneNumber: phone,
                 address: addressParts.join(", "),
             };
-            const res = await customerService.updateProfileCustomer(payload);
+
+            const formData = new FormData();
+            formData.append("fullName", payload.fullName || "");
+            formData.append("phone", payload.phone || "");
+            formData.append("address", payload.address || "");
+
+            const res = await customerService.updateProfileCustomer(formData);
             const data = res?.data ?? res;
             const c = data?.customer ?? data?.data ?? data;
             setProfile(c);
@@ -132,6 +162,26 @@ export default function ProfileCustomer() {
             setError(err?.response?.data?.message || "Lưu thay đổi thất bại");
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleUpdateAvatar = async () => {
+        if (!avatarFile || avatarSaving) return;
+        setAvatarSaving(true);
+        setError(null);
+        try {
+            const formData = new FormData();
+            formData.append("avatar", avatarFile);
+            const res = await customerService.updateProfileCustomer(formData);
+            const data = res?.data ?? res;
+            const c = data?.customer ?? data?.data ?? data;
+            setProfile(c);
+            setAvatarFile(null);
+            setAvatarPreviewUrl(null);
+        } catch (err: any) {
+            setError(err?.response?.data?.message || "Cập nhật avatar thất bại");
+        } finally {
+            setAvatarSaving(false);
         }
     };
 
@@ -156,6 +206,43 @@ export default function ProfileCustomer() {
             <div className="profile-card">
                 <h1>Thông tin khách hàng</h1>
                 <p className="subtitle">Cập nhật hồ sơ của bạn</p>
+
+                <div className="avatar-section">
+                    <div className="avatar-preview">
+                        {!avatarLoadError && (avatarPreviewUrl || profile?.avatar) ? (
+                            <img
+                                className="avatar-img"
+                                src={avatarPreviewUrl || normalizeImageUrl(profile?.avatar) || ""}
+                                alt="avatar"
+                                onError={() => setAvatarLoadError(true)}
+                            />
+                        ) : (
+                            <div className="avatar-fallback" />
+                        )}
+                    </div>
+
+                    <div className="avatar-actions">
+                        <label className="btn secondary" style={{ margin: 0 }}>
+                            Chọn ảnh
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+                                style={{ display: "none" }}
+                                disabled={avatarSaving}
+                            />
+                        </label>
+
+                        <button
+                            type="button"
+                            className="btn primary"
+                            onClick={handleUpdateAvatar}
+                            disabled={avatarSaving || !avatarFile}
+                        >
+                            {avatarSaving ? "Đang cập nhật..." : "Cập nhật avatar"}
+                        </button>
+                    </div>
+                </div>
 
                 <div className="form-grid">
                     <div className="form-item">

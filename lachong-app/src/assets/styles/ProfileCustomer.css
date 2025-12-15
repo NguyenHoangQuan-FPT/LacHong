@@ -56,6 +56,46 @@
     font-size: 14px;
 }
 
+.avatar-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 14px;
+    border: 1px solid var(--surface-border);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.6);
+    margin-bottom: 14px;
+}
+
+.avatar-preview {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar-img,
+.avatar-fallback {
+    width: 72px;
+    height: 72px;
+    border-radius: 999px;
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    background: #fbfdff;
+    object-fit: cover;
+}
+
+.avatar-fallback {
+    background: linear-gradient(180deg, rgba(37, 99, 235, 0.08), rgba(59, 130, 246, 0.05));
+}
+
+.avatar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
 /* Form grid */
 .form-grid {
     display: grid;

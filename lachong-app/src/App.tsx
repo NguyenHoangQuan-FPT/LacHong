@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import './App.css'
 import { BrowserRouter, useLocation } from 'react-router-dom'
 import RouterComponent from './routers/RouterComponent'

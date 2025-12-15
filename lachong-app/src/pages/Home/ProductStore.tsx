@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { storeService } from "../../services/store.service";
 import { productService } from "../../services/product.service";
-import ProductCard, { ProductItem } from "../../components/product/ProductCard";
+import ProductCard, { type ProductItem } from "../../components/product/ProductCard";
 import "../../assets/styles/ProductStore.css";
 
 type Category = { _id?: string; id?: string; name?: string };

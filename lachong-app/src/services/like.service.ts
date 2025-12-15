@@ -5,9 +5,8 @@ export const likeService = {
         return axiosClient.get(`/likes/${postId}`);
     },
     likePost: (postId: string) => {
-        return axiosClient.post(`/like`, { postId });
+        return axiosClient.post(`/like/${postId}`);
     },
-    // Backend removes like by postId: DELETE /like/:postId
     unLike: (postId: string) => {
         return axiosClient.delete(`/like/${postId}`);
     },

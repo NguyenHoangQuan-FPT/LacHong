@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import "../../assets/styles/Address.css";
 import { addressService } from "../../services/address.service";
 

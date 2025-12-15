@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import "../../assets/styles/SidebarStore.css";
 import StorePage from "../../pages/Home/StorePage";

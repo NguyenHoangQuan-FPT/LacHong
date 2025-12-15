@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams, Link, useNavigate } from "react-router-dom";
 import { productService } from "../../services/product.service";
 import { cartService } from "../../services/cart.service";

@@ -4,10 +4,9 @@ export const commentService = {
     getCommentsByPostId: (postId: string) => {
         return axiosClient.get(`/comments/${postId}`);
     },
-    // Backend expects: { postId, content }
-    addComment: (data: { postId?: string; post?: string; content: string }) => {
+    addComment: (data: { postId?: string; post?: string; content: string; parentCommentId?: string | null }) => {
         const postId = data.postId || data.post;
-        return axiosClient.post("/comment", { postId, content: data.content });
+        return axiosClient.post("/comment", { postId, content: data.content, parentCommentId: data.parentCommentId ?? null });
     },
     updateComment: (commentId: string, data: { content?: string }) => {
         return axiosClient.put(`/comment/${commentId}`, data);

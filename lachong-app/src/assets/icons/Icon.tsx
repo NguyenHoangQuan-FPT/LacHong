@@ -16,6 +16,9 @@ export type IconName =
     | 'profile'
     | 'cart'
     | 'shop'
+    | 'comment'
+    | 'like'
+    | 'options'
     | 'logout';
 
 interface IconProps extends React.HTMLAttributes<HTMLElement> {
@@ -37,6 +40,9 @@ const ICON_CLASS_MAP: Record<IconName, string> = {
     logout: 'bi-box-arrow-right',
     cart: 'bi-cart3',
     shop: 'bi-shop',
+    comment: 'bi-chat-dots-fill',
+    like: 'bi-hand-thumbs-up-fill',
+    options: 'bi-three-dots',
     'exclamation-circle': 'bi-exclamation-circle',
     'arrow-repeat': 'bi-arrow-repeat',
 };
