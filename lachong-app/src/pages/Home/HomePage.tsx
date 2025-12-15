@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import "../../assets/styles/HomePage.css";
+import "../../assets/styles/Homepage.css";
 import { productService } from "../../services/product.service";
 
 export type ProductItem = {
