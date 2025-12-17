@@ -147,7 +147,7 @@
 }
 
 .price-new {
-    color: var(--accent-2);
+    color: black;
     font-weight: 700;
     font-size: 15px;
 }
@@ -255,7 +255,7 @@
 
 /* Buttons */
 .cart-checkout-btn {
-    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    background: #afafaf;
     color: #fff;
     border: none;
     padding: 12px 14px;

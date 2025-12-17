@@ -1,13 +1,16 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import "../../assets/styles/Header.css";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Icon from "../../assets/icons/Icon";
+import { authService } from "../../services/auth.service";
 
 export default function Header() {
     const location = useLocation();
     const navigate = useNavigate();
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+    const userMenuRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         const savedUser = localStorage.getItem("user");
@@ -21,6 +24,24 @@ export default function Header() {
         setLoading(false);
     }, []);
 
+    useEffect(() => {
+        if (!isUserMenuOpen) return;
+
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Node | null;
+            if (!target) return;
+            if (userMenuRef.current && !userMenuRef.current.contains(target)) {
+                setIsUserMenuOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [isUserMenuOpen]);
+
+
     const handleLogout = () => {
         localStorage.removeItem("access_token");
         localStorage.removeItem("user");
@@ -28,24 +49,15 @@ export default function Header() {
         navigate("/login");
     };
 
+
     return (
         <header className="main-header">
             <div className="header-top">
                 <div className="logo-cate">
-                    <span className="logo">
-                        <img src="/images/Logo/logo1.png" alt="Logo" />
-                    </span>
                     <span>
                         <Link to="/" className="logo-etsy">
                             <p>Lac Hong</p>
-                            <p
-                                style={{
-                                    color: "#69580dc1",
-                                    fontSize: "1.2rem",
-                                    fontFamily: "revert",
-                                    fontWeight: "600",
-                                }}
-                            >
+                            <p>
                                 Artisan
                             </p>
                         </Link>
@@ -97,25 +109,47 @@ export default function Header() {
                 <div className="header-icons">
                     <span className="icon-header" title="Cart">
                         <Link to="/cart" className="cart-link">
-                            🛒<span className="cart-badge"></span>
+                            <Icon name="cart" size={20} />
                         </Link>
                     </span>
 
                     <span className="sign-in">
                         {user ? (
-                            <div className="user-menu">
-                                <span className="user-name">
-                                    <Link to="/customer/profile" className="profile-link">
-                                        <Icon name="profile" size={16} />
-                                    </Link>
-                                </span>
+                            <div className="user-menu" ref={userMenuRef}>
                                 <button
-                                    onClick={handleLogout}
-                                    className="logout-btn"
-                                    title="Đăng xuất"
+                                    type="button"
+                                    className="user-options-btn"
+                                    aria-haspopup="menu"
+                                    aria-expanded={isUserMenuOpen}
+                                    onClick={() => setIsUserMenuOpen((v) => !v)}
+                                    title="Options"
                                 >
-                                    Logout
+                                    <Icon name="justify" size={18} />
                                 </button>
+
+                                {isUserMenuOpen && (
+                                    <div className="user-dropdown" role="menu">
+                                        <Link
+                                            to="/customer/profile"
+                                            className="user-dropdown-item"
+                                            role="menuitem"
+                                            onClick={() => setIsUserMenuOpen(false)}
+                                        >
+                                            <Icon name="profile" size={16} />
+                                            <span>Profile</span>
+                                        </Link>
+
+                                        <button
+                                            type="button"
+                                            className="user-dropdown-item"
+                                            role="menuitem"
+                                            onClick={handleLogout}
+                                        >
+                                            <Icon name="logout" size={16} />
+                                            <span>Logout</span>
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <Link to="/login" className="sign-in-btn">
@@ -133,6 +167,7 @@ export default function Header() {
                     border: "1px solid #eee",
                 }}
             />
+
         </header>
     );
 }

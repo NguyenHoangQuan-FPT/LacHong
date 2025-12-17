@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "../../assets/styles/Homepage.css";
-import { productService } from "../../services/product.service";
+import Header from "../../components/layout/Header";
 
 export type ProductItem = {
     _id?: string;
@@ -35,42 +35,17 @@ const BANNERS = [
         text: <>Handmade <span>with Love</span></>,
     },
 ];
-const resolveStoreName = (p: ProductItem): string => {
-    // 1. Nếu product có storeName trực tiếp
-    if (p.storeName && String(p.storeName).trim()) return String(p.storeName);
-
-    // 2. Ưu tiên đọc từ storeId.storeName (theo dữ liệu bạn gửi)
-    if (p.storeId && typeof p.storeId === "object") {
-        if (p.storeId.storeName && String(p.storeId.storeName).trim()) {
-            return String(p.storeId.storeName);
-        }
-    }
-
-    // 3. Nếu API sau này có field store, cũng xử lý luôn
-    const store = p.store ?? p.storeId ?? null;
-    if (store && typeof store === "object") {
-        const candidates = [
-            store.storeName,
-            store.name,
-            store.title,
-            store.store_name,
-            store.fullName,
-            store.displayName,
-        ];
-        for (const c of candidates) {
-            if (c && String(c).trim()) return String(c);
-        }
-    }
-
-    // 4. Fallback
-    return "Lac Hong Store";
-};
 
 export default function Homepage() {
-    const [products, setProducts] = useState<any[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [bannerIdx, setBannerIdx] = useState(0);
+    const [isBannerVisible, setIsBannerVisible] = useState(false);
+
+
+    useEffect(() => {
+        // Trigger CSS transition after first paint
+        const raf = requestAnimationFrame(() => setIsBannerVisible(true));
+        return () => cancelAnimationFrame(raf);
+    }, []);
 
 
     const handlePrevBanner = () => {
@@ -80,100 +55,27 @@ export default function Homepage() {
         setBannerIdx(idx => (idx === BANNERS.length - 1 ? 0 : idx + 1));
     };
 
-    useEffect(() => {
-        setLoading(true);
-        productService
-            .getAllProducts()
-            .then((res: any) => {
-                const data = res?.data ?? res;
-                const list = data?.products ?? data?.data ?? (Array.isArray(data) ? data : []);
-                console.log("Products list >>>", list); // 👈 thêm dòng này
 
-                setProducts(list);
-            })
-            .catch((err: any) => {
-                console.error("Lỗi khi tải sản phẩm:", err);
-                setError("Không tải được sản phẩm");
-            })
-            .finally(() => setLoading(false));
-    }, []);
 
     return (
         <>
+            <Header />
             <div className="banner">
                 <button onClick={handlePrevBanner} className="custom-carousel-arrow left" type="button" aria-label="Previous">
                     &#8592;
                 </button>
                 <div className="banner-img">
-                    <img src={BANNERS[bannerIdx].img} alt="Banner" />
-                </div>
-                <div className="banner-content">
-                    <div className="banner-text">
-                        <h2>{BANNERS[bannerIdx].text}</h2>
-                    </div>
-                    <Link to="/product" className="explore-btn">Explore</Link>
-                    <div className="banner-products">
-                        <img src="./images/Banner/product1.jpg" alt="p1" />
-                        <img src="./images/Banner/product2.jpg" alt="p2" />
-                        <img src="./images/Banner/product3.jpg" alt="p3" />
-                    </div>
+                    <img
+                        className={isBannerVisible ? "banner-photo is-visible" : "banner-photo"}
+                        src={BANNERS[bannerIdx].img}
+                        alt="Banner"
+                    />
+                    <Link to="/product" className="shop-now-btn">Shop Now</Link>
                 </div>
                 <button onClick={handleNextBanner} className="custom-carousel-arrow right" type="button" aria-label="Next">
                     &#8594;
                 </button>
             </div>
-            <div className="homepage-container">
-                <div className="section-title">
-                    <div className="line" />
-                    <h3>Best Selling</h3>
-                    <div className="line" />
-                </div>
-
-                {loading ? (
-                    <div style={{ padding: 40, textAlign: "center" }}>Đang tải sản phẩm...</div>
-                ) : error ? (
-                    <div style={{ padding: 40, textAlign: "center", color: "red" }}>{error}</div>
-                ) : products.length === 0 ? (
-                    <div className="productpage-empty">Không có sản phẩm nào.</div>
-                ) : (
-                    <div className="productpage-grid">
-                        {products.map((p: any, idx: number) => (
-                            <div className="productpage-card" key={p._id || p.id || idx}>
-                                {Number(p.discountPercent) > 0 && (
-                                    <div className="productpage-discount">{p.discountPercent}% off</div>
-                                )}
-                                {!p.status && <div className="productpage-unavailable">Unavailable</div>}
-                                {p.stock === 0 && <div className="productpage-outofstock">Out of stock</div>}
-                                <Link style={{ textDecoration: "none" }} to={`/product/detail?id=${p._id || p.id}`}>
-                                    <img src={p.imageUrl || "/images/Product/pro1.jpg"} alt={p.productName || p.name} />
-                                </Link>
-                                <div className="productpage-name">{p.productName || p.name}</div>
-                                <div className="productpage-spacer" />
-                                <div className="productpage-bottom">
-                                    <div className="productpage-prices">
-                                        {Number(p.discountPercent) && Number(p.discountPercent) > 0 ? (
-                                            <>
-                                                <span className="productpage-price" style={{ textDecoration: "line-through", color: "#888" }}>
-                                                    {Number(p.price).toLocaleString()}.000 VND
-                                                </span>
-                                                <span className="price" >
-                                                    {Math.round(Number(p.price) * (1 - (Number(p.discountPercent) || 0) / 100)).toLocaleString()}.000 VND
-                                                </span>
-                                            </>
-                                        ) : (
-                                            <span className="price">{Number(p.price).toLocaleString()}.000 VND</span>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="productpage-store">
-                                    <i className="bi bi-shop" /> {resolveStoreName(p)}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
         </>
-
     );
 }

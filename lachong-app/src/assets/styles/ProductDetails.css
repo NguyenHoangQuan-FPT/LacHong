@@ -30,13 +30,13 @@
     gap: 6px;
     margin-top: 12px;
     font-size: 14px;
-    color: #0984e3;
+    color: #8d8d8d;
     text-decoration: none;
     transition: color 0.2s ease;
 }
 
 .product-detail-back:hover {
-    color: #0652dd;
+    color: #000000;
     text-decoration: underline;
 }
 
@@ -145,12 +145,11 @@
 .product-detail-thumbnails .thumbnail:hover {
     transform: translateY(-1px);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
-    border-color: #8373c9;
     background: #ffffff;
 }
 
 .product-detail-thumbnails .thumbnail.active {
-    border-color: #0984e3;
+    border-color: #000000;
     box-shadow: 0 0 0 1px rgba(9, 132, 227, 0.3);
 }
 
@@ -164,9 +163,18 @@
     gap: 6px;
 }
 
+.store-link {
+    color: #000;
+}
+
+.store-link:hover {
+    text-decoration: none;
+    color: #afafaf;
+}
+
 .product-detail-store i {
     font-size: 16px;
-    color: #0984e3;
+    color: #000000;
 }
 
 /* ===== Cột phải (thông tin) ===== */
@@ -243,8 +251,8 @@
     margin-top: 10px;
     padding: 10px 18px;
     border-radius: 999px;
-    background: linear-gradient(90deg, var(--primary), var(--soft));
-    color: #fff;
+    background: #afafaf;
+    color: #000000;
     font-weight: 600;
     font-size: 15px;
     cursor: pointer;

@@ -20,6 +20,18 @@ export default function Cart() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        const onLogout = () => {
+            setCartItems([]);
+            setSelectedItems(new Set());
+            setError(null);
+            setLoading(false);
+        };
+
+        window.addEventListener("app:logout", onLogout);
+        return () => window.removeEventListener("app:logout", onLogout);
+    }, []);
+
+    useEffect(() => {
         const fetchCart = async () => {
             setLoading(true);
             setError(null);
@@ -37,8 +49,15 @@ export default function Cart() {
                 setCartItems(items);
             } catch (err: any) {
                 console.error("Error fetching cart:", err);
-                setError("Không tải được giỏ hàng");
-                setCartItems([]);
+                // if logged out / token missing, show empty cart UI instead of sticky error
+                const status = err?.response?.status;
+                if (status === 401 || status === 403 || !localStorage.getItem("access_token")) {
+                    setCartItems([]);
+                    setError(null);
+                } else {
+                    setError("Không tải được giỏ hàng");
+                    setCartItems([]);
+                }
             } finally {
                 setLoading(false);
             }
@@ -111,7 +130,6 @@ export default function Cart() {
         }
     };
 
-    // Tính tổng tiền chỉ cho sản phẩm được chọn
     const totalPrice = cartItems.reduce((sum, item) => {
         if (!selectedItems.has(item._id)) return sum;
 

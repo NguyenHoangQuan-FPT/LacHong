@@ -37,10 +37,6 @@ const Footer = () => {
                         <li><a href="#" className="footer-link">Sign In</a></li>
                         <li><a href="#" className="footer-link">View Cart</a></li>
                         <li><a href="#" className="footer-link">My Wishlist</a></li>
-                        <li><a href="#" className="footer-link">Track My Order</a></li>
-                        <li><a href="#" className="footer-link">Help Ticket</a></li>
-                        <li><a href="#" className="footer-link">Shipping Details</a></li>
-                        <li><a href="#" className="footer-link">Compare products</a></li>
                     </ul>
                 </div>
                 <div className="footer-col">
@@ -48,11 +44,6 @@ const Footer = () => {
                     <ul className="footer-link-list">
                         <li><a href="#" className="footer-link">Become a Vendor</a></li>
                         <li><a href="#" className="footer-link">Affiliate Program</a></li>
-                        <li><a href="#" className="footer-link">Farm Business</a></li>
-                        <li><a href="#" className="footer-link">Farm Careers</a></li>
-                        <li><a href="#" className="footer-link">Our Suppliers</a></li>
-                        <li><a href="#" className="footer-link">Accessibility</a></li>
-                        <li><a href="#" className="footer-link">Promotions</a></li>
                     </ul>
                 </div>
                 <div className="footer-col">
@@ -60,11 +51,6 @@ const Footer = () => {
                     <ul className="footer-link-list">
                         <li><a href="#" className="footer-link">Milk & Flavoured Milk</a></li>
                         <li><a href="#" className="footer-link">Butter and Margarine</a></li>
-                        <li><a href="#" className="footer-link">Eggs Substitutes</a></li>
-                        <li><a href="#" className="footer-link">Marmalades</a></li>
-                        <li><a href="#" className="footer-link">Sour Cream and Dips</a></li>
-                        <li><a href="#" className="footer-link">Tea & Kombucha</a></li>
-                        <li><a href="#" className="footer-link">Cheese</a></li>
                     </ul>
                 </div>
             </div>

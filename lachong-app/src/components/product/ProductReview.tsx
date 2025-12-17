@@ -38,6 +38,7 @@ export default function ProductReview({ productId }: ProductReviewProps) {
     const [form, setForm] = useState({ rating: 5, comment: "" });
     const [showModal, setShowModal] = useState(false);
     const [viewerCustomerId, setViewerCustomerId] = useState<string | null>(null);
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
     const PAGE_SIZE = 5;
     const [page, setPage] = useState(1);
@@ -87,6 +88,22 @@ export default function ProductReview({ productId }: ProductReviewProps) {
             cancelled = true;
         };
     }, [currentUser]);
+
+    useEffect(() => {
+        if (!openMenuId) return;
+
+        const onDocClick = () => setOpenMenuId(null);
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") setOpenMenuId(null);
+        };
+
+        document.addEventListener("click", onDocClick);
+        document.addEventListener("keydown", onKeyDown);
+        return () => {
+            document.removeEventListener("click", onDocClick);
+            document.removeEventListener("keydown", onKeyDown);
+        };
+    }, [openMenuId]);
 
     const canSubmit = useMemo(() => form.rating >= 1 && form.rating <= 5 && form.comment.trim().length > 0, [form]);
 
@@ -224,7 +241,7 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                     <div className="review-count">{reviews.length} đánh giá</div>
                     <button
                         type="button"
-                        className="btn primary"
+                        className="add-review"
                         onClick={() => {
                             resetForm();
                             setShowModal(true);
@@ -243,6 +260,7 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                 ) : (
                     pagedReviews.map((rev) => {
                         const id = rev._id || rev.id;
+                        const reviewId = id ? String(id) : "";
                         const reviewUserId = rev.customer?._id || rev.customer?.id;
                         const isOwner = !!(
                             viewerCustomerId &&
@@ -254,19 +272,54 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                             <div className="review-item" key={id}>
                                 <div className="review-meta">
                                     <div className="review-user">{rev.customer?.fullName || "Ẩn danh"}</div>
-                                    <div className="review-stars">{renderStars(rev.rating)}</div>
                                 </div>
                                 <div className="review-comment">{rev.comment}</div>
+                                <div className="review-stars">{renderStars(rev.rating)}</div>
+
                                 {isOwner && (
                                     <div className="review-actions">
-                                        <button className="link" onClick={() => {
-                                            setEditingId(id || null);
-                                            setForm({ rating: rev.rating || 5, comment: rev.comment || "" });
-                                            setShowModal(true);
-                                        }}><Icon name="pencil"></Icon></button>
-                                        <button className="link danger" onClick={() => handleDelete(id)}>
-                                            <Icon name="trash"></Icon>
+                                        <button
+                                            type="button"
+                                            className="link review-options-button"
+                                            aria-label="Tùy chọn"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (!reviewId) return;
+                                                setOpenMenuId((curr) => (curr === reviewId ? null : reviewId));
+                                            }}
+                                        >
+                                            <Icon name="options"></Icon>
                                         </button>
+
+                                        {reviewId && openMenuId === reviewId && (
+                                            <div
+                                                className="review-options-menu"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <button
+                                                    type="button"
+                                                    className="review-options-item"
+                                                    onClick={() => {
+                                                        setOpenMenuId(null);
+                                                        setEditingId(reviewId);
+                                                        setForm({ rating: rev.rating || 5, comment: rev.comment || "" });
+                                                        setShowModal(true);
+                                                    }}
+                                                >
+                                                    Sửa
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="review-options-item"
+                                                    onClick={() => {
+                                                        setOpenMenuId(null);
+                                                        handleDelete(reviewId);
+                                                    }}
+                                                >
+                                                    Xóa
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>

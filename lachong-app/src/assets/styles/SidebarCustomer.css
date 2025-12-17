@@ -22,6 +22,7 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    height: 850px;
 }
 
 .sidebar-customer-title {
@@ -53,14 +54,13 @@
 }
 
 .sidebar-customer-tab:hover {
-    background: #e5edff;
-    color: #1d4ed8;
+    background: #afafaf;
+    color: #000000;
 }
 
 .sidebar-customer-tab.active {
-    background: linear-gradient(90deg, var(--primary), var(--soft));
-    color: #ffffff;
-    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+    background: #afafaf;
+    color: #000000;
     transform: translateY(-1px);
 }
 
@@ -70,8 +70,42 @@
     border-radius: 18px;
     padding: 20px 22px;
     box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
-    min-height: 320px;
-    height: fit-content;
+    height: 850px;
+    overflow: auto;
+}
+
+/* Normalize tab contents so switching tabs doesn't shift layout */
+.sidebar-customer-panel .profile-customer-page,
+.sidebar-customer-panel .address-page {
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    min-height: 0;
+    height: auto;
+}
+
+.sidebar-customer-panel .order-page {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar-customer-panel .order-shell {
+    width: 100%;
+}
+
+.sidebar-customer-panel .profile-customer-page {
+    display: block;
+}
+
+.sidebar-customer-panel .profile-card {
+    width: 100%;
+}
+
+.sidebar-customer-panel .address-header,
+.sidebar-customer-panel .address-list,
+.sidebar-customer-panel .address-form-card {
+    max-width: 100%;
 }
 
 .sidebar-customer-panel h3 {

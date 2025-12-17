@@ -3,6 +3,7 @@ import { productService } from "../../services/product.service";
 import ProductCard from "../../components/product/ProductCard";
 import type { ProductItem } from "../../components/product/ProductCard";
 import "../../assets/styles/Product.css";
+import Icon from "../../assets/icons/Icon";
 
 type Category = { _id?: string; id?: string; name?: string };
 type Material = { _id?: string; id?: string; name?: string };
@@ -115,7 +116,7 @@ export default function Product() {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
-                    <button type="submit">🔍</button>
+                    <button type="submit"><Icon name="search" size={18} /></button>
                 </form>
 
                 <div className="product-filters">
@@ -133,7 +134,7 @@ export default function Product() {
 
                     <div className="filter-item">
                         <label>Chất liệu</label>
-                        <select value={selectedMaterial} onChange={(e) => setSelectedMaterial(e.target.value)}>
+                        <select value={selectedMaterial} onChange={(e) => setSelectedMaterial(e.target.value)} >
                             <option value="">Tất cả chất liệu</option>
                             {materials.map((m) => (
                                 <option key={m._id ?? m.id} value={m._id ?? m.id}>

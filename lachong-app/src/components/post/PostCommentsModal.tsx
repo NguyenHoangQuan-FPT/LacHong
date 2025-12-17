@@ -77,6 +77,23 @@ export default function PostCommentsModal({
     const [expandedRepliesByParentId, setExpandedRepliesByParentId] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
+        const body = document.body;
+        const prevOverflow = body.style.overflow;
+        const prevPaddingRight = body.style.paddingRight;
+
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+        body.style.overflow = "hidden";
+        if (scrollbarWidth > 0) {
+            body.style.paddingRight = `${scrollbarWidth}px`;
+        }
+
+        return () => {
+            body.style.overflow = prevOverflow;
+            body.style.paddingRight = prevPaddingRight;
+        };
+    }, []);
+
+    useEffect(() => {
         if (!openCommentActionsId) return;
         const handleDocClick = () => setOpenCommentActionsId(null);
         document.addEventListener("click", handleDocClick);

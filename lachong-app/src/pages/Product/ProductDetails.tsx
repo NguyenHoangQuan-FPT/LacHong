@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams, Link, useNavigate } from "react-router-dom";
 import { productService } from "../../services/product.service";
 import { cartService } from "../../services/cart.service";
+import customerService from "../../services/customer.service";
 import { ToastContainer, toast } from "react-toastify";
 import "../../assets/styles/ProductDetails.css";
 import Icon from "../../assets/icons/Icon";
@@ -29,6 +30,8 @@ export default function ProductDetail() {
     const [loading, setLoading] = useState(false);
     const [addingToCart, setAddingToCart] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const [customerProfile, setCustomerProfile] = useState<any | null>(null);
 
     useEffect(() => {
         if (!id) {
@@ -84,6 +87,42 @@ export default function ProductDetail() {
             mounted = false;
         };
     }, [id]);
+
+    const isProfileComplete = (profile: any | null) => {
+        if (!profile) return false;
+        const name = String(profile?.fullName || profile?.name || "").trim();
+        const phone = String(profile?.phone || profile?.phoneNumber || "").trim();
+        return !!name && !!phone;
+    };
+
+    const ensureCustomerProfileComplete = async () => {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+            toast.info("Vui lòng đăng nhập để thêm vào giỏ hàng");
+            navigate("/login");
+            return false;
+        }
+
+        if (isProfileComplete(customerProfile)) return true;
+
+        try {
+            const res: any = await customerService.getProfileCustomer();
+            const data = res?.data ?? res;
+            const c = data?.customer ?? data?.data ?? data;
+            setCustomerProfile(c);
+
+            if (isProfileComplete(c)) return true;
+
+            toast.error("Vui lòng cập nhật thông tin cá nhân trước khi thêm vào giỏ hàng");
+
+            navigate("/product/detail" + (id ? `?id=${id}` : ""));
+            return false;
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message || "Không lấy được thông tin tài khoản");
+            navigate("/product/detail" + (id ? `?id=${id}` : ""));
+            return false;
+        }
+    };
 
     const getCategoryId = (cate: any) => {
         if (!cate) return null;
@@ -183,10 +222,10 @@ export default function ProductDetail() {
                             {discountValue > 0 ? (
                                 <>
                                     <span className="price-old">{(product.price ?? 0).toLocaleString()} VND</span>
-                                    <span className="price-new">{(priceAfterDiscount ?? 0).toLocaleString()} VND</span>
+                                    <span className="price-neww">{(priceAfterDiscount ?? 0).toLocaleString()} VND</span>
                                 </>
                             ) : (
-                                <span className="price-new">{(product.price ?? 0).toLocaleString()} VND</span>
+                                <span className="price-neww">{(product.price ?? 0).toLocaleString()} VND</span>
                             )}
                         </div>
 
@@ -217,6 +256,10 @@ export default function ProductDetail() {
                             <button
                                 onClick={async () => {
                                     if (!id || !product) return;
+
+                                    const ok = await ensureCustomerProfileComplete();
+                                    if (!ok) return;
+
                                     setAddingToCart(true);
                                     try {
                                         await cartService.addToCart(id, quantity);

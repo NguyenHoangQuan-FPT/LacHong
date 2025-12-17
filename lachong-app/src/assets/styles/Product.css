@@ -33,6 +33,10 @@
     box-shadow: 0 12px 30px rgba(15, 23, 42, 0.04);
 }
 
+.options {
+    background: #d1d0d0;
+}
+
 /* Left hero text */
 .product-kicker {
     margin: 0;
@@ -106,7 +110,7 @@
 }
 
 .product-search button {
-    background: linear-gradient(90deg, var(--primary), var(--soft));
+    background: #d1d0d0;
     color: #000000;
     border: none;
     padding: 8px 10px;
@@ -160,7 +164,6 @@
     display: flex;
     justify-content: space-between;
     margin-top: 6px;
-    color: var(--muted);
     font-size: 0.85rem;
 }
 
@@ -216,6 +219,8 @@
     min-height: 320px;
     transition: transform .12s ease, box-shadow .12s ease;
 }
+
+
 
 .product-card:hover {
     transform: translateY(-6px);

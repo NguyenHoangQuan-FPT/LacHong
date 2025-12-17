@@ -11,8 +11,8 @@ import ProductDetail from "../pages/Store/ProductDetail";
 import EditProduct from "../pages/Store/EditProduct";
 import ProfileStore from "../pages/Store/ProfileStore";
 import StoreLayout from "../components/layout/StoreLayout";
-import Product from "../pages/Home/Product";
-import ProductDetails from "../pages/Home/ProductDetails";
+import Product from "../pages/Product/Product";
+import ProductDetails from "../pages/Product/ProductDetails";
 import Cart from "../pages/Home/Cart";
 import Checkout from "../pages/Home/Checkout";
 import SidebarStore from "../components/layout/SidebarStore";
@@ -23,7 +23,7 @@ import Post from "../pages/Home/Post";
 export default function RouterComponent() {
     return (
         <Routes>
-            <Route path="/" element={<Layout><HomePage /></Layout>} />
+            <Route path="/" element={<HomePage />} />
             <Route path="/community" element={<Layout><Post /></Layout>} />
             <Route path="/product" element={<Layout><Product /></Layout>} />
             <Route path="/product/detail" element={<Layout><ProductDetails /></Layout>} />

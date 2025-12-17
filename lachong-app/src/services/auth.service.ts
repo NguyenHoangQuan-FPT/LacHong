@@ -16,9 +16,20 @@ export const authService = {
         } catch (e) {
             console.error('Logout api error', e);
         } finally {
+            // axiosClient reads token from `access_token`
+            localStorage.removeItem('access_token');
+            // backward-compat / older key
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             localStorage.removeItem('store');
+
+            try {
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new Event('app:logout'));
+                }
+            } catch {
+                // ignore
+            }
         }
     }
 };

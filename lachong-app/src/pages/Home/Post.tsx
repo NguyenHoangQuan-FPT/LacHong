@@ -374,7 +374,7 @@ export default function Post() {
                     <h1 className="post-title">Bài viết</h1>
                     <p className="post-subtitle">Tạo, cập nhật và quản lý bài viết.</p>
                 </div>
-                <button type="button" className="post-btn primary" onClick={openCreate}>
+                <button type="button" className="post-btn" onClick={openCreate}>
                     + Thêm bài viết
                 </button>
             </div>

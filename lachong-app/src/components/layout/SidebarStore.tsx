@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import "../../assets/styles/SidebarStore.css";
 import StorePage from "../../pages/Home/StorePage";
-import ProductStore from "../../pages/Home/ProductStore";
+import ProductStore from "../../pages/Product/ProductStore";
 
 export default function SidebarStore() {
     const { id: storeId } = useParams<{ id?: string }>();

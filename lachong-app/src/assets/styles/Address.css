@@ -18,7 +18,8 @@
 .address-page {
     padding: 32px 24px;
     background: linear-gradient(180deg, var(--bg-1) 0%, #eef3fb 100%);
-    min-height: 100vh;
+    min-height: 800px;
+    border-radius: 12px;
 }
 
 /* Header */
@@ -173,7 +174,7 @@
 }
 
 /* Empty state */
-.empty-state {
+.address-page .empty-state {
     text-align: center;
     padding: 60px 20px;
     background: rgba(255, 255, 255, 0.6);
@@ -183,13 +184,13 @@
     margin: 0 auto;
 }
 
-.empty-state p {
+.address-page .empty-state p {
     color: var(--muted);
     font-size: 15px;
     margin-bottom: 20px;
 }
 
-.btn-primary {
+.address-page .btn-primary {
     appearance: none;
     border: none;
     background: linear-gradient(90deg, var(--accent), var(--accent-2));
@@ -203,7 +204,7 @@
     box-shadow: 0 8px 22px rgba(59, 130, 246, 0.14);
 }
 
-.btn-primary:hover {
+.address-page .btn-primary:hover {
     filter: brightness(1.05);
 }
 
@@ -225,31 +226,31 @@
     font-weight: 700;
 }
 
-.form-grid {
+.address-page .form-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 18px;
     margin-bottom: 24px;
 }
 
-.form-item {
+.address-page .form-item {
     display: flex;
     flex-direction: column;
 }
 
-.form-item.span-2 {
+.address-page .form-item.span-2 {
     grid-column: 1 / -1;
 }
 
-.form-item label {
+.address-page .form-item label {
     font-size: 13px;
     color: #111827;
     margin-bottom: 8px;
     font-weight: 600;
 }
 
-.form-item input,
-.form-item select {
+.address-page .form-item input,
+.address-page .form-item select {
     background: #fbfdff;
     border: 1px solid rgba(15, 23, 42, 0.12);
     padding: 12px 14px;
@@ -261,33 +262,33 @@
     box-sizing: border-box;
 }
 
-.form-item input:focus,
-.form-item select:focus {
+.address-page .form-item input:focus,
+.address-page .form-item select:focus {
     border-color: rgba(37, 99, 235, 0.95);
     box-shadow: 0 6px 18px rgba(37, 99, 235, 0.1);
     transform: translateY(-1px);
 }
 
-.form-item select:disabled {
+.address-page .form-item select:disabled {
     background: #f3f4f6;
     cursor: not-allowed;
     opacity: 0.7;
 }
 
-.form-item input::placeholder {
+.address-page .form-item input::placeholder {
     color: #9ca3af;
 }
 
 /* Form actions */
-.form-actions {
+.address-page .form-actions {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
     padding-top: 12px;
 }
 
-.btn-cancel,
-.btn-submit {
+.address-page .btn-cancel,
+.address-page .btn-submit {
     appearance: none;
     border: none;
     padding: 11px 20px;
@@ -298,38 +299,38 @@
     transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
-.btn-cancel {
+.address-page .btn-cancel {
     background: transparent;
     color: var(--muted);
     border: 1px solid rgba(15, 23, 42, 0.1);
 }
 
-.btn-cancel:hover {
+.address-page .btn-cancel:hover {
     background: #f9fafb;
 }
 
-.btn-submit {
+.address-page .btn-submit {
     color: #fff;
     background: linear-gradient(90deg, var(--accent), var(--accent-2));
     box-shadow: 0 8px 22px rgba(59, 130, 246, 0.14);
 }
 
-.btn-submit:hover {
+.address-page .btn-submit:hover {
     filter: brightness(1.05);
 }
 
-.btn-submit:active,
-.btn-cancel:active {
+.address-page .btn-submit:active,
+.address-page .btn-cancel:active {
     transform: translateY(1px);
 }
 
-.btn-submit:disabled {
+.address-page .btn-submit:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
 
 /* Status messages */
-.status {
+.address-page .status {
     text-align: center;
     padding: 18px 16px;
     color: var(--muted);
@@ -341,7 +342,7 @@
     box-shadow: var(--shadow-1);
 }
 
-.status.error {
+.address-page .status.error {
     color: var(--danger);
     background: linear-gradient(180deg, rgba(255, 246, 246, 0.9), rgba(255, 250, 250, 0.9));
     border-color: rgba(239, 68, 68, 0.12);
@@ -378,21 +379,21 @@
         padding: 20px;
     }
 
-    .form-grid {
+    .address-page .form-grid {
         grid-template-columns: 1fr;
         gap: 12px;
     }
 
-    .form-item.span-2 {
+    .address-page .form-item.span-2 {
         grid-column: auto;
     }
 
-    .form-actions {
+    .address-page .form-actions {
         flex-direction: column-reverse;
     }
 
-    .btn-cancel,
-    .btn-submit {
+    .address-page .btn-cancel,
+    .address-page .btn-submit {
         width: 100%;
         text-align: center;
     }
