@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+
 :root {
     --primary: 102, 126, 234;
     --soft: 129, 140, 248;
@@ -57,7 +60,7 @@
     color: #000000;
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     font-weight: 600;
-    font-size: 2rem;
+    font-size: 1.5rem;
 }
 
 
@@ -74,6 +77,7 @@
     flex: 1;
     display: flex;
     justify-content: center;
+    align-items: center;
 }
 
 .dashboard-tabs {
@@ -104,11 +108,11 @@
     border-radius: 999px;
     color: var(--muted);
     text-decoration: none;
-    font-weight: 600;
+    font-weight: 500;
     font-size: 1.2rem;
     transition: all .12s ease;
     border: 1px solid transparent;
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-family: 'Roboto', sans-serif;
 }
 
 .dashboard-tab:hover {
@@ -130,6 +134,19 @@
     gap: 12px;
 }
 
+.icon-header {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 10px;
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    color: var(--text);
+    transition: background .12s ease, border-color .12s ease;
+}
+
 /* cart */
 .cart-link {
     display: inline-flex;
@@ -140,7 +157,7 @@
     padding: 8px;
     border-radius: 8px;
     transition: background .12s ease, transform .12s ease;
-    margin-right: 20px;
+    margin-right: 1px;
 }
 
 .cart-link:hover {
@@ -202,13 +219,11 @@
     border-radius: 10px;
     background: transparent;
     border: 1px solid transparent;
-    cursor: pointer;
-    color: var(--text);
 }
 
 .user-options-btn:hover {
-    border-color: rgba(var(--primary), 0.16);
-    background: linear-gradient(90deg, rgba(var(--primary), 0.08), rgba(var(--soft), 0.06));
+    border-color: #ffffff;
+    background: #ffffff;
 }
 
 .user-dropdown {

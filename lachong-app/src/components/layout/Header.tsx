@@ -107,12 +107,14 @@ export default function Header() {
                 </div>
 
                 <div className="header-icons">
+                    <span className="icon-header" title="Notifications">
+                        <Icon name="bell" size={20} />
+                    </span>
                     <span className="icon-header" title="Cart">
                         <Link to="/cart" className="cart-link">
                             <Icon name="cart" size={20} />
                         </Link>
                     </span>
-
                     <span className="sign-in">
                         {user ? (
                             <div className="user-menu" ref={userMenuRef}>
@@ -158,7 +160,7 @@ export default function Header() {
                         )}
                     </span>
                 </div>
-            </div>
+            </div >
 
             <hr
                 style={{
@@ -168,6 +170,6 @@ export default function Header() {
                 }}
             />
 
-        </header>
+        </header >
     );
 }

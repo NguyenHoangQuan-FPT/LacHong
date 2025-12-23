@@ -53,14 +53,13 @@
 }
 
 .sidebar-store-tab:hover {
-    background: #e5edff;
-    color: #1d4ed8;
+    background: #afafaf;
+
 }
 
 .sidebar-store-tab.active {
-    background: linear-gradient(90deg, var(--primary), var(--soft));
+    background: #afafaf;
     color: #ffffff;
-    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
     transform: translateY(-1px);
 }
 

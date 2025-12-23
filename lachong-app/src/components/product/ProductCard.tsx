@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import "../../assets/styles/ProductCard.css";
 
@@ -76,9 +75,9 @@ export default function ProductCard({ product }: { product: ProductItem }) {
                         <span className="price-card">{priceVal.toLocaleString()} VND</span>
                     )}
                 </div>
-                <div className="product-store">
-                    <i className="bi bi-shop" /> {storeDisplay}
-                </div>
+            </div>
+            <div className="product-store">
+                <i className="bi bi-shop" /> {storeDisplay}
             </div>
         </div>
     );

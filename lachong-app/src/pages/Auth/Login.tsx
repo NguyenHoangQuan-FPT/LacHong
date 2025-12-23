@@ -48,6 +48,12 @@ export default function Login() {
                 console.log('✅ Store saved');
             }
 
+            const isAdmin = user?.roleId?.name === 'admin';
+            if (isAdmin) {
+                navigate('/admin/stores');
+                return;
+            }
+
             const isStoreAccount = !!(
                 user?.storeId || user?.roleId?.name === 'manager' || user?.isStore || data?.store || data?.storeId
             );

@@ -1,5 +1,5 @@
 import React from 'react';
-import Sidebar from './Sidebar';
+import Sidebar from '../sidebar/Sidebar';
 import '../../assets/styles/StoreLayout.css';
 
 interface StoreLayoutProps {

@@ -255,9 +255,6 @@ export default function PostCommentsModal({
                         ×
                     </button>
                 </div>
-
-                {!!postTitle && <div className="post-comments-modal-posttitle">{postTitle}</div>}
-
                 <div className="post-comments">
                     {roots.map((c, i) => renderComment(c, i, 0))}
 

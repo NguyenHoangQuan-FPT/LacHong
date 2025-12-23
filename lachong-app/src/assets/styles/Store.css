@@ -34,11 +34,10 @@
 
 /* Banner trái */
 .store-banner {
-    background: linear-gradient(90deg, var(--primary), var(--soft));
+    background: #afafaf;
     border-radius: 12px;
     padding: 16px 18px;
     color: #fff;
-    box-shadow: 0 10px 30px rgba(166, 155, 212, 0.3);
     display: flex;
     align-items: center;
 }
@@ -108,8 +107,8 @@
         background-color 0.18s ease,
         color 0.18s ease,
         transform 0.08s ease,
-        box-shadow 0.12s ease,
-        border-color 0.18s ease;
+        box-shadow 0.12s ease;
+
     white-space: nowrap;
 }
 
@@ -126,13 +125,15 @@
 }
 
 .btn-store-outline {
-    background: transparent;
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.9);
+    background: #ffffff;
+    color: #000000;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.45);
+
 }
 
 .btn-store-outline:hover {
-    background: rgba(255, 255, 255, 0.14);
+    background: #ffffff;
+    transform: translateY(-1px);
 }
 
 .btn-store-secondary {
@@ -142,7 +143,7 @@
 }
 
 .btn-store-secondary:hover {
-    background: #020617;
+    background: #ffffff;
     transform: translateY(-1px);
 }
 

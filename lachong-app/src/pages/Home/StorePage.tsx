@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { storeService } from "../../services/store.service";
+import { followService } from "../../services/follow.service";
 import "../../assets/styles/Store.css";
+import { toast, ToastContainer } from "react-toastify";
 
 const normalizeImageUrl = (url?: string) => {
     if (!url) return "https://via.placeholder.com/200x200?text=No+Image";
@@ -15,20 +17,44 @@ export default function StorePage() {
     const [store, setStore] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isFollowing, setIsFollowing] = useState<boolean>(false);
+    const [followLoading, setFollowLoading] = useState(false);
+    const [followerCount, setFollowerCount] = useState<number>(0);
 
     useEffect(() => {
         const fetchStore = async () => {
             setLoading(true);
             setError(null);
             try {
+                let storeData;
                 if (id) {
                     const res = await storeService.getStoreById(id);
-                    const data = res?.data?.store ?? res?.data ?? res;
-                    setStore(data);
+                    storeData = res?.data?.store ?? res?.data ?? res;
                 } else {
                     const res = await storeService.getStoreInfo();
-                    const data = res?.data?.store ?? res?.data ?? res;
-                    setStore(data);
+                    storeData = res?.data?.store ?? res?.data ?? res;
+                }
+                setStore(storeData);
+
+                // Kiểm tra follow đúng user
+                if (storeData?._id) {
+                    try {
+                        // Lấy danh sách store user hiện tại đang theo dõi
+                        const followRes = await followService.getFollowingStores();
+                        const followingList = followRes?.data?.stores || followRes?.data || [];
+                        // followingList là mảng id (string)
+                        setIsFollowing(followingList.some((id: string) => id === storeData._id));
+                    } catch {
+                        setIsFollowing(false);
+                    }
+                    // Lấy số follower thực tế từ API mới getFollowingByStore
+                    try {
+                        const res = await followService.getFollowingByStore(storeData._id);
+                        const follows = res?.data?.follows || [];
+                        setFollowerCount(Array.isArray(follows) ? follows.length : 0);
+                    } catch {
+                        setFollowerCount(storeData.followerCount ?? 0);
+                    }
                 }
             } catch (err: any) {
                 setError(err?.response?.data?.message || "Không tải được thông tin cửa hàng");
@@ -36,9 +62,36 @@ export default function StorePage() {
                 setLoading(false);
             }
         };
-
         fetchStore();
     }, [id]);
+
+    // Xử lý follow/unfollow
+    const getStoreId = () => store?._id || store?.storeId || store?.id;
+    const handleFollowClick = async () => {
+        const storeId = getStoreId();
+        if (!storeId) {
+            console.error("Không tìm thấy storeId để follow", store);
+            return;
+        }
+        setFollowLoading(true);
+        try {
+            if (isFollowing) {
+                console.log("Unfollow storeId:", storeId);
+                await followService.unfollowStore(storeId);
+                setIsFollowing(false);
+                toast.success("Đã bỏ theo dõi cửa hàng");
+            } else {
+                console.log("Follow storeId:", storeId);
+                await followService.followStore(storeId);
+                setIsFollowing(true);
+                toast.success("Đã theo dõi cửa hàng");
+            }
+        } catch (err: any) {
+            console.error("Lỗi khi follow/unfollow:", err?.response?.data || err);
+        } finally {
+            setFollowLoading(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -79,7 +132,7 @@ export default function StorePage() {
     ];
 
     const statsRight = [
-        { label: "Người Theo Dõi", value: store.followerCount ?? "265,3k" },
+        { label: "Người Theo Dõi", value: followerCount },
         {
             label: "Đánh Giá",
             value: store.rating ? `${store.rating} (${store.ratingCount} Đánh Giá)` : "4.8 (182,8k Đánh Giá)"
@@ -107,7 +160,13 @@ export default function StorePage() {
                                 {store.address || "Online vài phút trước"}
                             </p>
                             <div className="store-banner-actions">
-                                <button className="btn-store-outline">+ Theo Dõi</button>
+                                <button
+                                    className={isFollowing ? "btn-store-outline active" : "btn-store-outline"}
+                                    onClick={handleFollowClick}
+                                    disabled={followLoading}
+                                >
+                                    {isFollowing ? "Đã Theo Dõi" : "+ Theo Dõi"}
+                                </button>
                                 <button className="btn-store-secondary">Chat</button>
                             </div>
                         </div>
@@ -196,6 +255,7 @@ export default function StorePage() {
                     </ul>
                 </div>
             </div>
+            <ToastContainer toastStyle={{ color: "white" }} autoClose={1000} />
         </div>
     );
 }

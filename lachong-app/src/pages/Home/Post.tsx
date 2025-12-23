@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import React from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { postService } from "../../services/post.service";
@@ -53,6 +54,37 @@ type LikeCommentItem = {
     createdAt?: string;
 };
 
+function SharePopup({ postUrl, onClose }: { postUrl: string; onClose: () => void }) {
+    const shareFacebook = () => {
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`, '_blank');
+        onClose();
+    };
+    const shareZalo = () => {
+        window.open(`https://zalo.me/share?url=${encodeURIComponent(postUrl)}`, '_blank');
+        onClose();
+    };
+    const copyLink = async () => {
+        try {
+            await navigator.clipboard.writeText(postUrl);
+            alert('Đã copy link!');
+        } catch {
+            alert('Không copy được link!');
+        }
+        onClose();
+    };
+    return (
+        <div className="share-popup-overlay" onClick={onClose}>
+            <div className="share-popup" onClick={e => e.stopPropagation()}>
+                <button onClick={shareFacebook}>Chia sẻ Facebook</button>
+                <button onClick={shareZalo}>Chia sẻ Zalo</button>
+                <button onClick={copyLink}>Copy link</button>
+                <button onClick={onClose}>Đóng</button>
+            </div>
+        </div>
+    );
+}
+
+
 function extractId(value: any): string | null {
     if (!value) return null;
     if (typeof value === "string") return value;
@@ -69,6 +101,7 @@ function normalizeImageUrl(url?: string | null): string | null {
 }
 
 export default function Post() {
+    const [sharePostId, setSharePostId] = useState<string | null>(null);
     const [posts, setPosts] = useState<PostItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -488,15 +521,33 @@ export default function Post() {
                                                 onClick={() => toggleLike(postId)}
                                                 disabled={isEngagementLoading}
                                             >
-                                                <Icon name="like" /> {likeState.liked ? "Đã thích" : "Thích"}
+                                                {likeState.liked ? (
+                                                    <Icon name="hearted" />
+                                                ) : (
+                                                    <Icon name="heart" />
+                                                )}
                                             </button>
                                             <button
                                                 type="button"
                                                 className="post-action-btn"
                                                 onClick={() => openCommentsPopup(postId)}
                                             >
-                                                <Icon name="comment" /> Bình luận
+                                                <Icon name="comment" />
                                             </button>
+                                            <button
+                                                type="button"
+                                                className="post-action-btn"
+                                                onClick={() => setSharePostId(postId)}
+                                            >
+                                                <Icon name="share" />
+                                            </button>
+                                            {sharePostId && (() => {
+                                                const post = posts.find(p => String(p._id || p.id) === String(sharePostId));
+                                                if (!post) return null;
+                                                // Giả sử đường dẫn bài post là /post/:id
+                                                const postUrl = window.location.origin + "/post/" + (post._id || post.id);
+                                                return <SharePopup postUrl={postUrl} onClose={() => setSharePostId(null)} />;
+                                            })()}
                                         </div>
                                     </div>
                                 </div>

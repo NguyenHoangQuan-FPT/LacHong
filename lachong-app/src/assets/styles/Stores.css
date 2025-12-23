@@ -1,0 +1,152 @@
+.admin-stores {
+    padding: 24px;
+}
+
+.page-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.search-store {
+    width: 300px;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    margin-bottom: 16px;
+}
+
+.search-store:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+}
+
+/* TABLE */
+.stores-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.stores-table th,
+.stores-table td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.stores-table th {
+    background: #f9fafb;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.stores-table tr:hover {
+    background: #f8fafc;
+}
+
+.stores-table tr.selected {
+    background: #eef2ff;
+}
+
+/* STATUS */
+.status {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.status.active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status.locked {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* BUTTON */
+.btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-outline {
+    background: #fff;
+    border: 1px solid #d1d5db;
+}
+
+.btn-outline:hover {
+    background: #f3f4f6;
+}
+
+.btn-danger {
+    background: #dc2626;
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
+}
+
+/* PAGINATION */
+.pagination {
+    margin-top: 16px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.pagination button {
+    min-width: 32px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    cursor: pointer;
+}
+
+.pagination button.active {
+    background: #2563eb;
+    color: #fff;
+    border-color: #2563eb;
+}
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* DETAIL PANEL */
+.store-detail {
+    margin-top: 32px;
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+.detail-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.detail-actions {
+    margin-top: 16px;
+    display: flex;
+    gap: 12px;
+}
+
+/* LOADING */
+.loading {
+    padding: 20px;
+    text-align: center;
+}

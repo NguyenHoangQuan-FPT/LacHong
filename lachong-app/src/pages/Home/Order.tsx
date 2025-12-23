@@ -1,10 +1,40 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import orderService from "../../services/order.service";
 import Footer from "../../components/layout/Footer";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "../../assets/styles/Order.css";
+import Icon from "../../assets/icons/Icon";
+import Button from "../../assets/buttons/Button";
+
+type OrderDto = {
+    _id: string;
+    status?: string;
+    products?: Array<any>;
+    totalAmount?: number;
+    createdAt?: string;
+    store?: any;
+    paymentMethod?: any;
+    address?: string;
+};
+
+const extractOrdersFromResponse = (data: any): OrderDto[] => {
+    // Backend returns: { orders: [...] }
+    if (data && Array.isArray(data.orders)) return data.orders;
+    // Some APIs return array directly
+    if (Array.isArray(data)) return data;
+    // Some wrappers: { data: { orders: [...] } }
+    if (data?.data && Array.isArray(data.data.orders)) return data.data.orders;
+    return [];
+};
+
+const extractOrderFromResponse = (data: any): OrderDto | null => {
+    if (data && data.order) return data.order as OrderDto;
+    if (data && data._id) return data as OrderDto;
+    if (data?.data && data.data.order) return data.data.order as OrderDto;
+    return null;
+};
 
 const ORDER_STATUSES = [
     { value: "", label: "Tất cả đơn hàng" },
@@ -38,15 +68,16 @@ const getStatusColor = (status: string) => {
 };
 
 export default function Order() {
-    const [orders, setOrders] = useState<any[]>([]);
-    const [filteredOrders, setFilteredOrders] = useState<any[]>([]);
+    const [orders, setOrders] = useState<OrderDto[]>([]);
+    const [filteredOrders, setFilteredOrders] = useState<OrderDto[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
 
-    const PAGE_SIZE = 2;
-    const [page, setPage] = useState(1);
+    const [selectedOrder, setSelectedOrder] = useState<OrderDto | null>(null);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [detailError, setDetailError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchOrders = async () => {
@@ -54,11 +85,17 @@ export default function Order() {
             setError(null);
             try {
                 const res = await orderService.getOrders();
-                const ordersList = res?.data?.orders ?? res?.data ?? [];
-                setOrders(Array.isArray(ordersList) ? ordersList : []);
+                const ordersList = extractOrdersFromResponse(res?.data);
+                setOrders(ordersList);
             } catch (err: any) {
                 console.error("Error fetching orders:", err);
-                setError(err?.response?.data?.message || "Không tải được danh sách đơn hàng");
+                const status = err?.response?.status;
+                const message = err?.response?.data?.message;
+                if (status === 401) {
+                    setError("Bạn cần đăng nhập để xem đơn hàng.");
+                } else {
+                    setError(message || "Không tải được danh sách đơn hàng");
+                }
                 setOrders([]);
             } finally {
                 setLoading(false);
@@ -67,6 +104,38 @@ export default function Order() {
 
         fetchOrders();
     }, []);
+
+    const handleOpenDetail = async (id: string) => {
+        setDetailLoading(true);
+        setDetailError(null);
+        try {
+            const res = await orderService.getOrderById(id);
+            const order = extractOrderFromResponse(res?.data);
+            if (!order) {
+                setDetailError("Không tải được chi tiết đơn hàng");
+                setSelectedOrder(null);
+                return;
+            }
+            setSelectedOrder(order);
+        } catch (err: any) {
+            console.error("Error fetching order detail:", err);
+            const status = err?.response?.status;
+            const message = err?.response?.data?.message;
+            if (status === 401) {
+                setDetailError("Bạn cần đăng nhập để xem chi tiết đơn hàng.");
+            } else {
+                setDetailError(message || "Không tải được chi tiết đơn hàng");
+            }
+            setSelectedOrder(null);
+        } finally {
+            setDetailLoading(false);
+        }
+    };
+
+    const handleCloseDetail = () => {
+        setSelectedOrder(null);
+        setDetailError(null);
+    };
 
     useEffect(() => {
         let result = [...orders];
@@ -83,24 +152,6 @@ export default function Order() {
         }
         setFilteredOrders(result);
     }, [orders, statusFilter, searchTerm]);
-
-    useEffect(() => {
-        setPage(1);
-    }, [statusFilter, searchTerm, orders.length]);
-
-    const totalPages = useMemo(() => {
-        const pages = Math.ceil(filteredOrders.length / PAGE_SIZE);
-        return pages <= 0 ? 1 : pages;
-    }, [filteredOrders.length]);
-
-    useEffect(() => {
-        if (page > totalPages) setPage(totalPages);
-    }, [page, totalPages]);
-
-    const pagedOrders = useMemo(() => {
-        const start = (page - 1) * PAGE_SIZE;
-        return filteredOrders.slice(start, start + PAGE_SIZE);
-    }, [filteredOrders, page]);
 
     if (loading) {
         return (
@@ -126,119 +177,206 @@ export default function Order() {
             <div className="order-shell">
                 <h1 className="order-title">Đơn hàng của tôi</h1>
 
-                <div className="order-filters">
-                    <div className="order-filter">
-                        <label className="order-label">Trạng thái đơn hàng</label>
-                        <select
-                            className="order-select"
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                        >
-                            {ORDER_STATUSES.map((status) => (
-                                <option key={status.value} value={status.value}>
-                                    {status.label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                {detailLoading && (
+                    <div className="order-status">Đang tải chi tiết đơn hàng...</div>
+                )}
 
-                    <div className="order-filter">
-                        <label className="order-label">Tìm kiếm theo ID hoặc số tiền</label>
-                        <input
-                            className="order-input"
-                            type="text"
-                            placeholder="Nhập mã đơn hàng hoặc số tiền..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                </div>
+                {detailError && (
+                    <div className="order-status error">{detailError}</div>
+                )}
 
-                {filteredOrders.length === 0 ? (
-                    <div className="order-empty">
-                        <h3>Không có đơn hàng nào</h3>
-                        <p>Hãy quay lại mua sắm để tạo đơn hàng mới.</p>
-                        <Link to="/product" className="order-btn order-btn-primary">Quay lại mua sắm</Link>
-                    </div>
-                ) : (
+                {selectedOrder && !detailLoading && (
+
                     <div className="order-list">
-                        {pagedOrders.map((order) => (
-                            <div
-                                key={order._id}
-                                className="order-card"
-                            >
-                                <div className="order-card__header">
-                                    <div>
-                                        <div className="order-card__sub">Mã đơn hàng</div>
-                                        <div className="order-card__id">{order._id}</div>
-                                    </div>
-                                    <div
-                                        className="order-badge"
-                                        style={{
-                                            color: getStatusColor(order.status),
-                                            backgroundColor: `${getStatusColor(order.status)}20`,
-                                        }}
-                                    >
-                                        {getStatusLabel(order.status)}
-                                    </div>
-                                </div>
 
-                                <div className="order-card__meta">
-                                    {order.products?.length || 0} sản phẩm
-                                </div>
+                        <div className="order-card">
 
-                                <div className="order-card__footer">
-                                    <div>
-                                        <div className="order-card__sub">Tổng cộng</div>
-                                        <div className="order-card__total">
-                                            {(order.totalAmount || 0).toLocaleString()} VND
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div className="order-card__sub">Ngày đặt hàng</div>
-                                        <div className="order-card__date">
-                                            {order.createdAt
-                                                ? new Date(order.createdAt).toLocaleDateString("vi-VN")
-                                                : "N/A"}
-                                        </div>
-                                    </div>
-                                    <Link to={`/order/${order._id}`} className="order-btn order-btn-primary">
-                                        Chi tiết
+                            <div className="order-card__header">
+                                <button
+                                    type="button"
+                                    className="order-btn order-btn-ghost"
+                                    onClick={handleCloseDetail}
+                                >
+                                    <Icon name="back"></Icon>Quay lại
+                                </button>
+                                <div
+                                    className="order-badge"
+                                    style={{
+                                        color: getStatusColor(selectedOrder.status || ""),
+                                        backgroundColor: `${getStatusColor(selectedOrder.status || "")}20`,
+                                    }}
+                                >
+                                    {getStatusLabel(selectedOrder.status || "")}
+                                </div>
+                            </div>
+
+                            <div className="order-card__meta">
+                                <div>
+                                    <div className="order-card__sub">• Mã đơn hàng: {selectedOrder._id}</div>
+                                </div>
+                                <div>
+                                    • {(selectedOrder.products?.length || 0)} sản phẩm
+                                </div>
+                                <div>
+                                    <Link to={selectedOrder.store ? `/store/${selectedOrder.store._id}` : "#"
+                                    } style={{ color: "inherit", textDecoration: "none" }}>
+                                        {selectedOrder.store?.storeName ? ` • Cửa hàng: ${selectedOrder.store.storeName}` : ""}
                                     </Link>
-                                </div>
-                            </div>
-                        ))}
 
-                        {filteredOrders.length > PAGE_SIZE && (
-                            <div className="order-pagination">
-                                <button
-                                    type="button"
-                                    className="order-btn order-btn-ghost"
-                                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                    disabled={page <= 1}
-                                >
-                                    Trước
-                                </button>
-                                <div className="order-page-indicator">
-                                    Trang {page} / {totalPages}
                                 </div>
-                                <button
-                                    type="button"
-                                    className="order-btn order-btn-ghost"
-                                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                                    disabled={page >= totalPages}
-                                >
-                                    Sau
-                                </button>
+                                {selectedOrder.address ? (
+                                    <div>• Địa chỉ: {selectedOrder.address}</div>
+                                ) : null}
+                                {selectedOrder.paymentMethod?.name ? ` • Thanh toán: ${selectedOrder.paymentMethod.name}` : ""}
                             </div>
-                        )}
+
+                            <div className="order-card__footer">
+                                <div>
+                                    <div className="order-card__sub">Tổng cộng</div>
+                                    <div className="order-card__total">
+                                        {(selectedOrder.totalAmount || 0).toLocaleString()} VND
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="order-card__sub">Ngày đặt hàng</div>
+                                    <div className="order-card__date">
+                                        {selectedOrder.createdAt
+                                            ? new Date(selectedOrder.createdAt).toLocaleDateString("vi-VN")
+                                            : "N/A"}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {(selectedOrder.products || []).map((p: any, idx: number) => {
+                            const productObj = typeof p?.productId === "object" ? p.productId : null;
+                            const productLabel =
+                                productObj?.productName ||
+                                productObj?._id ||
+                                (typeof p?.productId === "string" ? p.productId : "Sản phẩm");
+
+                            const productImage: string | null =
+                                (productObj?.imageUrl as string) ||
+                                (Array.isArray(productObj?.images) && productObj.images.length > 0 ? productObj.images[0] : null);
+
+                            return (
+                                <div key={`${selectedOrder._id}-${idx}`} className="order-card">
+                                    <div className="order-card__header">
+                                        <div>
+                                            <div className="order-card__sub">Sản phẩm</div>
+                                            <div className="order-card__id">{productLabel}</div>
+                                        </div>
+                                        <Link to={productObj ? `/product/detail/?id=${productObj._id}` : "#"}>
+                                            {productImage && (
+                                                <img
+                                                    className="order-product-thumb"
+                                                    src={productImage}
+                                                    alt={productLabel}
+                                                />
+                                            )}
+                                        </Link>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
 
-                {orders.length > 0 && (
-                    <div className="order-summary">
-                        Hiển thị <strong>{pagedOrders.length}</strong> / <strong>{filteredOrders.length}</strong> đơn hàng (tổng {orders.length})
-                    </div>
+                {!selectedOrder && (
+                    <>
+
+                        <div className="order-filters">
+                            <div className="order-filter">
+                                <label className="order-label">Trạng thái đơn hàng</label>
+                                <select
+                                    className="order-select"
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                >
+                                    {ORDER_STATUSES.map((status) => (
+                                        <option key={status.value} value={status.value}>
+                                            {status.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="order-filter">
+                                <label className="order-label">Tìm kiếm theo ID hoặc số tiền</label>
+                                <input
+                                    className="order-input"
+                                    type="text"
+                                    placeholder="Nhập mã đơn hàng hoặc số tiền..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        {filteredOrders.length === 0 ? (
+                            <div className="order-empty">
+                                <h3>Không có đơn hàng nào</h3>
+                                <p>Hãy quay lại mua sắm để tạo đơn hàng mới.</p>
+                                <Link to="/product" className="order-btn order-btn-primary">Quay lại mua sắm</Link>
+                            </div>
+                        ) : (
+                            <div className="order-list">
+                                {filteredOrders.map((order) => (
+                                    <div
+                                        key={order._id}
+                                        className="order-card"
+                                    >
+                                        <div className="order-card__header">
+                                            <div>
+                                                <div className="order-card__sub">Mã đơn hàng</div>
+                                                <div className="order-card__id">{order._id}</div>
+                                            </div>
+                                            <div
+                                                className="order-badge"
+                                                style={{
+                                                    color: getStatusColor(order.status || ""),
+                                                    backgroundColor: `${getStatusColor(order.status || "")}20`,
+                                                }}
+                                            >
+                                                {getStatusLabel(order.status || "")}
+                                            </div>
+                                        </div>
+
+                                        <div className="order-card__meta">
+                                            {order.products?.length || 0} sản phẩm
+                                        </div>
+
+                                        <div className="order-card__footer">
+                                            <div>
+                                                <div className="order-card__sub">Tổng cộng</div>
+                                                <div className="order-card__total">
+                                                    {(order.totalAmount || 0).toLocaleString()} VND
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div className="order-card__sub">Ngày đặt hàng</div>
+                                                <div className="order-card__date">
+                                                    {order.createdAt
+                                                        ? new Date(order.createdAt).toLocaleDateString("vi-VN")
+                                                        : "N/A"}
+                                                </div>
+                                            </div>
+                                            <Button onClick={() => handleOpenDetail(order._id)}
+                                                variant="secondary">
+                                                Chi tiết
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {orders.length > 0 && (
+                            <div className="order-summary">
+                                Hiển thị <strong>{filteredOrders.length}</strong> đơn hàng (tổng {orders.length})
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 

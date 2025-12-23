@@ -11,7 +11,6 @@
     --shadow-1: 0 6px 18px rgba(14, 30, 37, 0.08);
 
     padding: 32px 24px;
-    background: linear-gradient(180deg, var(--bg-1) 0%, #eef3fb 100%);
     min-height: 800px;
     border-radius: 12px;
     box-sizing: border-box;
@@ -20,7 +19,7 @@
 .order-shell {
     max-width: 1200px;
     margin: 0 auto;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), var(--card-bg));
+    background: fixed linear-gradient(180deg, var(--bg-1) 0%, #eef3fb 100%);
     border-radius: var(--radius);
     padding: 32px;
     box-shadow: var(--shadow-1);
@@ -94,6 +93,12 @@
     box-shadow: 0 12px 36px rgba(14, 30, 37, 0.12);
 }
 
+.order-card__id {
+    font-size: 16px;
+    font-weight: 500;
+    color: #000000;
+}
+
 .order-card__header {
     display: flex;
     justify-content: space-between;
@@ -109,11 +114,14 @@
     margin-bottom: 4px;
 }
 
-.order-card__id {
-    font-size: 14px;
-    font-weight: 700;
-    color: #0f172a;
-    word-break: break-all;
+
+
+.order-product-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 1px solid var(--surface-border);
 }
 
 .order-badge {
@@ -123,6 +131,8 @@
     font-size: 13px;
     border: 1px solid transparent;
     white-space: nowrap;
+    margin-top: 10px;
+
 }
 
 .order-card__meta {

@@ -11,7 +11,6 @@ export default function SidebarStore() {
     return (
         <div className="sidebar-store-page">
             <div className="sidebar-store-container">
-                {/* Sidebar bên trái */}
                 <div className="sidebar-store-left">
                     <h2 className="sidebar-store-title">Thông tin cửa hàng</h2>
 

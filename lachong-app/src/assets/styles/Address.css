@@ -44,8 +44,8 @@
 .btn-add {
     appearance: none;
     border: none;
-    background: linear-gradient(90deg, var(--accent), var(--accent-2));
-    color: #fff;
+    background: #afafaf;
+    color: #000000;
     padding: 11px 20px;
     border-radius: 10px;
     font-weight: 600;

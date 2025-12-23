@@ -100,12 +100,6 @@ export default function Product() {
                     <h1 className="product-title">Tất cả sản phẩm</h1>
                     <p className="product-subtitle">Tìm, lọc theo danh mục, chất liệu và giá để tìm món bạn yêu thích.</p>
                 </div>
-                <div className="product-hero-metrics">
-                    <div className="metric">
-                        <span className="metric-value">{products.length}</span>
-                        <span className="metric-label">Sản phẩm</span>
-                    </div>
-                </div>
             </div>
 
             <div className="product-controls">

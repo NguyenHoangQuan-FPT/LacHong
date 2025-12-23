@@ -15,9 +15,15 @@ import Product from "../pages/Product/Product";
 import ProductDetails from "../pages/Product/ProductDetails";
 import Cart from "../pages/Home/Cart";
 import Checkout from "../pages/Home/Checkout";
-import SidebarStore from "../components/layout/SidebarStore";
-import SidebarCustomer from "../components/layout/SidebarCustomer";
+import SidebarStore from "../components/sidebar/SidebarStore";
+import SidebarCustomer from "../components/sidebar/SidebarCustomer";
 import Post from "../pages/Home/Post";
+import Stores from "../pages/Admin/Stores";
+import LayoutAdmin from "../components/layout/LayoutAdmin";
+import StoreDetail from "../pages/Admin/StoreDetail";
+import Dashboard from "../pages/Admin/Dashboard";
+import Customer from "../pages/Admin/Customer";
+import CustomerDetail from "../pages/Admin/CustomerDetail";
 
 
 export default function RouterComponent() {
@@ -43,6 +49,12 @@ export default function RouterComponent() {
             <Route path="/store/products/:id" element={<StoreLayout><ProductDetail /></StoreLayout>} />
             <Route path="/store/products/edit/:id" element={<StoreLayout><EditProduct /></StoreLayout>} />
             <Route path="/store/profile" element={<StoreLayout><ProfileStore /></StoreLayout>} />
+
+            <Route path="/admin" element={<LayoutAdmin><Dashboard /></LayoutAdmin>} />
+            <Route path="/admin/stores" element={<LayoutAdmin><Stores /></LayoutAdmin>} />
+            <Route path="/admin/customers" element={<LayoutAdmin><Customer /></LayoutAdmin>} />
+            <Route path="/admin/customer/:id" element={<LayoutAdmin><CustomerDetail /></LayoutAdmin>} />
+            <Route path="/admin/store/:id" element={<LayoutAdmin><StoreDetail /></LayoutAdmin>} />
         </Routes>
     );
 }

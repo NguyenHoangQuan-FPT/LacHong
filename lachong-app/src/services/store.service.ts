@@ -16,5 +16,11 @@ export const storeService = {
     },
     getProductsByStoreId: (id: string) => {
         return axiosClient.get(`/store/${id}/products`);
+    },
+    getAllStores: () => {
+        return axiosClient.get(`/stores`);
+    },
+    updateStatusStore: (id: string, status: boolean) => {
+        return axiosClient.put(`/store/${id}`, { status });
     }
 }

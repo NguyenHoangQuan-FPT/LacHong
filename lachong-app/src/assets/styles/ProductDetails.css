@@ -1,7 +1,7 @@
 /* ===== Layout tổng thể ===== */
 .product-detail-page {
     min-height: 100vh;
-    background: #f5f6fa;
+    background: #ffffff;
     padding: 32px 16px;
     display: flex;
     flex-direction: column;
@@ -208,10 +208,16 @@
     text-decoration: line-through;
 }
 
-.product-detail-prices .price-new {
+.product-detail-prices {
     font-size: 22px;
     font-weight: 700;
     color: #6e61b1;
+}
+
+.price-neww {
+    font-size: 22px;
+    font-weight: 700;
+    color: #000000;
 }
 
 /* Mô tả */

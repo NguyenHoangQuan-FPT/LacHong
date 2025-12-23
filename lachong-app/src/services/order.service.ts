@@ -7,6 +7,9 @@ const orderService = {
     getOrders: () => {
         return axiosClient.get("/orders");
     },
+    getOrderById: (id: string) => {
+        return axiosClient.get(`/order/${id}`);
+    },
 };
 
 export default orderService;

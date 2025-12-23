@@ -11,6 +11,15 @@ const customerService = {
             },
         });
     },
+    getAllCustomers: () => {
+        return axiosClient.get("/customers");
+    },
+    getCustomerById: (id: string) => {
+        return axiosClient.get(`/customer/${id}`);
+    },
+    updateStatusCustomer: (id: string, status: boolean) => {
+        return axiosClient.put(`/customer/${id}`, { status });
+    },
 };
 
 export default customerService;

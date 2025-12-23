@@ -1,6 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import ReactCrop, {
+    type Crop,
+    type PixelCrop,
+    centerCrop,
+    makeAspectCrop,
+} from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
 import customerService from "../../services/customer.service";
 import "../../assets/styles/ProfileCustomer.css";
+import Button from "../../assets/buttons/Button";
 
 function normalizeImageUrl(url?: string | null): string | null {
     if (!url) return null;
@@ -8,6 +16,15 @@ function normalizeImageUrl(url?: string | null): string | null {
     const apiBase = (import.meta.env.VITE_API_BASE_URL as string) || "";
     const assetBase = apiBase.replace(/\/api\/v\d+\/?$/, "").replace(/\/$/, "");
     return assetBase ? assetBase + "/" + String(url).replace(/^\//, "") : url;
+}
+
+function toDateInputValue(value?: string | Date | null): string {
+    if (!value) return "";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    // Convert to local date (yyyy-mm-dd) without timezone shifting
+    const tzOffsetMs = d.getTimezoneOffset() * 60_000;
+    return new Date(d.getTime() - tzOffsetMs).toISOString().slice(0, 10);
 }
 
 export default function ProfileCustomer() {
@@ -21,11 +38,18 @@ export default function ProfileCustomer() {
     const [avatarSaving, setAvatarSaving] = useState(false);
     const [avatarLoadError, setAvatarLoadError] = useState(false);
 
+    const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+    const [pendingAvatarUrl, setPendingAvatarUrl] = useState<string | null>(null);
+    const imgRef = useRef<HTMLImageElement | null>(null);
+    const [crop, setCrop] = useState<Crop>();
+    const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+
     // editable fields
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
     const [address, setAddress] = useState("");
+    const [dob, setDob] = useState("");
     // provinces API state
     const [provinces, setProvinces] = useState<any[]>([]);
     const [districts, setDistricts] = useState<any[]>([]);
@@ -47,6 +71,7 @@ export default function ProfileCustomer() {
                 setEmail(c?.email || "");
                 setPhone(c?.phone || c?.phoneNumber || "");
                 setAddress(c?.address || "");
+                setDob(toDateInputValue(c?.dob));
             })
             .catch((err: any) => {
                 setError(
@@ -67,9 +92,102 @@ export default function ProfileCustomer() {
     }, [avatarFile]);
 
     useEffect(() => {
+        if (!pendingAvatarFile) {
+            setPendingAvatarUrl(null);
+            return;
+        }
+        const url = URL.createObjectURL(pendingAvatarFile);
+        setPendingAvatarUrl(url);
+        return () => URL.revokeObjectURL(url);
+    }, [pendingAvatarFile]);
+
+    useEffect(() => {
         // reset image error when profile avatar or preview changes
         setAvatarLoadError(false);
     }, [avatarPreviewUrl, profile?.avatar]);
+
+    const shouldShowCropper = useMemo(() => {
+        return Boolean(pendingAvatarUrl);
+    }, [pendingAvatarUrl]);
+
+    const onCropImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+        const image = e.currentTarget;
+        imgRef.current = image;
+        // Center a square crop at 90% of the smallest dimension
+        const { width, height } = image;
+        const cropWidthPercent = 90;
+        const initial = centerCrop(
+            makeAspectCrop(
+                { unit: "%", width: cropWidthPercent },
+                1,
+                width,
+                height
+            ),
+            width,
+            height
+        );
+        setCrop(initial);
+    };
+
+    const getCroppedBlob = async (image: HTMLImageElement, pixelCrop: PixelCrop) => {
+        const canvas = document.createElement("canvas");
+        const scaleX = image.naturalWidth / image.width;
+        const scaleY = image.naturalHeight / image.height;
+
+        const cropWidth = Math.floor(pixelCrop.width * scaleX);
+        const cropHeight = Math.floor(pixelCrop.height * scaleY);
+        canvas.width = cropWidth;
+        canvas.height = cropHeight;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("Canvas context không khả dụng");
+
+        ctx.drawImage(
+            image,
+            Math.floor(pixelCrop.x * scaleX),
+            Math.floor(pixelCrop.y * scaleY),
+            cropWidth,
+            cropHeight,
+            0,
+            0,
+            cropWidth,
+            cropHeight
+        );
+
+        return await new Promise<Blob>((resolve, reject) => {
+            canvas.toBlob(
+                (blob) => {
+                    if (!blob) {
+                        reject(new Error("Tạo ảnh crop thất bại"));
+                        return;
+                    }
+                    resolve(blob);
+                },
+                "image/jpeg",
+                0.92
+            );
+        });
+    };
+
+    const handleApplyCrop = async () => {
+        if (!pendingAvatarFile || !imgRef.current || !completedCrop) return;
+        try {
+            const blob = await getCroppedBlob(imgRef.current, completedCrop);
+            const croppedFile = new File([blob], "avatar.jpg", { type: blob.type });
+            setAvatarFile(croppedFile);
+            setPendingAvatarFile(null);
+            setCrop(undefined);
+            setCompletedCrop(undefined);
+        } catch (err: any) {
+            setError(err?.message || "Không thể cắt ảnh");
+        }
+    };
+
+    const handleCancelCrop = () => {
+        setPendingAvatarFile(null);
+        setCrop(undefined);
+        setCompletedCrop(undefined);
+    };
 
     // load provinces on mount
     useEffect(() => {
@@ -148,6 +266,7 @@ export default function ProfileCustomer() {
             formData.append("fullName", payload.fullName || "");
             formData.append("phone", payload.phone || "");
             formData.append("address", payload.address || "");
+            formData.append("dob", dob || "");
 
             const res = await customerService.updateProfileCustomer(formData);
             const data = res?.data ?? res;
@@ -158,6 +277,7 @@ export default function ProfileCustomer() {
             setEmail(c?.email || email);
             setPhone(c?.phone || c?.phoneNumber || phone);
             setAddress(c?.address || addressParts.join(", ") || address);
+            setDob(c?.dob ? toDateInputValue(c.dob) : dob);
         } catch (err: any) {
             setError(err?.response?.data?.message || "Lưu thay đổi thất bại");
         } finally {
@@ -227,7 +347,12 @@ export default function ProfileCustomer() {
                             <input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0] || null;
+                                    setError(null);
+                                    setAvatarFile(null);
+                                    setPendingAvatarFile(file);
+                                }}
                                 style={{ display: "none" }}
                                 disabled={avatarSaving}
                             />
@@ -243,6 +368,48 @@ export default function ProfileCustomer() {
                         </button>
                     </div>
                 </div>
+
+                {shouldShowCropper && (
+                    <div className="avatar-crop-panel">
+                        <div className="avatar-crop-title">Cắt ảnh avatar</div>
+                        <div className="avatar-crop-body">
+                            <ReactCrop
+                                crop={crop}
+                                onChange={(_, percentCrop) => setCrop(percentCrop)}
+                                onComplete={(c) => setCompletedCrop(c)}
+                                aspect={1}
+                                circularCrop
+                                keepSelection
+                            >
+                                <img
+                                    src={pendingAvatarUrl || ""}
+                                    alt="Crop avatar"
+                                    onLoad={onCropImageLoad}
+                                    className="avatar-crop-image"
+                                />
+                            </ReactCrop>
+                        </div>
+
+                        <div className="avatar-crop-actions">
+                            <button
+                                type="button"
+                                className="btn secondary"
+                                onClick={handleCancelCrop}
+                                disabled={avatarSaving}
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                type="button"
+                                className="btn primary"
+                                onClick={handleApplyCrop}
+                                disabled={avatarSaving || !completedCrop?.width || !completedCrop?.height}
+                            >
+                                Áp dụng cắt
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 <div className="form-grid">
                     <div className="form-item">
@@ -273,15 +440,22 @@ export default function ProfileCustomer() {
                             placeholder="Nhập số điện thoại"
                         />
                     </div>
-
+                    <div className="form-item">
+                        <label>Ngày sinh</label>
+                        <input
+                            type="date"
+                            value={dob}
+                            onChange={(e) => setDob(e.target.value)}
+                            placeholder="Nhập ngày sinh"
+                            max={toDateInputValue(new Date())}
+                        />
+                    </div>
                 </div>
 
-                <div className="actions">
-                    <button className="btn primary" onClick={handleSave} disabled={saving}>
-                        {saving ? "Đang lưu..." : "Lưu thay đổi"}
-                    </button>
-                </div>
+                <Button variant="primary" onClick={handleSave} disabled={saving}>
+                    {saving ? "Đang lưu..." : "Lưu thay đổi"}
+                </Button>
             </div>
-        </div>
+        </div >
     );
 }

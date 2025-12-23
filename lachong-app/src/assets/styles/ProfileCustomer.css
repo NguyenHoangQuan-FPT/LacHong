@@ -96,6 +96,97 @@
     justify-content: flex-end;
 }
 
+/* ===== Avatar crop panel ===== */
+.avatar-crop-panel {
+    width: 420px;
+    max-width: 92vw;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-left: 250px;
+}
+
+/* ===== Title ===== */
+.avatar-crop-title {
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    color: #050505;
+}
+
+/* ===== Crop body ===== */
+.avatar-crop-body {
+    background: #f0f2f5;
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ReactCrop container fix */
+.avatar-crop-body .ReactCrop {
+    max-width: 100%;
+}
+
+/* Image inside cropper */
+.avatar-crop-image {
+    max-width: 100%;
+    max-height: 320px;
+    border-radius: 8px;
+}
+
+/* ===== Action buttons ===== */
+.avatar-crop-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+/* ===== Buttons ===== */
+.avatar-crop-actions .btn {
+    min-width: 90px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+/* Secondary */
+.avatar-crop-actions .btn.secondary {
+    background: #e4e6eb;
+    color: #050505;
+}
+
+.avatar-crop-actions .btn.secondary:hover:not(:disabled) {
+    background: #d8dadf;
+}
+
+/* Primary */
+.avatar-crop-actions .btn.primary {
+    background: #1877f2;
+    color: #fff;
+}
+
+.avatar-crop-actions .btn.primary:hover:not(:disabled) {
+    background: #166fe5;
+}
+
+/* Disabled */
+.avatar-crop-actions .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+
 /* Form grid */
 .profile-customer-page .form-grid {
     display: grid;

@@ -119,6 +119,7 @@ export default function Checkout() {
             toast.success("Đặt hàng thành công");
             setTimeout(() => navigate("/"), 3000);
         } catch (e: any) {
+            console.log("Place order error:", e);
             toast.error(e?.response?.data?.message || "Thanh toán thất bại");
         } finally {
             setPlacing(false);
