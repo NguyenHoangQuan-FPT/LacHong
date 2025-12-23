@@ -4,6 +4,7 @@ const postSchema = new mongoose.Schema({
     customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required: true },
     title: { type: String },
     image: { type: String },
+    images: [{ type: String }],
     content: { type: String, required: true },
     comment: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }],
     like: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Like' }],

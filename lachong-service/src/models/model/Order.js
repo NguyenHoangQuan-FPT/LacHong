@@ -6,10 +6,11 @@ const orderSchema = new mongoose.Schema({
     products: [{
         productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
         quantity: { type: Number, required: true },
-        price: { type: Number, required: true }
+        price: { type: Number, required: true },
     }],
     totalAmount: { type: Number, required: true },
     paymentMethod: { type: mongoose.Schema.Types.ObjectId, ref: 'PaymentMethod', required: true },
+    address: { type: String, required: true },
     status: { type: String, default: 'Pending' }
 }, {
     timestamps: true

@@ -3,7 +3,7 @@ const express = require('express');
 const AuthenticationRouter = require('../modules/auth/AuthencationRouter');
 const StoreRouter = require('../modules/store/StoreRouter');
 const ProductRouter = require('../modules/product/ProductRouter');
-const CustomerRouter = require('../modules/customer/CustomerRouuter');
+const CustomerRouter = require('../modules/customer/CustomerRouter');
 const CartRouter = require('../modules/cart/CartRouter');
 const OrderRouter = require('../modules/order/OrderRouter');
 const CategoryRouter = require('../modules/categories/CategoryRouter');
@@ -15,6 +15,7 @@ const PostRouter = require('../modules/post/PostRouter');
 const CommentRouter = require('../modules/comment/CommentRouter');
 const LikeRouter = require('../modules/like/LikeRouter');
 const LikeCommentRouter = require('../modules/likeComment/LikeCommentRouter');
+const FollowRouter = require('../modules/follow/FollowRouter');
 
 const initRoute = (app) => {
 
@@ -33,6 +34,7 @@ const initRoute = (app) => {
     app.use('/api/v1/', CommentRouter);
     app.use('/api/v1/', LikeRouter);
     app.use('/api/v1/', LikeCommentRouter);
+    app.use('/api/v1/', FollowRouter);
 
 }
 

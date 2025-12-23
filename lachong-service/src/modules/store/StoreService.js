@@ -4,6 +4,7 @@ const Category = require('../../models/model/Category');
 const Material = require('../../models/model/Material');
 const Product = require('../../models/model/Product');
 const ProductDTO = require('../../models/DTOs/ProductDTO');
+const Acccount = require('../../models/model/Account');
 
 exports.getProfileStore = async (req, res) => {
     try {
@@ -257,3 +258,61 @@ exports.getProductsByStoreId = async (req, res) => {
         res.status(500).json({ message: "Internal server error." });
     }
 };
+
+exports.getAllStores = async (req, res) => {
+    try {
+        const accountId = req.user?._id || req.user?.id;
+        if (!accountId) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        const roleName = req.user?.role;
+        if (roleName !== 'admin') {
+            return res.status(403).json({ message: "Forbidden: Admin only" });
+        }
+
+        const stores = await Store.find();
+
+        res.status(200).json({
+            message: "Stores retrieved successfully.",
+            stores
+        });
+    } catch (error) {
+        console.error("Error getting all stores:", error);
+        res.status(500).json({ message: "Internal server error." });
+    }
+}
+
+exports.updateStatusStore = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const accountId = req.user?._id || req.user?.id;
+        if (!accountId) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        const roleName = req.user?.role;
+        if (roleName !== 'admin') {
+            return res.status(403).json({ message: "Forbidden: Admin only" });
+        }
+
+        const { status } = req.body;
+        const store = await Store.findByIdAndUpdate(
+            id,
+            { $set: { status: status } },
+            { new: true }
+        );
+
+        if (!store) {
+            return res.status(404).json({ message: "Store not found." });
+        }
+
+        res.status(200).json({
+            message: "Store status updated successfully.",
+            store
+        });
+
+    } catch (error) {
+        console.error("Error updating store status:", error);
+        res.status(500).json({ message: "Internal server error." });
+    }
+}

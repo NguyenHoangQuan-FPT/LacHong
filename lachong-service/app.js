@@ -1,6 +1,20 @@
 const express = require('express');
 const dotenv = require('dotenv');
-dotenv.config();
+const fs = require('fs');
+const path = require('path');
+
+const envPath = path.resolve(__dirname, '.env');
+const envLocalPath = path.resolve(__dirname, '.env.local');
+
+if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+} else {
+    dotenv.config();
+}
+
+if (fs.existsSync(envLocalPath)) {
+    dotenv.config({ path: envLocalPath, override: true });
+}
 const cors = require('cors');
 const initRoute = require('./src/loaders/routes');
 const { connectMongoDB } = require('./src/config/mongodb');

@@ -1,6 +1,8 @@
+const mongoose = require('mongoose');
 const Order = require('../../models/model/Order');
 const OrderItem = require('../../models/model/OrderItem');
 const PaymentMethod = require('../../models/model/PaymentMethod');
+const Address = require('../../models/model/Address');
 const Cart = require('../../models/model/Cart');
 const Customer = require('../../models/model/Customer');
 
@@ -18,12 +20,33 @@ exports.createOrder = async (req, res) => {
             return res.status(404).json({ message: 'Customer not found' });
         }
 
-        const { paymentMethod, cartIds } = req.body;
+        const { paymentMethod, cartIds, addressId } = req.body;
         if (!paymentMethod) {
             return res.status(400).json({ message: 'paymentMethod is required' });
         }
         if (!cartIds) {
             return res.status(400).json({ message: 'cartIds is required' });
+        }
+        if (!addressId) {
+            return res.status(400).json({ message: 'addressId is required' });
+        }
+
+        if (!mongoose.isValidObjectId(paymentMethod)) {
+            return res.status(400).json({ message: 'Invalid paymentMethod' });
+        }
+
+        const paymentMethodDoc = await PaymentMethod.findById(paymentMethod).lean();
+        if (!paymentMethodDoc) {
+            return res.status(400).json({ message: 'Invalid paymentMethod' });
+        }
+
+        if (!mongoose.isValidObjectId(addressId)) {
+            return res.status(400).json({ message: 'Invalid addressId' });
+        }
+
+        const addressDoc = await Address.findOne({ _id: addressId, customerId: customer._id, status: true }).lean();
+        if (!addressDoc) {
+            return res.status(400).json({ message: 'Invalid addressId' });
         }
 
         // Convert cartIds to array if it's a string
@@ -31,6 +54,11 @@ exports.createOrder = async (req, res) => {
 
         if (cartIdArray.length === 0) {
             return res.status(400).json({ message: 'cartIds cannot be empty' });
+        }
+
+        const invalidCartIds = cartIdArray.filter((id) => !mongoose.isValidObjectId(id));
+        if (invalidCartIds.length > 0) {
+            return res.status(400).json({ message: 'Invalid cartIds', invalidCartIds });
         }
 
         console.log('Customer ID:', customer._id);
@@ -74,12 +102,19 @@ exports.createOrder = async (req, res) => {
         for (const [storeId, items] of Object.entries(itemsByStore)) {
             let totalAmount = 0;
             const products = items.map(it => {
-                totalAmount += (it.priceAtTime || 0) * it.quantity;
+                const priceAtTime = it.priceAtTime || 0;
+                const discountPercent = it.discountPercentAtTime || 0;
+                const discountedUnitPrice = discountPercent > 0
+                    ? Math.round(priceAtTime * (1 - discountPercent / 100))
+                    : priceAtTime;
+
+                totalAmount += discountedUnitPrice * (it.quantity || 0);
                 usedCartIds.push(it._id);
                 return {
                     productId: it.productId,
                     quantity: it.quantity,
-                    price: it.priceAtTime || 0
+                    // Save final unit price (after discount) into the order
+                    price: discountedUnitPrice
                 };
             });
 
@@ -89,6 +124,7 @@ exports.createOrder = async (req, res) => {
                 products,
                 totalAmount,
                 paymentMethod: paymentMethod,
+                address: addressDoc.address,
                 status: 'Pending'
             });
             const savedOrder = await orderDoc.save();
@@ -104,7 +140,15 @@ exports.createOrder = async (req, res) => {
                 await orderItem.save();
             }
 
-            createdOrders.push(savedOrder);
+            const populatedOrder = await Order.findById(savedOrder._id)
+                .populate('store')
+                .populate('paymentMethod')
+                .populate({
+                    path: 'products.productId',
+                    select: 'productName imageUrl images',
+                });
+
+            createdOrders.push(populatedOrder || savedOrder);
         }
 
         await Cart.deleteMany({ _id: { $in: usedCartIds } });
@@ -115,6 +159,7 @@ exports.createOrder = async (req, res) => {
             orderCount: createdOrders.length
         });
     } catch (error) {
+        console.error('createOrder error:', error);
         return res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 }
@@ -134,10 +179,70 @@ exports.getOrders = async (req, res) => {
         const orders = await Order.find({ customer: customer._id })
             .populate('store')
             .populate('paymentMethod')
-            .sort({ createdAt: -1 });
+            .populate({
+                path: 'products.productId',
+                select: 'productName imageUrl images',
+            })
+            .sort({ createdAt: -1 })
+            .lean();
 
-        return res.status(200).json({ orders });
+        const ordersWithTotals = (orders || []).map((o) => {
+            const products = Array.isArray(o.products)
+                ? o.products.map((p) => ({
+                    ...p,
+                    lineTotal: (p.price || 0) * (p.quantity || 0),
+                }))
+                : [];
+
+            return { ...o, products };
+        });
+
+        return res.status(200).json({ orders: ordersWithTotals });
     } catch (error) {
+        console.error('getOrders error:', error);
+        return res.status(500).json({ message: 'Internal server error', error: error.message });
+    }
+}
+
+exports.getOrderById = async (req, res) => {
+    try {
+        const accountId = req.user?.id;
+        if (!accountId) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        const customer = await Customer.findOne({ accountId });
+        if (!customer) {
+            return res.status(404).json({ message: 'Customer not found' });
+        }
+
+        const { id } = req.params;
+        if (!mongoose.isValidObjectId(id)) {
+            return res.status(400).json({ message: 'Invalid order id' });
+        }
+        const order = await Order.findOne({ _id: id, customer: customer._id })
+            .populate('store')
+            .populate('paymentMethod')
+            .populate({
+                path: 'products.productId',
+                select: 'productName imageUrl images',
+            })
+            .lean();
+
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        const products = Array.isArray(order.products)
+            ? order.products.map((p) => ({
+                ...p,
+                lineTotal: (p.price || 0) * (p.quantity || 0),
+            }))
+            : [];
+
+        return res.status(200).json({ order: { ...order, products } });
+    } catch (error) {
+        console.error('getOrderById error:', error);
         return res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 }
