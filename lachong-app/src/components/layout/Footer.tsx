@@ -1,68 +1,57 @@
 import "../../assets/styles/Footer.css";
 
+
 const Footer = () => {
     return (
-        <footer className="footer-section">
-            <div className="footer-container">
-                <div className="footer-brand">
-                    <span className="footer-brand-logo">
-                        <img src="/images/Logo/Logo.png" alt="Nest Logo" className="footer-logo" />
-                        <div className="footer-brand-title">
-                            <span className="footer-brand-main">Lac Hong</span>
-                            <span className="footer-brand-sub">Artisan</span>
-                        </div>
-                    </span>
-                    <ul className="footer-contact-list">
-                        <li><span className="footer-contact-icon">📍</span> Address: 5171 W Campbell Ave, Kent, Utah 53127 United States</li>
-                        <li><span className="footer-contact-icon">📞</span> Call Us: (+91) - 540-025-124553</li>
-                        <li><span className="footer-contact-icon">✉️</span> Email: sale@Nest.com</li>
-                        <li><span className="footer-contact-icon">⏰</span> Hours: 10:00 - 18:00, Mon - Sat</li>
+        <footer className="footer-section" style={{ background: '#f7f7f7', fontFamily: 'Segoe UI, Arial, sans-serif' }}>
+            <div className="footer-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 0 }}>
+                <div style={{ flex: 2, minWidth: 220 }}>
+                    <div style={{ fontWeight: 700, fontSize: 22, letterSpacing: 2, marginBottom: 3, color: '#222' }}>
+                        LAC HONG<br />
+                        <span style={{ fontWeight: 400, fontSize: 14, letterSpacing: 3 }}> ARTISAN</span>
+                    </div>
+                    <div></div>
+                    <div style={{ display: 'flex', gap: 16, marginBottom: 18 }}>
+                        <a href="#"><i className="bi bi-facebook" style={{ color: "black" }}></i></a>
+                        <a href="#"><i className="bi bi-instagram" style={{ color: "black" }}></i></a>
+                        <a href="#"><i className="bi bi-twitter" style={{ color: "black" }}></i></a>
+                        <a href="#"><i className="bi bi-envelope" style={{ color: "black" }}></i></a>
+                    </div>
+                </div>
+                <div style={{ flex: 1, minWidth: 120, marginLeft: 32 }}>
+                    <div style={{ fontWeight: 700, marginBottom: 10 }}>Shop</div>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#222', fontSize: 15, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <li><a href="#" style={{ color: '#222', textDecoration: 'none' }}>My account</a></li>
+                        <li><a href="#" style={{ color: '#222', textDecoration: 'none' }}>Login</a></li>
+                        <li><a href="#" style={{ color: '#222', textDecoration: 'none' }}>Wishlist</a></li>
+                        <li><a href="#" style={{ color: '#222', textDecoration: 'none' }}>Cart</a></li>
                     </ul>
                 </div>
-                <div className="footer-col">
-                    <div className="footer-col-title">Company</div>
-                    <ul className="footer-link-list">
-                        <li><a href="#" className="footer-link">About Us</a></li>
-                        <li><a href="#" className="footer-link">Delivery Information</a></li>
-                        <li><a href="#" className="footer-link">Privacy Policy</a></li>
-                        <li><a href="#" className="footer-link">Terms & Conditions</a></li>
-                        <li><a href="#" className="footer-link">Contact Us</a></li>
-                        <li><a href="#" className="footer-link">Support Center</a></li>
-                        <li><a href="#" className="footer-link">Careers</a></li>
+                <div style={{ flex: 1, minWidth: 120, marginLeft: 32 }}>
+                    <div style={{ fontWeight: 700, marginBottom: 10 }}>Information</div>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#222', fontSize: 15, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <li><a href="#" style={{ color: '#222', textDecoration: 'none' }}>Shipping Policy</a></li>
+                        <li><a href="#" style={{ color: '#222', textDecoration: 'none' }}>Returns & Refunds</a></li>
+                        <li><a href="#" style={{ color: '#222', textDecoration: 'none' }}>Cookies Policy</a></li>
+                        <li><a href="#" style={{ color: '#222', textDecoration: 'none' }}>Frequently asked</a></li>
                     </ul>
                 </div>
-                <div className="footer-col">
-                    <div className="footer-col-title">Account</div>
-                    <ul className="footer-link-list">
-                        <li><a href="#" className="footer-link">Sign In</a></li>
-                        <li><a href="#" className="footer-link">View Cart</a></li>
-                        <li><a href="#" className="footer-link">My Wishlist</a></li>
-                    </ul>
-                </div>
-                <div className="footer-col">
-                    <div className="footer-col-title">Corporate</div>
-                    <ul className="footer-link-list">
-                        <li><a href="#" className="footer-link">Become a Vendor</a></li>
-                        <li><a href="#" className="footer-link">Affiliate Program</a></li>
-                    </ul>
-                </div>
-                <div className="footer-col">
-                    <div className="footer-col-title">Popular</div>
-                    <ul className="footer-link-list">
-                        <li><a href="#" className="footer-link">Milk & Flavoured Milk</a></li>
-                        <li><a href="#" className="footer-link">Butter and Margarine</a></li>
+                <div style={{ flex: 1, minWidth: 120, marginLeft: 32 }}>
+                    <div style={{ fontWeight: 700, marginBottom: 10 }}>Company</div>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#222', fontSize: 15, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <li><a href="#" style={{ color: '#222', textDecoration: 'none' }}>About us</a></li>
+                        <li><a href="#" style={{ color: '#222', textDecoration: 'none' }}>Privacy Policy</a></li>
+                        <li><a href="#" style={{ color: '#222', textDecoration: 'none' }}>Terms & Conditions</a></li>
+                        <li><a href="#" style={{ color: '#222', textDecoration: 'none' }}>Contact Us</a></li>
                     </ul>
                 </div>
             </div>
-            <hr className="footer-divider" />
-            <div className="footer-bottom">
-                <div className="footer-bottom-left">
-                    © 2025, <span className="footer-link">Lac Hong</span> - HTML Ecommerce Template<br />All rights reserved
+            <hr className="footer-divider" style={{ margin: '32px 0 0 0' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1300, margin: '0 auto', padding: '18px 24px', flexWrap: 'wrap', fontSize: 15, color: '#222' }}>
+                <div style={{ opacity: 0.7 }}>
+                    © LacHong 2025 - 2026. All rights reserved.
                 </div>
-                <div className="footer-bottom-right">
-                    <span className="footer-bottom-contact"><span className="footer-contact-icon">📞</span> <span className="footer-bottom-number">1900 - 6666</span> <span className="footer-bottom-desc">Working 8:00 - 22:00</span></span>
-                    <span className="footer-bottom-contact"><span className="footer-contact-icon">📞</span> <span className="footer-bottom-number">1900 - 8888</span> <span className="footer-bottom-desc">24/7 Support Center</span></span>
-                </div>
+
             </div>
         </footer>
     );

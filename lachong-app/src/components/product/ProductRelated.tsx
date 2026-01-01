@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { productService } from "../../services/product.service";
 import ProductCard, { type ProductItem } from "./ProductCard";
 import "../../assets/styles/ProductRelated.css";
@@ -73,11 +73,12 @@ export default function ProductRelated({ product, currentCategoryId }: ProductRe
                 <div className="related-status">Chưa có gợi ý phù hợp.</div>
             ) : (
                 <div className="related-grid">
-                    {relatedProducts.map((item) => (
-                        <ProductCard key={item._id || item.id} product={item} />
+                    {relatedProducts.map((p) => (
+                        <ProductCard key={p._id || p.name} product={p} />
                     ))}
                 </div>
             )}
+            <hr className="hr"></hr>
         </div>
     );
 }

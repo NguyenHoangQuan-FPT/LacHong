@@ -1,160 +1,95 @@
-import '../../assets/styles/Homestore.css';
-import { FiPackage, FiShoppingCart, FiTrendingUp, FiStar } from 'react-icons/fi';
+import { useEffect, useState } from "react";
+import { storeService } from "../../services/store.service";
+import { Bar } from 'react-chartjs-2';
+import 'chart.js/auto';
+
+interface Order {
+    _id: string;
+    totalAmount?: number;
+    status?: string;
+    createdAt?: string;
+    products?: { quantity: number }[];
+}
+
+interface Product {
+    _id: string;
+    productName?: string;
+    sold?: number;
+}
+
 
 export default function Homestore() {
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [totalRevenue, setTotalRevenue] = useState(0);
+    const [totalProducts, setTotalProducts] = useState(0);
 
-    // Sample data
-    const stats = [
-        { icon: FiPackage, label: 'Sản phẩm', value: '24', change: '+2.5%', color: '#f59e0b' },
-        { icon: FiShoppingCart, label: 'Đơn hàng', value: '156', change: '+12.3%', color: '#10b981' },
-        { icon: FiTrendingUp, label: 'Doanh thu', value: '45.2M', change: '+8.1%', color: '#3b82f6' },
-        { icon: FiStar, label: 'Đánh giá', value: '4.8', change: '+0.2', color: '#ec4899' },
-    ];
+    useEffect(() => {
+        setLoading(true);
 
-    const recentOrders = [
-        { id: '#ORD001', customer: 'Nguyễn Văn A', amount: '2.5M VND', status: 'Completed', date: '2025-12-02' },
-        { id: '#ORD002', customer: 'Trần Thị B', amount: '1.8M VND', status: 'Processing', date: '2025-12-01' },
-        { id: '#ORD003', customer: 'Phạm Văn C', amount: '3.2M VND', status: 'Pending', date: '2025-11-30' },
-        { id: '#ORD004', customer: 'Lê Thị D', amount: '1.5M VND', status: 'Completed', date: '2025-11-29' },
-        { id: '#ORD005', customer: 'Hoàng Văn E', amount: '2.9M VND', status: 'Cancelled', date: '2025-11-28' },
-    ];
+        storeService.getProductsByStore()
+            .then((res: any) => {
+                const productsList = res?.data?.products || [];
+                // Tổng số sản phẩm đã bán = tổng sold của tất cả sản phẩm
+                const totalSold = productsList.reduce((sum: number, p: Product) => sum + (typeof p.sold === 'number' ? p.sold : 0), 0);
+                setTotalProducts(totalSold);
+            })
+            .catch(() => setError("Không thể tải dữ liệu thống kê sản phẩm"));
 
-    const topProducts = [
-        { id: 1, name: 'Tranh dệt thủ công', sales: 45, image: '🎨', revenue: '22.5M VND' },
-        { id: 2, name: 'Gốm sứ truyền thống', sales: 38, image: '🏺', revenue: '19M VND' },
-        { id: 3, name: 'Vải lụa Hà Đông', sales: 32, image: '🧵', revenue: '16M VND' },
-        { id: 4, name: 'Sản phẩm gỗ mỹ nghệ', sales: 28, image: '🪵', revenue: '14M VND' },
-    ];
+        storeService.getAllOrdersByStore()
+            .then((res: any) => {
+                const orderList = res?.data?.orders || [];
+                setOrders(orderList);
+                // Tính tổng doanh thu
+                const revenue = orderList.reduce((sum: number, o: Order) => sum + (o.totalAmount || 0), 0);
+                setTotalRevenue(revenue);
+            })
+            .catch(() => setError("Không thể tải dữ liệu thống kê"))
+            .finally(() => setLoading(false));
+    }, []);
+
+    // Chuẩn bị dữ liệu cho biểu đồ doanh thu theo tháng
+    const chartData = () => {
+        const months = Array.from({ length: 12 }, (_, i) => i + 1);
+        const revenueByMonth = months.map(month => {
+            return orders.filter(o => {
+                if (!o.createdAt) return false;
+                const d = new Date(o.createdAt);
+                return d.getMonth() + 1 === month;
+            }).reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+        });
+        return {
+            labels: months.map(m => `Tháng ${m}`),
+            datasets: [
+                {
+                    label: 'Doanh thu',
+                    data: revenueByMonth,
+                    backgroundColor: '#2563eb',
+                },
+            ],
+        };
+    };
 
     return (
-        <div className="store-layout">
-            <main className="store-main">
-                {/* Header */}
-                <div className="store-header">
-                    <div className="store-header-content">
-                        <div>
-                            <h1>Dashboard Cửa Hàng</h1>
-                            <p>Quản lý đơn hàng, sản phẩm và theo dõi doanh thu</p>
-                        </div>
-                        <div className="header-date">
-                            📅 {new Date().toLocaleDateString('vi-VN')}
-                        </div>
+        <div className="orders-container">
+            <div className="orders-header">Thống kê tổng quan cửa hàng</div>
+            {loading ? (
+                <div>Đang tải...</div>
+            ) : error ? (
+                <div style={{ color: 'red' }}>{error}</div>
+            ) : (
+                <>
+                    <div style={{ margin: '16px 0', fontWeight: 600, display: 'flex', gap: 32 }}>
+                        <div>Tổng đơn hàng: <span style={{ color: '#2563eb' }}>{orders.length}</span></div>
+                        <div>Tổng sản phẩm đã bán: <span style={{ color: '#16a34a' }}>{totalProducts}</span></div>
+                        <div>Tổng doanh thu: <span style={{ color: '#eab308' }}>{totalRevenue.toLocaleString()} VND</span></div>
                     </div>
-                </div>
-
-                {/* Stats Cards */}
-                <section className="stats-section">
-                    {stats.map((stat, idx) => {
-                        const Icon = stat.icon;
-                        return (
-                            <div key={idx} className="stat-card" style={{ borderLeftColor: stat.color }}>
-                                <div className="stat-icon" style={{ backgroundColor: `${stat.color}20` }}>
-                                    <Icon size={24} color={stat.color} />
-                                </div>
-                                <div className="stat-content">
-                                    <p className="stat-label">{stat.label}</p>
-                                    <div className="stat-value-row">
-                                        <h3 className="stat-value">{stat.value}</h3>
-                                        <span className="stat-change positive">↑ {stat.change}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </section>
-
-                {/* Main Content */}
-                <div className="store-content">
-                    {/* Left Column */}
-                    <div className="content-left">
-                        {/* Recent Orders */}
-                        <div className="card">
-                            <div className="card-header">
-                                <h2>Đơn hàng gần đây</h2>
-                                <a href="#" className="view-all">Xem tất cả →</a>
-                            </div>
-                            <div className="orders-table">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Mã đơn</th>
-                                            <th>Khách hàng</th>
-                                            <th>Số tiền</th>
-                                            <th>Trạng thái</th>
-                                            <th>Ngày</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {recentOrders.map((order, idx) => (
-                                            <tr key={idx}>
-                                                <td><span className="order-id">{order.id}</span></td>
-                                                <td>{order.customer}</td>
-                                                <td><strong>{order.amount}</strong></td>
-                                                <td>
-                                                    <span className={`status-badge status-${order.status.toLowerCase()}`}>
-                                                        {order.status}
-                                                    </span>
-                                                </td>
-                                                <td>{order.date}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {/* Chart Section */}
-                        <div className="card" style={{ marginTop: 20 }}>
-                            <div className="card-header">
-                                <h2>Doanh thu 7 ngày gần đây</h2>
-                            </div>
-                            <div className="chart-placeholder">
-                                <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
-                                    📊 Kết nối API để hiển thị biểu đồ
-                                </div>
-                            </div>
-                        </div>
+                    <div style={{ maxWidth: 700, margin: '0 auto' }}>
+                        <Bar data={chartData()} />
                     </div>
-
-                    {/* Right Column */}
-                    <div className="content-right">
-                        {/* Top Products */}
-                        <div className="card">
-                            <div className="card-header">
-                                <h2>Sản phẩm bán chạy</h2>
-                            </div>
-                            <div className="products-list">
-                                {topProducts.map((product) => (
-                                    <div key={product.id} className="product-item">
-                                        <div className="product-emoji">{product.image}</div>
-                                        <div className="product-info">
-                                            <p className="product-name">{product.name}</p>
-                                            <p className="product-sales">{product.sales} đơn</p>
-                                        </div>
-                                        <div className="product-revenue">
-                                            <p className="revenue-value">{product.revenue}</p>
-                                            <p className="revenue-label">Doanh thu</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Quick Actions */}
-                        <div className="card" style={{ marginTop: 20 }}>
-                            <div className="card-header">
-                                <h2>Hành động nhanh</h2>
-                            </div>
-                            <div className="quick-actions">
-                                <button className="action-btn action-btn-primary">➕ Thêm sản phẩm</button>
-                                <button className="action-btn action-btn-secondary">📦 Quản lý kho</button>
-                                <button className="action-btn action-btn-secondary">💬 Tin nhắn khách</button>
-                                <button className="action-btn action-btn-secondary">⚙️ Cài đặt</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </main>
+                </>
+            )}
         </div>
     );
 }

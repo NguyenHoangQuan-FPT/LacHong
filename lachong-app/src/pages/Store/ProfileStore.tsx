@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { storeService } from '../../services/store.service';
+import { typeStoreService } from '../../services/typeStore.service';
 import '../../assets/styles/ProfileStore.css';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function ProfileStore() {
+    const [typeStores, setTypeStores] = useState<any[]>([]);
+    const [selectedTypeStore, setSelectedTypeStore] = useState<any | null>(null);
     const [store, setStore] = useState<any | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // editable fields
     const [storeName, setStoreName] = useState('');
     const [emailStore, setEmailStore] = useState('');
     const [phone, setPhone] = useState('');
@@ -21,8 +23,9 @@ export default function ProfileStore() {
     const [selectedDistrict, setSelectedDistrict] = useState<any | null>(null);
     const [selectedWard, setSelectedWard] = useState<any | null>(null);
 
-    // địa chỉ chi tiết: số nhà + tên đường
-    const [addressDetail, setAddressDetail] = useState(''); const [policy, setPolicy] = useState('');
+    const [addressDetail, setAddressDetail] = useState('');
+    const [policy, setPolicy] = useState('');
+    const [description, setDescription] = useState('');
     const [facebook, setFacebook] = useState('');
     const [instagram, setInstagram] = useState('');
     const [twitter, setTwitter] = useState('');
@@ -31,6 +34,10 @@ export default function ProfileStore() {
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
+        typeStoreService.getTypeStoreTrue().then((res: any) => {
+            const arr = res?.data || [];
+            setTypeStores(arr);
+        });
         load();
     }, []);
 
@@ -59,12 +66,15 @@ export default function ProfileStore() {
                 setSelectedProvince(null);
                 setSelectedDistrict(null);
                 setSelectedWard(null);
+                setDescription(s?.description || '');
                 setDistricts([]);
-                setWards([]); setPolicy(s?.policy || '');
+                setWards([]);
+                setPolicy(s?.policy || '');
                 setFacebook(s?.socialMedia?.facebook || '');
                 setInstagram(s?.socialMedia?.instagram || '');
                 setTwitter(s?.socialMedia?.twitter || '');
                 setAvatarPreview(s?.avatar || s?.avatarUrl || '');
+                setSelectedTypeStore(s?.typeStoreId || null);
             })
             .catch((err: any) => {
                 console.error('Load store profile error', err);
@@ -141,10 +151,12 @@ export default function ProfileStore() {
         ].filter(Boolean);
         const fullAddress = parts.join(', ');
         form.append('address', fullAddress);
+        form.append('description', description);
         form.append('policy', policy);
         form.append('facebook', facebook);
         form.append('instagram', instagram);
         form.append('twitter', twitter);
+        if (selectedTypeStore) form.append('typeStoreId', selectedTypeStore);
         if (avatarFile) form.append('avatar', avatarFile);
 
         try {
@@ -181,6 +193,15 @@ export default function ProfileStore() {
                                 <label className="form-label">Tên cửa hàng</label>
                                 <input className="form-input" value={storeName} onChange={e => setStoreName(e.target.value)} />
                             </div>
+                            <div style={{ width: 220 }}>
+                                <label className="form-label">Loại cửa hàng</label>
+                                <select className="form-input" value={selectedTypeStore || ''} onChange={e => setSelectedTypeStore(e.target.value)}>
+                                    <option value="">-- Chọn loại cửa hàng --</option>
+                                    {typeStores.map((t: any) => (
+                                        <option key={t._id} value={t._id}>{t.typeName}</option>
+                                    ))}
+                                </select>
+                            </div>
                             <div style={{ width: 300 }}>
                                 <label className="form-label">Email cửa hàng</label>
                                 <input className="form-input" value={emailStore} onChange={e => setEmailStore(e.target.value)} />
@@ -196,14 +217,6 @@ export default function ProfileStore() {
                                     placeholder="Số nhà, tên đường..."
                                     value={addressDetail}
                                     onChange={e => setAddressDetail(e.target.value)}
-                                />
-                            </div>
-                            <div style={{ width: 220 }}>
-                                <label className="form-label">Số điện thoại</label>
-                                <input
-                                    className="form-input"
-                                    value={phone}
-                                    onChange={e => setPhone(e.target.value)}
                                 />
                             </div>
                         </div>
@@ -264,9 +277,12 @@ export default function ProfileStore() {
                                 <input className="form-input" value={phone} onChange={e => setPhone(e.target.value)} />
                             </div>
                         </div>
-
                         <div style={{ marginTop: 12 }}>
-                            <label className="form-label">Mô tả / Chính sách</label>
+                            <label className="form-label">Mô tả </label>
+                            <textarea className="form-textarea" rows={4} value={description} onChange={e => setDescription(e.target.value)} />
+                        </div>
+                        <div style={{ marginTop: 12 }}>
+                            <label className="form-label">Chính sách</label>
                             <textarea className="form-textarea" rows={4} value={policy} onChange={e => setPolicy(e.target.value)} />
                         </div>
 

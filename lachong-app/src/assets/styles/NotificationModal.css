@@ -1,0 +1,86 @@
+.notification-modal {
+    position: absolute;
+    top: 50px;
+    right: 20px;
+    width: 350px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+    z-index: 1000;
+    padding: 16px;
+    height: fit-content;
+}
+
+.notification-title {
+    color: #000;
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 12px;
+}
+
+.notification-list {
+    padding: 0;
+    list-style: none;
+    overflow-y: auto;
+    max-height: 500px;
+}
+
+.notification-empty {
+    color: #888;
+    text-align: center;
+}
+
+.notification-item {
+    margin-bottom: 10px;
+    padding: 12px;
+    border-radius: 6px;
+    background: #f3f6fa;
+}
+
+.notification-item.read {
+    background: #e5e7eb;
+    opacity: 0.7;
+}
+
+.notification-item.unread {
+    opacity: 1;
+}
+
+.notification-item-title {
+    font-weight: 600;
+    color: #000000;
+}
+
+.notification-item-title.success {
+    color: #16a34a;
+}
+
+.notification-item-time {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+}
+
+.notification-error {
+    color: red;
+}
+
+.notification-loading {
+    text-align: center;
+}
+
+.notification-btn {
+    margin-top: 10px;
+    width: 100%;
+    background: #888888;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.notification-btn:hover {
+    background: #555555;
+}

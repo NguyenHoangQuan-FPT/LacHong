@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import "../../assets/styles/PostForm.css";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
-import { TextStyle } from "@tiptap/extension-text-style";
-import { Color } from "@tiptap/extension-color";
 
 type PostFormModalProps = {
     isOpen: boolean;
@@ -17,56 +15,23 @@ type PostFormModalProps = {
     onSubmit: (e: React.FormEvent) => void;
     onTitleChange: (value: string) => void;
     onContentChange: (value: string) => void;
-    onImagesChange: (files: File[]) => void;
+    onImagesChange: (images: (File | string)[]) => void; // string = url ảnh cũ
+    images?: (File | string)[]; // truyền vào khi sửa
 };
 
-const FontSize = TextStyle.extend({
-    addAttributes() {
-        return {
-            ...this.parent?.(),
-            fontSize: {
-                default: null,
-                parseHTML: (element) => {
-                    const size = (element as HTMLElement).style.fontSize;
-                    return size || null;
-                },
-                renderHTML: (attributes) => {
-                    if (!attributes.fontSize) return {};
-                    return {
-                        style: `font-size: ${attributes.fontSize}`,
-                    };
-                },
-            },
-            fontFamily: {
-                default: null,
-                parseHTML: (element) => {
-                    const family = (element as HTMLElement).style.fontFamily;
-                    return family || null;
-                },
-                renderHTML: (attributes) => {
-                    if (!attributes.fontFamily) return {};
-                    return {
-                        style: `font-family: ${attributes.fontFamily}`,
-                    };
-                },
-            },
-        };
-    },
-});
 
-const looksLikeHtml = (value: string) => /<\/?[a-z][\s\S]*>/i.test(value);
-
-const toHtmlContent = (value: string) => {
-    const v = value ?? "";
-    if (!v.trim()) return "";
-    if (looksLikeHtml(v)) return v;
-    // Convert plain text into simple HTML for TipTap
-    const escaped = v
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-    return `<p>${escaped.replace(/\n/g, "<br />")}</p>`;
-};
+function htmlToPlainText(html: string): string {
+    return html
+        .replace(/<br\s*\/?>(\r\n)?/gi, '\n')
+        .replace(/<\/?p[^>]*>/gi, '')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;/gi, "'")
+        .trim();
+}
 
 export default function PostFormModal({
     isOpen,
@@ -81,18 +46,19 @@ export default function PostFormModal({
     onTitleChange,
     onContentChange,
     onImagesChange,
+    images = [],
 }: PostFormModalProps) {
     if (!isOpen) return null;
 
-    const [fontSize, setFontSize] = useState<string>("16px");
-    const [fontFamily, setFontFamily] = useState<string>("");
-    const initialContent = useMemo(() => toHtmlContent(content), [content]);
+    const [selectedImages, setSelectedImages] = useState<(File | string)[]>(images);
+    const initialContent = useMemo(() => htmlToPlainText(content), [content]);
 
     const editor = useEditor({
-        extensions: [StarterKit, Underline, FontSize, Color],
+        extensions: [StarterKit], // Không còn Underline
         content: initialContent,
         onUpdate: ({ editor }) => {
-            onContentChange(editor.getHTML());
+            // Lưu content dạng plain text, loại bỏ <p>
+            onContentChange(htmlToPlainText(editor.getHTML()));
         },
         editorProps: {
             attributes: {
@@ -101,30 +67,24 @@ export default function PostFormModal({
         },
     });
 
+
+    // Khi mở modal sửa, cập nhật lại selectedImages từ props.images
     useEffect(() => {
-        if (!editor) return;
-        const next = toHtmlContent(content);
-        // Avoid resetting selection while typing
-        if (editor.getHTML() !== next) {
-            editor.commands.setContent(next || "", false);
+        if (isOpen) {
+            setSelectedImages(images || []);
         }
-    }, [editor, content]);
+    }, [isOpen, images]);
 
     useEffect(() => {
         if (!editor) return;
-        const syncToolbar = () => {
-            const attrs = editor.getAttributes("textStyle") as any;
-            setFontSize(attrs?.fontSize || "16px");
-            setFontFamily(attrs?.fontFamily || "");
-        };
-        syncToolbar();
-        editor.on("selectionUpdate", syncToolbar);
-        editor.on("transaction", syncToolbar);
-        return () => {
-            editor.off("selectionUpdate", syncToolbar);
-            editor.off("transaction", syncToolbar);
-        };
-    }, [editor]);
+        const next = htmlToPlainText(content);
+        // Avoid resetting selection while typing
+        if (editor.getHTML() !== next) {
+            editor.commands.setContent(next || "");
+        }
+    }, [editor, content]);
+
+
 
     return (
         <div className="post-modal-backdrop" onClick={() => !submitting && onClose()}>
@@ -151,82 +111,9 @@ export default function PostFormModal({
                         <label>Nội dung</label>
                         <div className="post-editor-wrap">
                             <div className="post-editor-toolbar" aria-label="Định dạng nội dung">
-                                <button
-                                    type="button"
-                                    className={"post-editor-btn" + (editor?.isActive("bold") ? " active" : "")}
-                                    onMouseDown={(e) => e.preventDefault()}
-                                    onClick={() => editor?.chain().focus().toggleBold().run()}
-                                    disabled={!editor}
-                                >
-                                    B
-                                </button>
-                                <button
-                                    type="button"
-                                    className={"post-editor-btn" + (editor?.isActive("italic") ? " active" : "")}
-                                    onMouseDown={(e) => e.preventDefault()}
-                                    onClick={() => editor?.chain().focus().toggleItalic().run()}
-                                    disabled={!editor}
-                                >
-                                    I
-                                </button>
-                                <button
-                                    type="button"
-                                    className={"post-editor-btn" + (editor?.isActive("underline") ? " active" : "")}
-                                    onMouseDown={(e) => e.preventDefault()}
-                                    onClick={() => editor?.chain().focus().toggleUnderline().run()}
-                                    disabled={!editor}
-                                >
-                                    U
-                                </button>
+                                {/* Đã loại bỏ các nút B, I, U */}
 
-                                <select
-                                    className="post-editor-select"
-                                    value={fontFamily}
-                                    onMouseDown={(e) => e.preventDefault()}
-                                    onChange={(e) => {
-                                        const v = e.target.value;
-                                        setFontFamily(v);
-                                        editor?.chain().focus().setMark("textStyle", { fontFamily: v || null }).run();
-                                    }}
-                                    disabled={!editor}
-                                    aria-label="Font chữ"
-                                >
-                                    <option value="">Mặc định</option>
-                                    <option value="serif">Serif</option>
-                                    <option value="monospace">Monospace</option>
-                                </select>
 
-                                <select
-                                    className="post-editor-select"
-                                    value={fontSize}
-                                    onMouseDown={(e) => e.preventDefault()}
-                                    onChange={(e) => {
-                                        const v = e.target.value;
-                                        setFontSize(v);
-                                        editor?.chain().focus().setMark("textStyle", { fontSize: v }).run();
-                                    }}
-                                    disabled={!editor}
-                                    aria-label="Cỡ chữ"
-                                >
-                                    <option value="12px">12</option>
-                                    <option value="14px">14</option>
-                                    <option value="16px">16</option>
-                                    <option value="18px">18</option>
-                                    <option value="20px">20</option>
-                                    <option value="24px">24</option>
-                                    <option value="28px">28</option>
-                                    <option value="32px">32</option>
-                                </select>
-
-                                <input
-                                    className="post-editor-color"
-                                    type="color"
-                                    value={(editor?.getAttributes("textStyle") as any)?.color || "#050505"}
-                                    onMouseDown={(e) => e.preventDefault()}
-                                    onChange={(e) => editor?.chain().focus().setColor(e.target.value).run()}
-                                    disabled={!editor}
-                                    aria-label="Màu chữ"
-                                />
                             </div>
 
                             <div className="post-editor-content">
@@ -241,9 +128,47 @@ export default function PostFormModal({
                             type="file"
                             accept="image/*"
                             multiple
-                            onChange={(e) => onImagesChange(Array.from(e.target.files || []))}
+                            onChange={(e) => {
+                                const files = Array.from(e.target.files || []);
+                                setSelectedImages(prev => {
+                                    const merged = [...prev, ...files];
+                                    onImagesChange(merged);
+                                    return merged;
+                                });
+                            }}
                             disabled={submitting}
                         />
+                        {selectedImages.length > 0 && (
+                            <div className="post-form-preview-list">
+                                {selectedImages.map((img, idx) => {
+                                    const isFile = img instanceof File;
+                                    const src = isFile ? URL.createObjectURL(img) : img;
+                                    return (
+                                        <div key={idx} style={{ position: 'relative', display: 'inline-block' }}>
+                                            <img
+                                                src={src}
+                                                alt={`preview-${idx}`}
+                                                className="post-form-preview-img"
+                                            />
+                                            <button
+                                                type="button"
+                                                className="delete-image"
+                                                aria-label="Xóa ảnh"
+                                                onClick={() => {
+                                                    setSelectedImages(prev => {
+                                                        const next = prev.filter((_, i) => i !== idx);
+                                                        onImagesChange(next);
+                                                        return next;
+                                                    });
+                                                }}
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
 
                     <div className="post-form-actions">

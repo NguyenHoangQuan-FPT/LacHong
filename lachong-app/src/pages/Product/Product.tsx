@@ -94,14 +94,6 @@ export default function Product() {
 
     return (
         <div className="product-page">
-            <div className="product-hero">
-                <div>
-                    <p className="product-kicker">Khám phá sản phẩm</p>
-                    <h1 className="product-title">Tất cả sản phẩm</h1>
-                    <p className="product-subtitle">Tìm, lọc theo danh mục, chất liệu và giá để tìm món bạn yêu thích.</p>
-                </div>
-            </div>
-
             <div className="product-controls">
                 <form className="product-search" onSubmit={(e) => e.preventDefault()}>
                     <input

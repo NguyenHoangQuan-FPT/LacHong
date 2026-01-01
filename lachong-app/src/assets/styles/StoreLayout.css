@@ -8,14 +8,13 @@
 
 /* ⭐ Sidebar - bên TRÁI */
 .store-sidebar-wrapper {
-    width: 250px;
+    width: 280px;
     flex-shrink: 0;
     position: sticky;
     top: 0;
     height: 100vh;
     overflow-y: auto;
-    background-color: #fff;
-    border-right: 1px solid #ddd;
+    background: #0f172a;
 }
 
 .store-main-wrapper {
@@ -24,7 +23,6 @@
     display: flex;
     flex-direction: column;
     width: 2000px;
-    margin-left: 10px;
 }
 
 /* ⭐ Responsive Mobile */

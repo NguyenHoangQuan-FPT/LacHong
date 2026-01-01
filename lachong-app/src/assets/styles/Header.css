@@ -39,6 +39,24 @@
     text-decoration: none;
 }
 
+.notification-count {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #e7e7e7;
+    color: #050505;
+    border-radius: 50%;
+    min-width: 18px;
+    height: 18px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    padding: 0 4px;
+    z-index: 2;
+}
+
 .logo img {
     height: 44px;
     width: auto;
@@ -59,8 +77,9 @@
     line-height: 1;
     color: #000000;
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-    font-weight: 600;
-    font-size: 1.5rem;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: 2px;
 }
 
 
@@ -151,13 +170,27 @@
 .cart-link {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
     color: var(--text);
     text-decoration: none;
     padding: 8px;
     border-radius: 8px;
     transition: background .12s ease, transform .12s ease;
-    margin-right: 1px;
+    padding-right: 30px;
+}
+
+.wishlist-link {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text);
+    text-decoration: none;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background .12s ease, transform .12s ease;
+}
+
+.wishlist-link:hover {
+    transform: translateY(-1px);
+    color: #000000;
 }
 
 .cart-link:hover {
@@ -189,12 +222,12 @@
     background: linear-gradient(90deg, rgba(var(--primary), 0.12), rgba(var(--soft), 0.08));
     color: rgb(17, 24, 39);
     text-decoration: none;
-    font-weight: 700;
+    font-weight: 500;
     border: 1px solid rgba(var(--primary), 0.06);
 }
 
 .sign-in-btn:hover {
-    background: linear-gradient(90deg, rgba(var(--primary), 0.16), rgba(var(--soft), 0.12));
+    color: #000000;
     transform: translateY(-1px);
 }
 

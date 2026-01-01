@@ -1,0 +1,48 @@
+.admin-notification-page {
+    padding: 24px;
+
+}
+
+.notifications-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.notifications-table th,
+.notifications-table td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.notifications-table th {
+    background: #f9fafb;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.notifications-table tr:hover {
+    background: #f8fafc;
+}
+
+.notifications-table tr.selected {
+    background: #eef2ff;
+}
+
+.status {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.read {
+    background: #f3f4f6;
+}
+
+.unread {
+    background: #fffbe7;
+}

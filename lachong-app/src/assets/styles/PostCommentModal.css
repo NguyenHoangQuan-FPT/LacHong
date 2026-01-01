@@ -1,3 +1,15 @@
+/* Giới hạn chiều cao và xử lý overflow cho nội dung comment quá dài */
+.post-comment-text {
+    max-height: 6em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    white-space: pre-line;
+    word-break: break-word;
+}
+
 /* ===== Backdrop & Modal ===== */
 .post-modal-backdrop {
     position: fixed;
@@ -9,9 +21,9 @@
     z-index: 999;
 }
 
-.post-modal {
-    max-width: 100%;
-    max-height: 90vh;
+.post-modals {
+    width: 1000px;
+    max-height: 95vh;
     background: #fff;
     border-radius: 12px;
     display: flex;
@@ -87,12 +99,17 @@
     flex: 1;
 }
 
+.post-comment-reply-to {
+    font-size: 13px;
+    color: #65676b;
+    margin-bottom: 4px;
+}
+
 /* ===== Bubble ===== */
 .post-comment-bubble {
     background: #f0f2f5;
     border-radius: 12px;
     padding: 8px 12px;
-    max-width: 100%;
 }
 
 .post-comment-author {
@@ -105,6 +122,7 @@
     font-size: 14px;
     color: #050505;
     line-height: 1.4;
+
 }
 
 /* ===== Actions ===== */
@@ -127,7 +145,7 @@
 }
 
 .post-comment-like-btn.active {
-    color: #1877f2;
+    color: #ec0202;
     font-weight: 500;
 }
 
@@ -173,10 +191,11 @@
 .post-comment-show-more {
     background: none;
     border: none;
-    color: #1877f2;
+    color: #575757;
     font-size: 13px;
     cursor: pointer;
-    padding: 4px 0;
+    align-self: start;
+
 }
 
 /* ===== Comment form ===== */

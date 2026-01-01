@@ -92,7 +92,6 @@ export default function Cart() {
                 )
             );
 
-            toast.success("Cập nhật số lượng thành công");
         } catch (err: any) {
             console.error("Update error:", err);
             toast.error(err?.response?.data?.message || "Không thể cập nhật số lượng");
@@ -151,7 +150,6 @@ export default function Cart() {
         return (
             <div className="cart-page">
                 <div className="cart-status">Đang tải giỏ hàng...</div>
-                <Footer />
             </div>
         );
     }
@@ -161,7 +159,6 @@ export default function Cart() {
             <div className="cart-page">
                 <div className="cart-status error">{error}</div>
                 <Link to="/product" className="cart-back">← Quay lại mua sắm</Link>
-                <Footer />
             </div>
         );
     }

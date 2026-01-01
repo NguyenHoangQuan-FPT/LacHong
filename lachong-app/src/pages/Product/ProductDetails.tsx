@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams, Link, useNavigate } from "react-router-dom";
 import { productService } from "../../services/product.service";
 import { cartService } from "../../services/cart.service";
+import { wishListService } from "../../services/wishList.service";
 import customerService from "../../services/customer.service";
 import { ToastContainer, toast } from "react-toastify";
 import "../../assets/styles/ProductDetails.css";
-import Icon from "../../assets/icons/Icon";
 import ProductRelated from "../../components/product/ProductRelated";
 import ProductReview from "../../components/product/ProductReview";
+import Icon from "../../assets/icons/Icon";
 
 const normalizeImageUrl = (url?: string) => {
     if (!url) return "https://via.placeholder.com/400x300?text=No+Image";
@@ -17,22 +18,42 @@ const normalizeImageUrl = (url?: string) => {
 };
 
 export default function ProductDetail() {
-    // lấy id từ cả param lẫn query string để tương thích
     const { id: paramId } = useParams<{ id?: string }>();
     const location = useLocation();
     const searchId = new URLSearchParams(location.search).get("id");
     const id = paramId || searchId;
     const navigate = useNavigate();
-
+    const [user, setUser] = useState<any>(null);
     const [product, setProduct] = useState<any>(null);
     const [selectedImage, setSelectedImage] = useState<string>("");
     const [quantity, setQuantity] = useState(1);
     const [loading, setLoading] = useState(false);
     const [addingToCart, setAddingToCart] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [addingToWishList, setAddingToWishList] = useState(false);
 
+    const [error, setError] = useState<string | null>(null);
     const [customerProfile, setCustomerProfile] = useState<any | null>(null);
 
+    useEffect(() => {
+        const savedUser = localStorage.getItem("user");
+        if (savedUser) {
+            try {
+                const parsedUser = JSON.parse(savedUser);
+                let role = "customer";
+                if (parsedUser.role) {
+                    role = parsedUser.role;
+                } else if (parsedUser.roleId && typeof parsedUser.roleId === "object" && parsedUser.roleId.name) {
+                    role = parsedUser.roleId.name;
+                } else if (parsedUser.name) {
+                    role = parsedUser.name;
+                }
+                setUser({ ...parsedUser, role });
+            } catch (e) {
+                console.error("Lỗi parse user:", e);
+            }
+        }
+        setLoading(false);
+    }, []);
     useEffect(() => {
         if (!id) {
             setError("ID sản phẩm không hợp lệ");
@@ -172,6 +193,14 @@ export default function ProductDetail() {
         product.storeId?.name ||
         "Lac Hong Store";
 
+    const storeAvatar =
+        product.storeAvatar ||
+        product.store?.storeAvatar ||
+        product.store?.avatar ||
+        product.storeId?.storeAvatar ||
+        product.storeId?.avatar ||
+        "Lac Hong Store";
+
     const productImages = product.images || [];
     const mainImage = selectedImage || product.imageUrl || product.image || (productImages.length > 0 ? productImages[0] : "");
     const discountValue = product.discountPercent || product.discount || 0;
@@ -210,14 +239,23 @@ export default function ProductDetail() {
                         )}
                         <div className="product-detail-store">
                             <Link to={storeIdValue ? `/store/${storeIdValue}` : "/store"} className="store-link">
-                                <i className="bi bi-shop" /> {storeName}
+                                {storeAvatar && <img src={normalizeImageUrl(storeAvatar)} className="avatar-store" />}  {storeName}
                             </Link>
                         </div>
                     </div>
 
                     <div className="product-detail-info">
-                        <h1 className="product-detail-title">{product.productName || product.name}</h1>
-
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                            <h1 className="product-detail-title" style={{ margin: 0 }}>{product.productName || product.name}</h1>
+                            <span style={{ display: "flex", alignItems: "center" }}>
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                    <span key={i} style={{ color: i < Math.round(product.avgRating) ? '#ffc107' : '#e4e5e9', fontSize: 22, paddingRight: 2 }}>
+                                        <Icon name="start" size={12} />
+                                    </span>
+                                ))}
+                                <span style={{ fontSize: 18, color: '#888', marginLeft: 4 }}>{product.avgRating ? product.avgRating.toFixed(1) : 'Chưa có đánh giá'}</span>
+                            </span>
+                        </div>
                         <div className="product-detail-prices">
                             {discountValue > 0 ? (
                                 <>
@@ -246,45 +284,82 @@ export default function ProductDetail() {
                                 <strong>Chất liệu:</strong> {product.material.name || product.material}
                             </div>
                         )}
-
-                        <div className="product-detail-actions">
-                            <div className="quantity-control">
-                                <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>−</button>
-                                <input type="number" min="1" value={quantity} onChange={e => setQuantity(Math.max(1, Number(e.target.value)))} />
-                                <button onClick={() => setQuantity(quantity + 1)}>+</button>
+                        {product.stock && (
+                            <div className="product-detail-meta">
+                                <strong>Tồn kho:</strong> {product.stock} sản phẩm
                             </div>
-                            <button
-                                onClick={async () => {
-                                    if (!id || !product) return;
+                        )}
+                        {product.policy && (
+                            <div className="product-detail-meta">
+                                <strong>Chính sách bảo hành:</strong> {product.policy}
+                            </div>
+                        )}
+                        {user?.role !== "manager" && (
 
-                                    const ok = await ensureCustomerProfileComplete();
-                                    if (!ok) return;
-
-                                    setAddingToCart(true);
-                                    try {
-                                        await cartService.addToCart(id, quantity);
-                                        toast.success("Đã thêm sản phẩm vào giỏ!");
-                                        setQuantity(1);
-                                    } catch (err: any) {
-                                        toast.error(err?.response?.data?.message || "Không thể thêm vào giỏ");
-                                    } finally {
-                                        setAddingToCart(false);
-                                    }
-                                }}
-                                disabled={addingToCart}
-                                className="product-detail-add-to-cart"
-                            >
-                                <Icon name="cart" /> {addingToCart ? "Đang thêm..." : "Thêm vào giỏ hàng"}
-                            </button>
-                        </div>
+                            <div className="product-detail-actions">
+                                <div className="quantity-control">
+                                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>−</button>
+                                    <input type="number" min="1" value={quantity} onChange={e => setQuantity(Math.max(1, Number(e.target.value)))} />
+                                    <button onClick={() => setQuantity(quantity + 1)}>+</button>
+                                </div>
+                                <div>
+                                    <button
+                                        onClick={async () => {
+                                            if (!id || !product) return;
+                                            if (quantity > (product.stock ?? 0)) {
+                                                toast.error(`Chỉ còn ${product.stock} sản phẩm trong kho!`);
+                                                return;
+                                            }
+                                            const ok = await ensureCustomerProfileComplete();
+                                            if (!ok) return;
+                                            setAddingToCart(true);
+                                            try {
+                                                await cartService.addToCart(id, quantity);
+                                                toast.success("Đã thêm sản phẩm vào giỏ!");
+                                                setQuantity(1);
+                                            } catch (err: any) {
+                                                toast.error(err?.response?.data?.message || "Không thể thêm vào giỏ");
+                                            } finally {
+                                                setAddingToCart(false);
+                                            }
+                                        }}
+                                        disabled={addingToCart}
+                                        className="product-detail-add-to-cart"
+                                    >
+                                        {addingToCart ? "Đang thêm..." : "Thêm vào giỏ hàng"}
+                                    </button>
+                                    <button
+                                        onClick={async () => {
+                                            if (!id || !product) return;
+                                            const ok = await ensureCustomerProfileComplete();
+                                            if (!ok) return;
+                                            setAddingToCart(true);
+                                            try {
+                                                await wishListService.addToWishList(id);
+                                                toast.success("Đã thêm vào danh sách yêu thích!");
+                                            } catch (err: any) {
+                                                toast.error(err?.response?.data?.message || "Không thể thêm vào danh sách yêu thích");
+                                            } finally {
+                                                setAddingToCart(false);
+                                            }
+                                        }}
+                                        disabled={addingToWishList}
+                                        className="product-detail-wish-list"
+                                    >
+                                        <Icon name="heart" size={15} />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         <Link to="/product" className="product-detail-back">← Quay lại danh sách sản phẩm</Link>
                     </div>
                 </div>
+                <hr className="hr"></hr>
             </div>
-            <ProductReview productId={id as string} />
             <ProductRelated product={product} currentCategoryId={currentCategoryId} />
+            <ProductReview productId={id as string} />
             <ToastContainer toastStyle={{ color: "white" }} autoClose={1000} />
-        </div>
+        </div >
     );
 }

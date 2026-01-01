@@ -1,0 +1,62 @@
+.notification-page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.notification-header {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #000;
+}
+
+.notification-loading {
+    text-align: center;
+}
+
+.notification-error {
+    color: red;
+}
+
+.notification-empty {
+    color: #6b7280;
+}
+
+/* List */
+.notification-list {
+    padding: 0;
+    list-style: none;
+}
+
+/* Item */
+.notification-item {
+    background: #f3f6fa;
+    margin-bottom: 12px;
+    padding: 16px;
+    border-radius: 8px;
+}
+
+/* Title */
+.notification-title {
+    font-weight: 600;
+    color: #000000;
+    margin-bottom: 4px;
+}
+
+/* Success type */
+.notification-title.success {
+    color: #16a34a;
+}
+
+/* Message */
+.notification-message {
+    color: #374151;
+}
+
+/* Time */
+.notification-time {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+}

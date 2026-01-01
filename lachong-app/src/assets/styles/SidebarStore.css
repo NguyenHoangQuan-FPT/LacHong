@@ -40,7 +40,6 @@
 .sidebar-store-tab {
     width: 100%;
     padding: 10px 12px;
-    border-radius: 999px;
     border: none;
     outline: none;
     background: transparent;
@@ -65,10 +64,8 @@
 
 /* === Nội dung bên phải === */
 .sidebar-store-right {
-    background: #ffffff;
     border-radius: 18px;
     padding: 20px 22px;
-    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
     min-height: 320px;
     height: fit-content;
 }

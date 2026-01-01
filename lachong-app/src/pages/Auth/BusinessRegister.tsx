@@ -32,13 +32,21 @@ export default function BusinessRegister() {
         }
         setLoading(true);
         try {
+            const storeData = {
+                storeName: form.storeName,
+                description: "",
+                policy: "",
+                phone: "",
+                address: ""
+            };
             await authService.registerStore(
                 form.email,
                 form.password,
                 form.storeName,
                 form.emailStore
             );
-            navigate("/login");
+            localStorage.setItem("storeInfo", JSON.stringify(storeData));
+            navigate("/store/verification");
         } catch (err: any) {
             console.error("Register store error", err);
             const msg =

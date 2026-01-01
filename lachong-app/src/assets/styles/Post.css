@@ -51,15 +51,11 @@
 
 .post-header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
     gap: 12px;
     margin-bottom: 14px;
-    background: #ffffff;
     border-radius: 10px;
-    padding: 12px 14px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    padding-left: 1230px;
+
 }
 
 .post-btn {
@@ -540,53 +536,6 @@
     cursor: not-allowed;
 }
 
-.post-modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.35);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    padding: 16px;
-}
-
-.post-modal {
-    background: #fff;
-    border-radius: 10px;
-    padding: 18px;
-    width: 1000px;
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
-}
-
-.post-comments-modal-posttitle {
-    font-weight: 800;
-    color: #050505;
-    font-size: 14px;
-    margin-bottom: 10px;
-}
-
-.post-modal .post-comments {
-    max-height: 420px;
-    overflow: auto;
-    padding-right: 4px;
-}
-
-.post-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
-.post-modal-header h3 {
-    margin: 0;
-    font-size: 18px;
-    color: #050505;
-}
-
 .post-modal-close {
     background: none;
     border: none;
@@ -710,4 +659,31 @@
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+}
+
+/* Ảnh lớn khi chỉ có 1 ảnh */
+.post-images-single {
+    display: flex;
+    margin: 12px 0;
+}
+
+.post-image-large {
+    max-width: 100%;
+    max-height: 500px;
+}
+
+/* Ảnh nhỏ khi có nhiều ảnh */
+.post-images-list {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 12px 0;
+}
+
+.post-image-small {
+    width: 400px;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }

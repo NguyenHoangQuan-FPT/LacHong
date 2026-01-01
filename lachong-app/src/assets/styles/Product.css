@@ -9,10 +9,12 @@
     --glass: rgba(255, 255, 255, 0.96);
 }
 
+
+
+
 /* Page wrapper to visually match Home */
 .product-page {
-    width: 100%;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 18px auto 60px;
     padding: 0 12px;
     box-sizing: border-box;
@@ -203,7 +205,7 @@
 .product-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 18px;
+    gap: 30px;
     padding: 10px;
 }
 

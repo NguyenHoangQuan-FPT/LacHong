@@ -12,6 +12,7 @@ export default function EditProduct() {
 
     const [productName, setProductName] = useState('');
     const [description, setDescription] = useState('');
+    const [policy, setPolicy] = useState('');
     const [price, setPrice] = useState<number | ''>('');
     const [stock, setStock] = useState<number | ''>('');
     const [discountPercent, setDiscountPercent] = useState<number | ''>('');
@@ -42,6 +43,7 @@ export default function EditProduct() {
                 const p = data?.product ?? data?.data ?? data;
                 setProductName(p.productName || p.name || '');
                 setDescription(p.description || '');
+                setPolicy(p.policy || '');
                 setPrice(p.price ?? '');
                 setStock(p.stock ?? '');
                 setDiscountPercent(p.discountPercent ?? '');
@@ -116,6 +118,7 @@ export default function EditProduct() {
         const formData = new FormData();
         formData.append('productName', productName);
         formData.append('description', description);
+        formData.append('policy', policy);
         formData.append('price', String(price));
         formData.append('stock', String(stock));
         formData.append('discountPercent', String(discountPercent === '' ? 0 : discountPercent));
@@ -151,7 +154,7 @@ export default function EditProduct() {
             <div className="add-product-modal">
                 <div className="modal-header">
                     <div>
-                        <h2 className="modal-title">✏️ Sửa sản phẩm</h2>
+                        <h2 className="modal-title">Sửa sản phẩm</h2>
                         <p className="modal-subtitle">Sửa thông tin sản phẩm</p>
                     </div>
                     <button className="modal-close-btn" onClick={() => navigate('/store/products')}><Icon name="x" size={18} /></button>
@@ -166,6 +169,17 @@ export default function EditProduct() {
                     <div className="form-group">
                         <label className="form-label">Mô tả</label>
                         <textarea className="form-textarea" rows={3} value={description} onChange={e => setDescription(e.target.value)} />
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Chính sách sản phẩm</label>
+                        <textarea
+                            placeholder="Chính sách đổi trả, bảo hành..."
+                            value={policy}
+                            onChange={e => setPolicy(e.target.value)}
+                            className="form-textarea"
+                            rows={3}
+                        />
                     </div>
 
                     <div className="form-row">

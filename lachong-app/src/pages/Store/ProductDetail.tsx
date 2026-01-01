@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { productStoreService } from '../../services/product-store.service';
 import '../../assets/styles/ProductDetail.css';
 import Icon from '../../assets/icons/Icon';
+import Button from '../../assets/buttons/Button';
 
 export default function ProductDetail() {
     const { id } = useParams();
@@ -53,6 +54,27 @@ export default function ProductDetail() {
         }
     };
 
+    // Update product status using storeService
+    const [statusLoading, setStatusLoading] = useState(false);
+    const handleUpdateStatus = async () => {
+        if (!id || !product) return;
+        setStatusLoading(true);
+        try {
+            // Toggle status
+            const newStatus = !product.status;
+            const res = await productStoreService.updateStatusProduct(id, newStatus);
+            if (res?.data?.status !== undefined) {
+                setProduct({ ...product, status: res.data.status });
+            } else {
+                setProduct({ ...product, status: newStatus });
+            }
+        } catch (err: any) {
+            alert('Cập nhật trạng thái thất bại');
+        } finally {
+            setStatusLoading(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="store-status store-status-loading">
@@ -77,7 +99,6 @@ export default function ProductDetail() {
         );
     }
 
-    // chuẩn bị list ảnh để render thumbnail
     const allImages: string[] = (() => {
         const imgs: string[] = Array.isArray(product.images)
             ? product.images.filter(Boolean)
@@ -94,18 +115,13 @@ export default function ProductDetail() {
     return (
         <div className="store-page detail-page">
             <div className="detail-wrapper">
-                {/* Top nav “back to list” */}
-                <div className="detail-top-bar">
-                    <button
-                        type="button"
-                        className="detail-back-btn"
-                        onClick={() => navigate('/store/products')}
-                    >
-                        <Icon name="arrow-left" size={16} />
-                        <span>Quay lại danh sách</span>
-                    </button>
+                <div >
+                    <Link to="/store/products">
+                        <Button variant="secondary" >
+                            <Icon name="back" /> Quay lại
+                        </Button>
+                    </Link>
                 </div>
-
                 {/* Card bao cả ảnh + thông tin */}
                 <div className="detail-card detail-card-with-image">
                     {/* Cột trái: gallery ảnh */}
@@ -142,15 +158,19 @@ export default function ProductDetail() {
 
                     {/* Cột phải: thông tin */}
                     <div className="detail-card-right">
-                        <h1 className="detail-title">
+                        <div style={{ fontSize: 34, fontWeight: 600, marginBottom: 8 }}>
                             {product.productName || product.name}
-                        </h1>
+                            <span style={{ float: 'right' }}>
+                                <Button
+                                    variant='secondary'
+                                    onClick={handleDelete}
+                                >
+                                    <Icon name="trash" />
+                                </Button>
+                            </span>
+                        </div>
 
                         <div className="detail-meta-row">
-                            <span className="detail-meta-category">
-                                {product.category?.name || 'Danh mục'}
-                            </span>
-
                             <span className="detail-meta-rating">
                                 <span className="detail-stars">★★★★★</span>
                                 <span className="detail-rating-text">
@@ -188,6 +208,21 @@ export default function ProductDetail() {
                             </ul>
                         </div>
 
+                        <div className="detail-section">
+                            <div className="detail-section-title">Chính sách bảo hành</div>
+                            <ul className="detail-list">
+                                {product.policy ? (
+                                    product.policy
+                                        .split('\n')
+                                        .filter((line: string) => line.trim())
+                                        .map((line: string, idx: number) => (
+                                            <li key={idx}>{line}</li>
+                                        ))
+                                ) : (
+                                    <li>Chưa có chính sách bảo hành cho sản phẩm này.</li>
+                                )}
+                            </ul>
+                        </div>
                         {/* Tồn kho */}
                         <div className="detail-section">
                             <div className="detail-section-title">Tồn kho</div>
@@ -212,34 +247,34 @@ export default function ProductDetail() {
                                 </li>
                                 <li>
                                     <strong>Trạng thái:</strong>{' '}
-                                    {product.status ? 'Đang bán' : 'Ngừng bán'}
+                                    {product.status === false ?
+                                        <span style={{ color: '#e53935', fontWeight: 600, background: "#ffcdd2", borderRadius: "12px", padding: "2px 6px" }}>Ngừng bán</span >
+                                        :
+                                        product.status === true ?
+                                            <span style={{ color: '#16a34a', fontWeight: 600, background: "#d1fae5", borderRadius: "12px", padding: "2px 6px" }}>Đang bán</span>
+                                            : '—'
+                                    }
                                 </li>
                             </ul>
                         </div>
 
-                        {/* Hành động */}
                         <div className="detail-actions">
-                            <button
-                                className="detail-btn detail-btn-secondary"
-                                type="button"
+                            <Button
+                                variant='secondary'
                                 onClick={() => navigate(`/store/products/edit/${id}`)}
                             >
-                                <Icon name="pencil" size={16} />
-                                <span>Sửa sản phẩm</span>
-                            </button>
-
-                            <button
-                                className="detail-btn detail-btn-danger"
-                                type="button"
-                                onClick={handleDelete}
+                                Sửa sản phẩm
+                            </Button>
+                            <Button
+                                variant={product.status ? 'danger' : 'success'}
+                                onClick={() => handleUpdateStatus()}
                             >
-                                <Icon name="trash" size={16} />
-                                <span>Xóa sản phẩm</span>
-                            </button>
+                                {statusLoading ? 'Đang cập nhật...' : (product.status ? 'Ngừng bán' : 'Mở bán')}
+                            </Button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

@@ -7,16 +7,15 @@ import { FiX, FiUploadCloud, FiCheck } from 'react-icons/fi';
 export default function AddProduct() {
     const navigate = useNavigate();
 
-    // Form states
     const [productName, setProductName] = useState('');
     const [description, setDescription] = useState('');
+    const [policy, setPolicy] = useState('');
     const [price, setPrice] = useState<number | ''>('');
     const [stock, setStock] = useState<number | ''>('');
     const [discountPercent, setDiscountPercent] = useState<number | ''>('');
     const [category, setCategory] = useState('');
     const [material, setMaterial] = useState('');
 
-    // Image states (NHIỀU ẢNH)
     const [imageFiles, setImageFiles] = useState<File[]>([]);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [dragActive, setDragActive] = useState(false);
@@ -107,7 +106,6 @@ export default function AddProduct() {
         setImageFiles(mergedFiles);
         setError(null);
 
-        // Tạo preview mới tương ứng (chỉ cho các file mới)
         validFiles.forEach(file => {
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -127,7 +125,6 @@ export default function AddProduct() {
         setImagePreviews([]);
     };
 
-    // ====== SUBMIT ======
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
@@ -147,6 +144,7 @@ export default function AddProduct() {
         const formData = new FormData();
         formData.append('productName', productName);
         formData.append('description', description);
+        formData.append('policy', policy);
         formData.append('price', String(price));
         formData.append('stock', String(stock));
         formData.append(
@@ -161,7 +159,6 @@ export default function AddProduct() {
             formData.append('images', file);
         });
 
-        console.log('📤 FormData gửi lên:');
         for (let pair of formData.entries()) {
             console.log(`  ${pair[0]}:`, pair[1]);
         }
@@ -239,7 +236,17 @@ export default function AddProduct() {
                             rows={3}
                         />
                     </div>
-
+                    {/* Policy */}
+                    <div className="form-group">
+                        <label className="form-label">Chính sách sản phẩm</label>
+                        <textarea
+                            placeholder="Chính sách đổi trả, bảo hành..."
+                            value={policy}
+                            onChange={e => setPolicy(e.target.value)}
+                            className="form-textarea"
+                            rows={3}
+                        />
+                    </div>
                     {/* Category & Material */}
                     <div className="form-row">
                         <div className="form-group">

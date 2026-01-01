@@ -1,0 +1,97 @@
+.orderdetail-container {
+    padding: 24px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.orderdetail-header {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 18px;
+    color: #1976d2;
+}
+
+.orderdetail-info {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 18px 20px 12px 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 4px 0 rgba(25, 118, 210, 0.06);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 24px;
+}
+
+.orderdetail-info div {
+    font-size: 1rem;
+    margin-bottom: 2px;
+}
+
+.orderdetail-products-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #1976d2;
+}
+
+.orderdetail-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px 0 rgba(25, 118, 210, 0.06);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+.orderdetail-table th,
+.orderdetail-table td {
+    padding: 12px 10px;
+    text-align: left;
+    border-bottom: 1px solid #e0e7ef;
+    font-size: 1rem;
+}
+
+.orderdetail-table th {
+    background: #f3f6fa;
+    font-weight: 600;
+    color: #1976d2;
+}
+
+.orderdetail-table tr:last-child td {
+    border-bottom: none;
+}
+
+.orderdetail-table tr:hover {
+    background: #f5faff;
+}
+
+.orderdetail-table td {
+    vertical-align: middle;
+}
+
+.orderdetail-table img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 6px;
+    background: #f3f6fa;
+    box-shadow: 0 1px 4px 0 rgba(25, 118, 210, 0.04);
+}
+
+@media (max-width: 700px) {
+    .orderdetail-container {
+        padding: 8px;
+    }
+
+    .orderdetail-info {
+        grid-template-columns: 1fr;
+        padding: 12px 8px 8px 8px;
+    }
+
+    .orderdetail-table th,
+    .orderdetail-table td {
+        padding: 8px 4px;
+        font-size: 0.97rem;
+    }
+}

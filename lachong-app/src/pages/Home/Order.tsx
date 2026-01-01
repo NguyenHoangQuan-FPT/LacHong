@@ -10,6 +10,7 @@ import Button from "../../assets/buttons/Button";
 
 type OrderDto = {
     _id: string;
+    code?: string;
     status?: string;
     products?: Array<any>;
     totalAmount?: number;
@@ -186,11 +187,8 @@ export default function Order() {
                 )}
 
                 {selectedOrder && !detailLoading && (
-
                     <div className="order-list">
-
                         <div className="order-card">
-
                             <div className="order-card__header">
                                 <button
                                     type="button"
@@ -209,27 +207,24 @@ export default function Order() {
                                     {getStatusLabel(selectedOrder.status || "")}
                                 </div>
                             </div>
-
                             <div className="order-card__meta">
                                 <div>
-                                    <div className="order-card__sub">• Mã đơn hàng: {selectedOrder._id}</div>
+                                    <div className="order-card__sub">• Mã đơn hàng: {selectedOrder.code}</div>
                                 </div>
                                 <div>
-                                    • {(selectedOrder.products?.length || 0)} sản phẩm
-                                </div>
-                                <div>
-                                    <Link to={selectedOrder.store ? `/store/${selectedOrder.store._id}` : "#"
-                                    } style={{ color: "inherit", textDecoration: "none" }}>
-                                        {selectedOrder.store?.storeName ? ` • Cửa hàng: ${selectedOrder.store.storeName}` : ""}
-                                    </Link>
-
+                                    • {Array.isArray(selectedOrder.orderItems) ? selectedOrder.orderItems.reduce((sum, oi: any) => sum + (oi.products?.length || 0), 0) : 0} sản phẩm
                                 </div>
                                 {selectedOrder.address ? (
                                     <div>• Địa chỉ: {selectedOrder.address}</div>
                                 ) : null}
                                 {selectedOrder.paymentMethod?.name ? ` • Thanh toán: ${selectedOrder.paymentMethod.name}` : ""}
+                                <div>
+                                    <Link to={selectedOrder.store ? `/store/${selectedOrder.store._id}` : "#"}
+                                        style={{ color: "inherit", textDecoration: "none" }}>
+                                        {selectedOrder.store.storeName ? ` • Cửa hàng: ${selectedOrder.store.storeName}` : ""}
+                                    </Link>
+                                </div>
                             </div>
-
                             <div className="order-card__footer">
                                 <div>
                                     <div className="order-card__sub">Tổng cộng</div>
@@ -247,38 +242,38 @@ export default function Order() {
                                 </div>
                             </div>
                         </div>
-
-                        {(selectedOrder.products || []).map((p: any, idx: number) => {
-                            const productObj = typeof p?.productId === "object" ? p.productId : null;
-                            const productLabel =
-                                productObj?.productName ||
-                                productObj?._id ||
-                                (typeof p?.productId === "string" ? p.productId : "Sản phẩm");
-
-                            const productImage: string | null =
-                                (productObj?.imageUrl as string) ||
-                                (Array.isArray(productObj?.images) && productObj.images.length > 0 ? productObj.images[0] : null);
-
-                            return (
-                                <div key={`${selectedOrder._id}-${idx}`} className="order-card">
-                                    <div className="order-card__header">
-                                        <div>
-                                            <div className="order-card__sub">Sản phẩm</div>
-                                            <div className="order-card__id">{productLabel}</div>
+                        {/* Hiển thị sản phẩm từ orderItems */}
+                        {Array.isArray(selectedOrder.orderItems) && selectedOrder.orderItems.length > 0 && selectedOrder.orderItems.map((orderItem: any, idx: number) => (
+                            orderItem.products && orderItem.products.length > 0 && orderItem.products.map((p: any, pidx: number) => {
+                                const productObj = typeof p?.productId === "object" ? p.productId : null;
+                                const productLabel = productObj?.productName || productObj?._id || (typeof p?.productId === "string" ? p.productId : "Sản phẩm");
+                                const productImage: string | null =
+                                    (productObj?.imageUrl as string) ||
+                                    (Array.isArray(productObj?.images) && productObj.images.length > 0 ? productObj.images[0] : null);
+                                return (
+                                    <div key={`${selectedOrder._id}-${idx}-${pidx}`} className="order-card">
+                                        <div className="order-card__header">
+                                            <div>
+                                                <div className="order-card__sub">Sản phẩm</div>
+                                                <div className="order-card__id">{productLabel}</div>
+                                            </div>
+                                            <Link to={productObj ? `/product/detail/?id=${productObj._id}` : "#"}>
+                                                {productImage && (
+                                                    <img
+                                                        className="order-product-thumb"
+                                                        src={productImage}
+                                                        alt={productLabel}
+                                                    />
+                                                )}
+                                            </Link>
                                         </div>
-                                        <Link to={productObj ? `/product/detail/?id=${productObj._id}` : "#"}>
-                                            {productImage && (
-                                                <img
-                                                    className="order-product-thumb"
-                                                    src={productImage}
-                                                    alt={productLabel}
-                                                />
-                                            )}
-                                        </Link>
+                                        <div className="order-card__meta">
+                                            Số lượng: {p.quantity || 1} &nbsp;|&nbsp; Giá: {p.price ? p.price.toLocaleString() + ' VND' : '-'}
+                                        </div>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            })
+                        ))}
                     </div>
                 )}
 
@@ -329,7 +324,7 @@ export default function Order() {
                                         <div className="order-card__header">
                                             <div>
                                                 <div className="order-card__sub">Mã đơn hàng</div>
-                                                <div className="order-card__id">{order._id}</div>
+                                                <div className="order-card__id">{order.code}</div>
                                             </div>
                                             <div
                                                 className="order-badge"

@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import "../../assets/styles/Header.css";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Icon from "../../assets/icons/Icon";
-import { authService } from "../../services/auth.service";
+import NotificationModal from "../notification/NotificationModal";
+import notificationService from "../../services/notification.service";
 
 export default function Header() {
     const location = useLocation();
@@ -11,17 +12,40 @@ export default function Header() {
     const [loading, setLoading] = useState(true);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const userMenuRef = useRef<HTMLDivElement | null>(null);
+    const [showNotificationPopup, setShowNotificationPopup] = useState(false);
+    const [unread, setUnread] = useState<Notification[]>([]);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         const savedUser = localStorage.getItem("user");
         if (savedUser) {
             try {
-                setUser(JSON.parse(savedUser));
+                const parsedUser = JSON.parse(savedUser);
+                let role = "customer";
+                if (parsedUser.role) {
+                    role = parsedUser.role;
+                } else if (parsedUser.roleId && typeof parsedUser.roleId === "object" && parsedUser.roleId.name) {
+                    role = parsedUser.roleId.name;
+                } else if (parsedUser.name) {
+                    role = parsedUser.name;
+                }
+                setUser({ ...parsedUser, role });
             } catch (e) {
                 console.error("Lỗi parse user:", e);
             }
         }
         setLoading(false);
+    }, []);
+
+    const fetchUnread = () => {
+        setLoading(true);
+        notificationService.getNotificationIsRead()
+            .then((res: any) => setUnread(res?.data?.notifications || []))
+            .catch(() => setError("Không thể tải thông báo mới"))
+            .finally(() => setLoading(false));
+    };
+    useEffect(() => {
+        fetchUnread();
     }, []);
 
     useEffect(() => {
@@ -56,9 +80,9 @@ export default function Header() {
                 <div className="logo-cate">
                     <span>
                         <Link to="/" className="logo-etsy">
-                            <p>Lac Hong</p>
-                            <p>
-                                Artisan
+                            <p>LAC HONG</p>
+                            <p style={{ fontSize: 14, fontWeight: 400, marginTop: 4 }}>
+                                ARTISAN
                             </p>
                         </Link>
                     </span>
@@ -106,15 +130,28 @@ export default function Header() {
                     </div>
                 </div>
 
-                <div className="header-icons">
-                    <span className="icon-header" title="Notifications">
-                        <Icon name="bell" size={20} />
-                    </span>
-                    <span className="icon-header" title="Cart">
-                        <Link to="/cart" className="cart-link">
-                            <Icon name="cart" size={20} />
-                        </Link>
-                    </span>
+                <div className="header-icons" style={{ position: 'relative' }}>
+                    {user?.role !== "manager" && (
+                        <>
+                            <span className="icon-header" title="Notifications" style={{ position: 'relative' }}>
+                                <span onClick={() => setShowNotificationPopup(v => !v)} style={{ cursor: 'pointer', position: 'relative', display: 'inline-block' }}>
+                                    <Icon name="bell" size={20} />
+                                    {unread.length > 0 && (
+                                        <span className="notification-count" >{unread.length}</span>
+                                    )}
+                                </span>
+                                {showNotificationPopup && <NotificationModal onUpdate={fetchUnread} />}
+                            </span>
+                            <span className="icon-header" title="Cart">
+                                <Link to="/cart" className="cart-link">
+                                    <Icon name="cart" size={20} />
+                                </Link>
+                                <Link to="/wishlist" className="wishlist-link">
+                                    <Icon name="heart" size={20} />
+                                </Link>
+                            </span>
+                        </>
+                    )}
                     <span className="sign-in">
                         {user ? (
                             <div className="user-menu" ref={userMenuRef}>
@@ -131,15 +168,27 @@ export default function Header() {
 
                                 {isUserMenuOpen && (
                                     <div className="user-dropdown" role="menu">
-                                        <Link
-                                            to="/customer/profile"
-                                            className="user-dropdown-item"
-                                            role="menuitem"
-                                            onClick={() => setIsUserMenuOpen(false)}
-                                        >
-                                            <Icon name="profile" size={16} />
-                                            <span>Profile</span>
-                                        </Link>
+                                        {user?.role === "manager" ? (
+                                            <Link
+                                                to="/store"
+                                                className="user-dropdown-item"
+                                                role="menuitem"
+                                                onClick={() => setIsUserMenuOpen(false)}
+                                            >
+                                                <Icon name="home" size={16} />
+                                                <span>Dashboard</span>
+                                            </Link>
+                                        ) : (
+                                            <Link
+                                                to="/customer/profile"
+                                                className="user-dropdown-item"
+                                                role="menuitem"
+                                                onClick={() => setIsUserMenuOpen(false)}
+                                            >
+                                                <Icon name="profile" size={16} />
+                                                <span>Profile</span>
+                                            </Link>
+                                        )}
 
                                         <button
                                             type="button"
@@ -155,7 +204,8 @@ export default function Header() {
                             </div>
                         ) : (
                             <Link to="/login" className="sign-in-btn">
-                                Login
+                                <Icon name="profile" size={20} />
+                                Sign in
                             </Link>
                         )}
                     </span>

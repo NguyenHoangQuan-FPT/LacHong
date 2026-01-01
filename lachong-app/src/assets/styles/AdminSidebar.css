@@ -1,3 +1,17 @@
+.badge-noti {
+    display: inline-block;
+    min-width: 20px;
+    padding: 2px 7px;
+    margin-left: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    background: #0044ff;
+    border-radius: 999px;
+    vertical-align: middle;
+    line-height: 1.2;
+}
+
 .admin-sidebar {
     width: 260px;
     background: #0f172a;

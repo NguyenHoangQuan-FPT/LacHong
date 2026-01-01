@@ -22,6 +22,10 @@ export type IconName =
     | 'heart'
     | 'hearted'
     | 'share'
+    | 'home'
+    | 'overview'
+    | 'caret'
+    | 'start'
     | 'logout';
 
 interface IconProps extends React.HTMLAttributes<HTMLElement> {
@@ -53,6 +57,10 @@ const ICON_CLASS_MAP: Record<IconName, string> = {
     share: 'bi-share',
     heart: 'bi-heart',
     hearted: 'bi-heart-fill',
+    home: 'bi-house',
+    overview: 'bi-layout-text-window-reverse',
+    caret: 'bi-caret-right',
+    start: 'bi-star-fill',
     'exclamation-circle': 'bi-exclamation-circle',
     'arrow-repeat': 'bi-arrow-repeat',
 };

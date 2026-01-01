@@ -3,12 +3,14 @@ import { Link, useParams } from "react-router-dom";
 import { storeService } from "../../services/store.service";
 import "../../assets/styles/StoreDetail.css";
 import Icon from "../../assets/icons/Icon";
+import { toast, ToastContainer } from "react-toastify";
+import Button from "../../assets/buttons/Button";
 
 interface Store {
     _id: string;
     storeName: string;
     emailStore: string;
-    status: boolean;
+    status: 'PENDING' | 'ACTIVE' | 'INACTIVE';
     [key: string]: any;
 }
 
@@ -28,12 +30,13 @@ export default function StoreDetail() {
             .finally(() => setLoading(false));
     }, [id]);
 
-    const handleStatusChange = async (status: boolean) => {
+    const handleStatusChange = async (status: 'PENDING' | 'ACTIVE' | 'INACTIVE') => {
         if (!store) return;
         setUpdating(true);
         try {
             await storeService.updateStatusStore(store._id, status);
             setStore({ ...store, status });
+            toast.success("Cập nhật thành công");
         } finally {
             setUpdating(false);
         }
@@ -63,8 +66,8 @@ export default function StoreDetail() {
                         <h3>{store.storeName}</h3>
                         <p>{store.emailStore}</p>
 
-                        <span className={`status ${store.status ? "active" : "locked"}`}>
-                            {store.status ? "Hoạt động" : "Ngưng hoạt động"}
+                        <span className={`status ${store.status.toLowerCase()}`}>
+                            {store.status === 'PENDING' ? 'Chờ duyệt' : store.status === 'ACTIVE' ? 'Hoạt động' : 'Ngưng hoạt động'}
                         </span>
                     </div>
                 </div>
@@ -72,6 +75,7 @@ export default function StoreDetail() {
                 <div className="store-section">
                     <Detail label="Địa chỉ" value={store.address} />
                     <Detail label="Điện thoại" value={store.phone} />
+                    <Detail label="Mô tả" value={store.description} />
                     <Detail label="Chính sách" value={store.policy} />
                     <Detail label="Loại cửa hàng" value={store.typeStoreId} />
                     <Detail
@@ -96,17 +100,34 @@ export default function StoreDetail() {
                     </ul>
                 </div>
 
-                <div className="store-actions">
-                    <button
-                        className={`btn ${store.status ? "danger" : "success"}`}
-                        disabled={updating}
-                        onClick={() => handleStatusChange(!store.status)}
-                    >
-                        {store.status ? "Ngưng hoạt động" : "Hoạt động"}
-                    </button>
+                <div className="store-actions" style={{ display: 'flex', gap: 8 }}>
+                    <span >
+                        <Button variant="primary" >
+                            <Link to={`/admin/store/product/${store._id}`} style={{ color: "#ffffff" }}>Xem sản phẩm của cửa hàng</Link>
+                        </Button>
+                    </span>
+                    <span>
+                        {store.status === 'PENDING' && (
+                            <>
+                                <button className="btn success" disabled={updating} onClick={() => handleStatusChange('ACTIVE')}>Duyệt</button>
+                                <button className="btn danger" disabled={updating} onClick={() => handleStatusChange('INACTIVE')}>Từ chối</button>
+                            </>
+                        )}
+                        {store.status === 'ACTIVE' && (
+                            <button className="btn danger" disabled={updating} onClick={() => handleStatusChange('INACTIVE')}>Ngưng hoạt động</button>
+                        )}
+                        {store.status === 'INACTIVE' && (
+                            <button className="btn success" disabled={updating} onClick={() => handleStatusChange('ACTIVE')}>Hoạt động</button>
+                        )}
+                    </span>
                 </div>
             </div>
-        </div>
+            <ToastContainer
+                toastStyle={{ color: "white" }}
+                position="top-right"
+                autoClose={3000}
+            />
+        </div >
     );
 }
 

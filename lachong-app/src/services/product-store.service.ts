@@ -32,5 +32,8 @@ export const productStoreService = {
 
     getMaterials: () => {
         return axiosClient.get(`/materials`);
-    }
+    },
+    updateStatusProduct: (productId: string, status: boolean) => {
+        return axiosClient.patch(`/store/product/${productId}`, { status });
+    },
 }

@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import customerService from "../../services/customer.service";
 import "../../assets/styles/StoreDetail.css";
 import Icon from "../../assets/icons/Icon";
+import { toast, ToastContainer } from "react-toastify";
 
 interface Customer {
     _id: string;
@@ -45,6 +46,7 @@ export default function CustomerDetail() {
             await customerService.updateStatusCustomer(customer._id, status);
             const res = await customerService.getCustomerById(customer._id);
             setCustomer(res?.data?.customer || { ...customer, status });
+            toast.success("Cập nhật thành công");
         } finally {
             setUpdating(false);
         }
@@ -100,6 +102,11 @@ export default function CustomerDetail() {
                     </button>
                 </div>
             </div>
+            <ToastContainer
+                toastStyle={{ color: "white" }}
+                position="top-right"
+                autoClose={3000}
+            />
         </div>
     );
 }

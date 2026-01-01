@@ -11,6 +11,7 @@ type CommentItem = {
     updatedAt?: string;
     parentComment?: string | { _id?: string; id?: string } | null;
     customer?: { _id?: string; id?: string; fullName?: string; avatar?: string } | string;
+    store?: { _id?: string; id?: string; storeName?: string; avatar?: string } | string;
 };
 
 type PostCommentsModalProps = {
@@ -21,6 +22,7 @@ type PostCommentsModalProps = {
     commentLikesById: Record<string, { count: number; liked: boolean }>;
     onToggleLikeComment: (commentId: string) => void;
     viewerCustomerId: string | null;
+    viewerStoreId: string | null;
     replyToCommentId: string | null;
     replyToCommentName: string | null;
     onReply: (commentId: string, customerName?: string) => void;
@@ -58,6 +60,7 @@ export default function PostCommentsModal({
     commentLikesById,
     onToggleLikeComment,
     viewerCustomerId,
+    viewerStoreId,
     replyToCommentId,
     replyToCommentName,
     onReply,
@@ -117,17 +120,53 @@ export default function PostCommentsModal({
     const roots = comments.filter((c) => !parentIdOf(c));
 
     const renderComment = (c: CommentItem, index: number, depth: number) => {
+        let repliedName: string | null = null;
+        if (depth > 0 && c.parentComment) {
+            const parentId = extractId((c as any).parentComment);
+            const parent = comments.find((p) => extractId(p._id || p.id) === parentId);
+            if (parent) {
+                repliedName = typeof parent.customer === "object" && parent.customer?.fullName
+                    ? parent.customer.fullName
+                    : typeof parent.store === "object" && parent.store?.storeName
+                        ? parent.store.storeName
+                        : null;
+            }
+        }
         const cid = commentIdOf(c, index);
-        const name = typeof c.customer === "object" ? c.customer?.fullName : undefined;
-        const avatar = typeof c.customer === "object" ? normalizeImageUrl((c.customer as any)?.avatar) : null;
+        const name =
+            typeof c.customer === "object" && c.customer?.fullName
+                ? c.customer.fullName
+                : typeof c.store === "object" && c.store?.storeName
+                    ? c.store.storeName
+                    : "Ẩn danh";
+        const avatar =
+            typeof c.customer === "object" ? normalizeImageUrl((c.customer as any)?.avatar) :
+                typeof c.store === "object" ? normalizeImageUrl((c.store as any)?.avatar) :
+                    null;
         const commentCustomerId = extractId((c as any).customer);
-        const isMine = !!(viewerCustomerId && commentCustomerId && String(viewerCustomerId) === String(commentCustomerId));
+        const commentStoreId = extractId((c as any).store);
+        const isMine =
+            (viewerCustomerId && commentCustomerId && String(viewerCustomerId) === String(commentCustomerId)) ||
+            (viewerStoreId && commentStoreId && String(viewerStoreId) === String(commentStoreId));
         const likeState = commentLikesById[cid] || { count: 0, liked: false };
         const children = childrenByParentId[cid] || [];
-        const expanded = !!expandedRepliesByParentId[cid];
-        const visibleChildren = expanded ? children : children.slice(0, 1);
-        const hiddenCount = Math.max(0, children.length - visibleChildren.length);
+        const expanded = !!expandedRepliesByParentId[cid]; // Check if replies are expanded
+        const visibleChildren = expanded ? children : children.slice(0, 1); // Show only the first reply if not expanded
+        const hiddenCount = Math.max(0, children.length - visibleChildren.length); // Calculate hidden replies
 
+        // Helper: tìm id comment gốc (bậc 0) cho mọi comment
+        function getRootCommentId(comment: CommentItem): string {
+            let current = comment;
+            let parentId = extractId(current.parentComment);
+            while (parentId) {
+                const parent = comments.find((p) => extractId(p._id || p.id) === parentId);
+                if (!parent) break;
+                if (!parent.parentComment) return extractId(parent._id || parent.id) || cid;
+                current = parent;
+                parentId = extractId(current.parentComment);
+            }
+            return extractId(comment._id || comment.id) || cid;
+        }
         return (
             <div key={cid} className={"post-comment" + (depth > 0 ? " post-comment-reply" : "")}>
                 <div className="post-comment-avatar">
@@ -144,7 +183,12 @@ export default function PostCommentsModal({
                 <div className="post-comment-body">
                     <div className="post-comment-bubble">
                         <div className="post-comment-author">{name || "Ẩn danh"}</div>
-                        <div className="post-comment-text">{c.content}</div>
+                        <div className="post-comment-text">
+                            {repliedName && (
+                                <span className="post-comment-reply-to"><strong>{repliedName}</strong> </span>
+                            )}
+                            {c.content}
+                        </div>
                         {!!cid && (
                             <div className="post-comment-actions">
                                 <button
@@ -153,12 +197,12 @@ export default function PostCommentsModal({
                                     onClick={() => onToggleLikeComment(cid)}
                                     disabled={submitting}
                                 >
-                                    <Icon name="like" size={14} /> {likeState.count}
+                                    <Icon name="hearted" size={14} /> {likeState.count}
                                 </button>
                                 <button
                                     type="button"
                                     className="post-comment-reply-btn"
-                                    onClick={() => onReply(cid, name)}
+                                    onClick={() => onReply(getRootCommentId(c), name)}
                                     disabled={submitting}
                                 >
                                     Trả lời
@@ -243,7 +287,7 @@ export default function PostCommentsModal({
 
     return (
         <div className="post-modal-backdrop" onClick={() => !submitting && onClose()}>
-            <div className="post-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="post-modals" onClick={(e) => e.stopPropagation()}>
                 <div className="post-modal-header">
                     <h3>Bình luận</h3>
                     <button
@@ -259,7 +303,6 @@ export default function PostCommentsModal({
                     {roots.map((c, i) => renderComment(c, i, 0))}
 
                     <div className="post-comment-form">
-                        <div className="post-comment-avatar" />
                         <div className="post-comment-input-col">
                             {!!editingCommentId && (
                                 <div className="post-replying-banner">
@@ -295,7 +338,11 @@ export default function PostCommentsModal({
                                 <input
                                     id="comment-input-popup"
                                     className="post-comment-input"
-                                    placeholder={editingCommentId ? "Sửa bình luận..." : "Viết bình luận..."}
+                                    placeholder={editingCommentId
+                                        ? "Sửa bình luận..."
+                                        : replyToCommentId && replyToCommentName
+                                            ? `Trả lời ${replyToCommentName}...`
+                                            : "Viết bình luận..."}
                                     value={draft}
                                     onChange={(e) => onDraftChange(e.target.value)}
                                     onKeyDown={(e) => {

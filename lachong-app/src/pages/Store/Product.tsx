@@ -3,11 +3,13 @@ import { productStoreService } from '../../services/product-store.service';
 import { Link } from 'react-router-dom';
 import '../../assets/styles/ProductStore.css';
 import Icon from '../../assets/icons/Icon';
+import Button from '../../assets/buttons/Button';
 
 export default function StoreProducts() {
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [search, setSearch] = useState("");
 
     const storeRaw = localStorage.getItem('store') || localStorage.getItem('user');
     let storeId: string | null = null;
@@ -33,24 +35,33 @@ export default function StoreProducts() {
             .finally(() => setLoading(false));
     }, []);
 
-    return (
-        <div className="store-page">
-            <div className="store-main">
-                {/* Header */}
-                <header className="store-header">
-                    <div className="store-header-left">
-                        <h2>Quản lý sản phẩm</h2>
-                        <p>Danh sách sản phẩm của cửa hàng</p>
-                    </div>
-                    <div className="store-header-action">
-                        <Link to="/store/products/new" className="store-add-btn">
-                            <Icon name="plus" size={16} />
-                            <span>Thêm sản phẩm</span>
-                        </Link>
-                    </div>
-                </header>
+    const filteredProducts = products.filter((p) => {
+        const name = (p.productName || p.name || "").toLowerCase();
+        const searchMatch = name.includes(search.toLowerCase());
+        return searchMatch;
+    });
 
-                {/* Content */}
+    return (
+        <div className="store-pages">
+            <div className="product-header">Sản phẩm của cửa hàng
+                <span style={{ float: "right" }} >
+                    <Link to="/store/products/new" className="button-link">
+                        <Button variant="secondary">
+                            + Thêm sản phẩm
+                        </Button>
+                    </Link>
+                </span>
+
+            </div>
+            <input
+                className="search-store"
+                type="text"
+                placeholder="Tìm kiếm sản phẩm..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ marginTop: 16, padding: 8, width: 300 }}
+            />
+            <div className="store-mainn">
                 {loading ? (
                     <div className="store-status store-status-loading">
                         <Icon name="arrow-repeat" size={18} className="spin" /> Đang tải...
@@ -68,42 +79,52 @@ export default function StoreProducts() {
                         </Link>
                     </div>
                 ) : (
-                    <div className="productpage-grid">
-                        {products.map((p: any) => (
-                            <Link
-                                key={p._id || p.id}
-                                to={`/store/products/${p._id || p.id}`}
-                                className="productpage-link"
-                                title="Xem chi tiết"
-                            >
-                                <div className="productpage-card">
-                                    {Number(p.discountPercent) > 0 && (
-                                        <div className="productpage-discount">
-                                            {p.discountPercent}% OFF
-                                        </div>
-                                    )}
-                                    <img
-                                        className="productpage-image"
-                                        src={p.imageUrl}
-                                        alt={p.productName || p.name}
-                                    />
-                                    <div className="productpage-name">
-                                        {p.productName || p.name}
-                                    </div>
-                                    <div className="productpage-spacer" />
-                                    <div className="productpage-bottom">
-                                        <div className="productpage-prices">
-                                            <span className="price">
-                                                {Number(p.price).toLocaleString()} VND
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
+                    <table className="products-table">
+                        <thead>
+                            <tr>
+                                <th>ẢNH</th>
+                                <th>TÊN SẢN PHẨM</th>
+                                <th>GIÁ</th>
+                                <th>GIẢM GIÁ</th>
+                                <th>ĐÃ BÁN</th>
+                                <th>TRẠNG THÁI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredProducts.map((p: any) => (
+                                <tr key={p._id || p.id}>
+                                    <td>
+                                        <Link to={`/store/products/${p._id || p.id}`}>
+                                            <img
+                                                className="productpage-image"
+                                                src={p.imageUrl}
+                                                alt={p.productName || p.name}
+                                            />
+                                        </Link>
+                                    </td>
+                                    <td>
+                                        <Link to={`/store/products/${p._id || p.id}`} className="productpage-name">
+                                            {p.productName || p.name}
+                                        </Link>
+                                    </td>
+                                    <td><span className="price">{Number(p.price).toLocaleString()} VND</span></td>
+                                    <td>{Number(p.discountPercent) > 0 ? `${p.discountPercent}%` : '-'}</td>
+                                    <td>{p.sold}</td>
+                                    <td>
+                                        {p.status === false ? (
+                                            <span style={{ color: '#e53935', fontWeight: 600, background: '#fee2e2', borderRadius: 12, padding: '2px 10px' }}>Ngừng bán</span>
+                                        ) : p.status === true ? (
+                                            <span style={{ color: '#16a34a', fontWeight: 600, background: "#d1fae5", borderRadius: 12, padding: "2px 10px" }}>Đang bán</span>
+                                        ) : (
+                                            <span style={{ color: '#6b7280', fontWeight: 500, background: '#f3f4f6', borderRadius: 12, padding: '2px 10px' }}>-</span>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 )}
             </div>
-        </div>
+        </div >
     );
 }

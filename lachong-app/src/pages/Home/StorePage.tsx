@@ -207,8 +207,9 @@ export default function StorePage() {
                 </div>
 
                 <div className="store-section">
-                    <h3>Chính sách & Mạng xã hội</h3>
+                    <h3>Thông tin khác</h3>
                     <ul>
+                        <li>Mô tả: {store.description || "—"}</li>
                         <li>Chính sách: {store.policy || "—"}</li>
                         <li>
                             Social:&nbsp;

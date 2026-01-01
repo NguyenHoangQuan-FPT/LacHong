@@ -216,6 +216,15 @@ export default function ProductReview({ productId }: ProductReviewProps) {
             <span key={i} className={i < val ? "star filled" : "star"}>★</span>
         ));
     };
+    const fomattedDate = (dateStr?: string) => {
+        if (!dateStr) return "";
+        const date = new Date(dateStr);
+        return date.toLocaleDateString("vi-VN", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        });
+    };
 
     if (!productId) {
         return null;
@@ -273,6 +282,7 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                                 <div className="review-meta">
                                     <div className="review-user">{rev.customer?.fullName || "Ẩn danh"}</div>
                                 </div>
+                                <div className="review-date">{fomattedDate(rev.createdAt)}</div>
                                 <div className="review-comment">{rev.comment}</div>
                                 <div className="review-stars">{renderStars(rev.rating)}</div>
 

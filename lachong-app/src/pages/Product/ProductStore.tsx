@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { storeService } from "../../services/store.service";
 import { productService } from "../../services/product.service";
 import ProductCard, { type ProductItem } from "../../components/product/ProductCard";
-import "../../assets/styles/ProductStore.css";
+import "../../assets/styles/ProductStoreHome.css";
 
 type Category = { _id?: string; id?: string; name?: string };
 type Material = { _id?: string; id?: string; name?: string };

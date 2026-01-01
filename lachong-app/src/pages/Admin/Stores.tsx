@@ -9,13 +9,14 @@ interface Store {
     storeName: string;
     emailStore: string;
     phone?: string;
-    status: boolean;
+    status: 'PENDING' | 'ACTIVE' | 'INACTIVE';
 }
 
 
 const PAGE_SIZE = 15;
 
 export default function Stores() {
+
     const [stores, setStores] = useState<Store[]>([]);
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState("");
@@ -84,11 +85,11 @@ export default function Stores() {
                                         <td>{store.emailStore}</td>
                                         <td>{store.phone || "Chưa cập nhật"}</td>
                                         <td>
-                                            <span className={`status ${store.status ? "active" : "locked"}`}>
-                                                {store.status ? "Hoạt động" : "Khoá"}
+                                            <span className={`status ${store.status.toLowerCase()}`}>
+                                                {store.status === 'PENDING' ? 'Chờ duyệt' : store.status === 'ACTIVE' ? 'Hoạt động' : 'Khoá'}
                                             </span>
                                         </td>
-                                        <td>
+                                        <td style={{ display: 'flex', gap: 8 }}>
                                             <Button variant="secondary">
                                                 <Link to={`/admin/store/${store._id}`}>
                                                     Xem chi tiết

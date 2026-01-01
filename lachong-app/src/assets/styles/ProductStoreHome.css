@@ -1,0 +1,161 @@
+/* ===== PAGE ===== */
+.product-store-page {
+    width: 100%;
+    min-height: 100vh;
+    padding: 24px 0;
+}
+
+/* ===== CONTAINER ===== */
+.product-store-container {
+    margin: 0 auto;
+    display: flex;
+    gap: 24px;
+    padding: 0 16px;
+}
+
+/* ===== STATUS ===== */
+.product-store-status {
+    text-align: center;
+    font-size: 16px;
+    color: #555;
+}
+
+.product-store-status.error {
+    color: #d32f2f;
+}
+
+/* ===== FILTER SIDEBAR ===== */
+.product-store-filters {
+    width: 260px;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    height: fit-content;
+}
+
+/* Section */
+.filter-section {
+    margin-bottom: 16px;
+}
+
+.filter-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: #333;
+}
+
+/* Search */
+.filter-search {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+}
+
+.filter-search:focus {
+    outline: none;
+    border-color: #1976d2;
+}
+
+/* Select */
+.filter-select {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+    background: #fff;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #1976d2;
+}
+
+/* ===== PRICE FILTER ===== */
+.price-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.price-slider {
+    width: 100%;
+}
+
+.price-display {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #555;
+}
+
+.price-value {
+    font-weight: 600;
+    color: #000000;
+}
+
+/* ===== RESET BUTTON ===== */
+.filter-reset {
+    width: 100%;
+    padding: 10px;
+    background: #9e9e9e;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.filter-reset:hover {
+    background: #7e7e7e;
+}
+
+/* ===== MAIN CONTENT ===== */
+.product-store-main {
+    flex: 1;
+}
+
+/* ===== GRID ===== */
+.product-store-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 23px;
+}
+
+/* ===== EMPTY ===== */
+.product-store-empty {
+    background: #ffffff;
+    padding: 40px;
+    text-align: center;
+    border-radius: 12px;
+    color: #666;
+    font-size: 15px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 992px) {
+    .product-store-container {
+        flex-direction: column;
+    }
+
+    .product-store-filters {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .product-store-page {
+        padding: 12px 0;
+    }
+
+    .product-store-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+}

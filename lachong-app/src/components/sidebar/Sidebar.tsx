@@ -3,12 +3,14 @@ import { useEffect, useState } from 'react';
 import { storeService } from '../../services/store.service';
 import { authService } from '../../services/auth.service'; // nếu em tạo file này
 import '../../assets/styles/Sidebar.css';
+import Icon from '../../assets/icons/Icon';
 
 type StoreInfo = {
     id?: string;
     storeName?: string;
     emailStore?: string;
     avatar?: string;
+    status?: string;
 };
 
 export default function Sidebar() {
@@ -26,6 +28,7 @@ export default function Sidebar() {
                     storeName: s.storeName,
                     emailStore: s.emailStore,
                     avatar: s.avatar,
+                    status: s.status,
                 });
                 return;
             } catch {
@@ -43,6 +46,7 @@ export default function Sidebar() {
                     storeName: s.storeName,
                     emailStore: s.emailStore,
                     avatar: s.avatar,
+                    status: s.status,
                 };
                 setStore(mapped);
                 localStorage.setItem('store', JSON.stringify(mapped));
@@ -53,13 +57,13 @@ export default function Sidebar() {
     }, []);
 
     const links = [
-        { to: '/store', label: 'Overview', icon: 'bi-house' },
+        { to: '/store', label: 'Overview', icon: 'bi-layout-text-window-reverse' },
         { to: '/store/products', label: 'Products', icon: 'bi-box-seam' },
         { to: '/store/orders', label: 'Orders', icon: 'bi-receipt' },
-        { to: '/store/orders/pending', label: 'Pending', icon: 'bi-clock' },
-        { to: '/store/customers', label: 'Customers', icon: 'bi-people' },
-        { to: '/store/reports', label: 'Reports', icon: 'bi-bar-chart' },
+        { to: '/store/notifications', label: 'Notifications', icon: 'bi-bell' },
         { to: '/store/profile', label: 'Profile', icon: 'bi-person-circle' },
+        { to: '/', label: 'Home', icon: 'bi-house' },
+
     ];
 
     const isActive = (path: string) => {
@@ -96,6 +100,13 @@ export default function Sidebar() {
                     <div className="lh-store-email">
                         {store?.emailStore || '—'}
                     </div>
+                    <div className="lh-store-status-badge">
+                        {store?.status ? (
+                            <span className={`badge badge-${(store.status || '').toLowerCase()}`}>
+                                {store.status === 'ACTIVE' ? 'Active' : store.status === 'PENDING' ? 'Pending' : store.status === 'INACTIVE' ? 'Inactive' : store.status}
+                            </span>
+                        ) : '—'}
+                    </div>
                 </div>
             </div>
 
@@ -113,13 +124,15 @@ export default function Sidebar() {
 
                 <button
                     type="button"
-                    className="lh-nav-item lh-nav-logout"
+                    className='lh-nav-item'
+                    style={{ background: "#0f172a", color: "white", border: "none", width: "100%" }}
                     onClick={handleLogout}
                 >
-                    <i className="bi bi-box-arrow-right" />
-                    <span className="lh-nav-label">Logout</span>
+                    <Icon name="logout" size={18} />
+                    <span className="lh-nav-label"> Logout</span>
                 </button>
+
             </nav>
-        </aside>
+        </aside >
     );
 }
