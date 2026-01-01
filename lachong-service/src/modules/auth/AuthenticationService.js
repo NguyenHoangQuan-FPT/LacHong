@@ -6,6 +6,7 @@ const role = require('../../models/model/Role');
 const Store = require('../../models/model/Store');
 const AccountDTO = require('../../models/DTOs/AccountDTO');
 const StoreDTO = require('../../models/DTOs/StoreDTO');
+const Notification = require('../../models/model/Notification');
 
 exports.registerUser = async (req, res) => {
     const { error, value } = AccountDTO.validate(req.body);
@@ -74,9 +75,25 @@ exports.registerStore = async (req, res) => {
         const store = new Store({
             storeName: storeName,
             emailStore: emailStore,
-            ownerId: user._id
+            ownerId: user._id,
+            status: 'PENDING'
         });
         await store.save();
+
+        // Notify all admins
+        const admins = await Account.find({ status: true }).populate('roleId');
+        for (const admin of admins) {
+            if (admin.roleId && admin.roleId.name === 'admin') {
+                const adminNoti = new Notification({
+                    receiver: admin._id,
+                    store: store._id,
+                    title: 'Yêu cầu duyệt cửa hàng mới',
+                    message: `Cửa hàng "${storeName}" vừa đăng ký mới và chờ duyệt.`,
+                    type: 'SYSTEM'
+                });
+                await adminNoti.save();
+            }
+        }
 
         res.status(201).json({ message: 'Store registered successfully' });
     } catch (error) {
@@ -89,7 +106,7 @@ exports.registerStore = async (req, res) => {
 exports.login = async (req, res) => {
     const { email, password } = req.body;
     try {
-        const user = await Account.findOne({ email }).populate('roleId');
+        const user = await Account.findOne({ email, status: true }).populate('roleId');
         if (!user) return res.status(400).json({ message: 'Invalid username or password.' });
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: 'Invalid username or password.' });

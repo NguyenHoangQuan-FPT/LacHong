@@ -5,6 +5,9 @@ const StoreService = require('./StoreService');
 const upload = require('../../config/multer');
 const verifyStoreToken = require('../../services/middleware');
 
+router.get("/store/orders", verifyStoreToken, StoreService.getAllOrdersByStore);
+router.get("/store/order/:orderId", verifyStoreToken, StoreService.getOrdersById);
+router.put("/store/order/:orderId", verifyStoreToken, StoreService.updateOrderStatus);
 router.put("/profileStore", verifyStoreToken, upload.single("avatar"), StoreService.updateProfileStore);
 router.get("/profileStore", verifyStoreToken, StoreService.getProfileStore);
 router.post(
@@ -20,5 +23,6 @@ router.get("/store/:id", StoreService.getStoreById);
 router.get("/store/:id/products", StoreService.getProductsByStoreId);
 router.get("/stores", verifyStoreToken, StoreService.getAllStores);
 router.put("/store/:id", verifyStoreToken, StoreService.updateStatusStore);
+router.patch("/store/product/:id", verifyStoreToken, StoreService.updateProductStatusByStore);
 
 module.exports = router;

@@ -102,13 +102,16 @@ exports.updateQuantity = async (req, res) => {
             return res.status(404).json({ message: "Cart item not found." });
         }
 
-        cartItem.quantity = quantity;
-
         const product = await Product.findById(cartItem.productId);
         if (!product) {
             return res.status(404).json({ message: "Product not found." });
         }
 
+        if (quantity > product.stock) {
+            return res.status(400).json({ message: `Sản phẩm không đủ trong kho` });
+        }
+
+        cartItem.quantity = quantity;
         cartItem.priceAtTime = product.price;
         cartItem.discountPercentAtTime = product.discountPercent || 0;
         cartItem.totalPrice = product.price * cartItem.quantity;

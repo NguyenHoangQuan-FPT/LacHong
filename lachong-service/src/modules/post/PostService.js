@@ -1,9 +1,10 @@
 const Post = require('../../models/model/Post');
 const Customer = require('../../models/model/Customer');
+const Store = require('../../models/model/Store');
 
 exports.getAllPosts = async (req, res) => {
     try {
-        const posts = await Post.find().populate('customer', 'fullName avatar').lean().exec();
+        const posts = await Post.find().populate('customer', 'fullName avatar').populate('store', 'storeName avatar').lean().exec();
         res.status(200).json({
             message: "Posts retrieved successfully.",
             posts
@@ -31,16 +32,31 @@ exports.createPost = async (req, res) => {
             return res.status(400).json({ message: "Content cannot be empty." });
         }
 
-        const image = req.file ? req.file.path : null;
+        const files = req.files || [];
+        const images = files.map(f => f.path);
 
-        const customer = await Customer.findOne({ accountId });
-        if (!customer) {
-            return res.status(404).json({ message: "Customer not found." });
+        let customer = null;
+        let store = null;
+        const role = req.user?.role;
+
+        if (role === "manager") {
+            store = await Store.findOne({ ownerId: accountId });
+            if (!store) {
+                return res.status(404).json({ message: "Store not found for this account." });
+            }
+        } else if (role === "customer") {
+            customer = await Customer.findOne({ accountId: accountId });
+
         }
+        else {
+            return res.status(403).json({ message: "Only customers or store managers can create posts." });
+        }
+
         const newPost = new Post({
-            customer: customer._id,
+            customer: customer ? customer._id : undefined,
+            store: store ? store._id : undefined,
             title,
-            image,
+            images: images ? images : [],
             content,
             createdAt: new Date(),
             updatedAt: new Date()
@@ -49,6 +65,7 @@ exports.createPost = async (req, res) => {
 
         const created = await Post.findById(newPost._id)
             .populate('customer', 'fullName avatar')
+            .populate('store', 'storeName address')
             .lean()
             .exec();
 
@@ -66,6 +83,7 @@ exports.updatePost = async (req, res) => {
     try {
         const { id } = req.params;
         const accountId = req.user?.id;
+        const role = req.user?.role;
 
         if (!accountId) {
             return res.status(401).json({ message: "Unauthorized." });
@@ -75,26 +93,53 @@ exports.updatePost = async (req, res) => {
             return res.status(404).json({ message: "Post not found." });
         }
 
-        const customer = await Customer.findOne({ accountId });
-        if (!customer) {
-            return res.status(404).json({ message: "Customer not found." });
+        let isOwner = false;
+        if (role === "manager") {
+            const store = await Store.findOne({ ownerId: accountId });
+            if (store && String(post.store) === String(store._id)) {
+                isOwner = true;
+            }
+        } else if (role === "customer") {
+            const customer = await Customer.findOne({ accountId: accountId });
+            if (customer && String(post.customer) === String(customer._id)) {
+                isOwner = true;
+            }
         }
-
-        if (String(post.customer) !== String(customer._id)) {
+        if (!isOwner) {
             return res.status(403).json({ message: "You can only update your own post." });
         }
 
         const { title, content } = req.body;
+        let oldImages = [];
+        if (req.body.images) {
+            try {
+                if (typeof req.body.images === 'string') {
+                    // Có thể là JSON.stringify([...]) hoặc 1 url string
+                    if (req.body.images.startsWith('[')) {
+                        oldImages = JSON.parse(req.body.images);
+                    } else {
+                        oldImages = [req.body.images];
+                    }
+                } else if (Array.isArray(req.body.images)) {
+                    oldImages = req.body.images;
+                }
+            } catch (e) {
+                oldImages = [];
+            }
+        }
+        // Ảnh mới upload
+        const files = req.files || [];
+        const newImages = files.map(f => f.path);
+        // Gộp lại
+        post.images = [...oldImages, ...newImages];
         if (title !== undefined) post.title = title;
         if (content !== undefined) post.content = content;
-        if (req.file) {
-            post.image = req.file.path;
-        }
         post.updatedAt = new Date();
         await post.save();
 
         const updated = await Post.findById(post._id)
             .populate('customer', 'fullName avatar')
+            .populate('store', 'storeName avatar')
             .lean()
             .exec();
 
@@ -112,6 +157,7 @@ exports.deletePost = async (req, res) => {
     try {
         const { id } = req.params;
         const accountId = req.user?.id;
+        const role = req.user?.role;
 
         if (!accountId) {
             return res.status(401).json({ message: "Unauthorized." });
@@ -121,12 +167,19 @@ exports.deletePost = async (req, res) => {
             return res.status(404).json({ message: "Post not found." });
         }
 
-        const customer = await Customer.findOne({ accountId });
-        if (!customer) {
-            return res.status(404).json({ message: "Customer not found." });
+        let isOwner = false;
+        if (role === "manager") {
+            const store = await Store.findOne({ ownerId: accountId });
+            if (store && String(post.store) === String(store._id)) {
+                isOwner = true;
+            }
+        } else if (role === "customer") {
+            const customer = await Customer.findOne({ accountId: accountId });
+            if (customer && String(post.customer) === String(customer._id)) {
+                isOwner = true;
+            }
         }
-
-        if (String(post.customer) !== String(customer._id)) {
+        if (!isOwner) {
             return res.status(403).json({ message: "You can only delete your own post." });
         }
 

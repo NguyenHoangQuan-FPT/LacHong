@@ -16,6 +16,11 @@ const ProductDTO = joi.object({
         .messages({
             'string.max': 'Description must be at most 1000 characters long'
         }),
+    policy: joi.string()
+        .max(1000)
+        .messages({
+            'string.max': 'Policy must be at most 1000 characters long'
+        }),
     price: joi.number()
         .positive()
         .required()

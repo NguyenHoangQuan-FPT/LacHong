@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 
 const likeCommentSchema = new mongoose.Schema({
     comment: { type: mongoose.Schema.Types.ObjectId, ref: 'Comment', required: true },
-    customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required: true },
+    customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
+    store: { type: mongoose.Schema.Types.ObjectId, ref: 'Store' },
     createdAt: { type: Date, default: Date.now }
 })
 

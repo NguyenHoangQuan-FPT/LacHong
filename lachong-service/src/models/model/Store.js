@@ -11,13 +11,19 @@ const storeSchema = new mongoose.Schema({
         instagram: { type: String },
         twitter: { type: String }
     },
+    description: { type: String },
     policy: { type: String },
     typeStoreId: { type: mongoose.Schema.Types.ObjectId, ref: 'TypeStore' },
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Account' },
-    status: { type: Boolean, default: true }
-}, {
-    timestamps: true
-});
+    status: {
+        type: String,
+        enum: ['PENDING', 'ACTIVE', 'INACTIVE'],
+        default: 'PENDING'
+    }
+}
+    , {
+        timestamps: true
+    });
 
 const Store = mongoose.model('Store', storeSchema);
 

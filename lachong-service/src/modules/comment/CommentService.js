@@ -1,6 +1,7 @@
 const Comment = require('../../models/model/Comment');
 const Post = require('../../models/model/Post');
 const Customer = require('../../models/model/Customer');
+const Store = require('../../models/model/Store');
 
 const normalizeId = (value) => {
     if (value === undefined || value === null || value === '') return null;
@@ -29,15 +30,17 @@ const buildCommentTree = (comments) => {
 };
 
 exports.addComment = async (req, res) => {
-    const { postId, content } = req.body;
-    const parentCommentId = normalizeId(req.body.parentCommentId ?? req.body.parentComment);
-    const accountId = req.user?.id;
-
-    if (!accountId) {
-        return res.status(401).json({ message: "Unauthorized." });
-    }
-
     try {
+
+        const { postId, content } = req.body;
+        const parentCommentId = normalizeId(req.body.parentCommentId ?? req.body.parentComment);
+        const accountId = req.user?.id;
+
+        if (!accountId) {
+            return res.status(401).json({ message: "Unauthorized." });
+        }
+
+
         if (!postId) {
             return res.status(400).json({ message: "postId is required." });
         }
@@ -46,9 +49,20 @@ exports.addComment = async (req, res) => {
             return res.status(400).json({ message: "Content cannot be empty." });
         }
 
-        const customer = await Customer.findOne({ accountId });
-        if (!customer) {
-            return res.status(404).json({ message: "Customer not found." });
+        let customer = null;
+        let store = null;
+        if (req.user?.role === 'manager') {
+            store = await Store.findOne({ ownerId: accountId });
+            if (!store) {
+                return res.status(404).json({ message: "Store not found." });
+            }
+        } else if (req.user?.role === 'customer') {
+            customer = await Customer.findOne({ accountId: accountId });
+            if (!customer) {
+                return res.status(404).json({ message: "Customer not found." });
+            }
+        } else {
+            return res.status(403).json({ message: "Invalid role." });
         }
 
         const post = await Post.findById(postId);
@@ -70,7 +84,8 @@ exports.addComment = async (req, res) => {
 
         const newComment = new Comment({
             post: postId,
-            customer: customer._id,
+            customer: customer ? customer._id : undefined,
+            store: store ? store._id : undefined,
             parentComment: parentComment ? parentComment._id : null,
             content: String(content).trim()
         });
@@ -79,6 +94,7 @@ exports.addComment = async (req, res) => {
 
         const created = await Comment.findById(newComment._id)
             .populate('customer', 'fullName avatar')
+            .populate('store', 'storeName avatar')
             .lean()
             .exec();
 
@@ -97,6 +113,7 @@ exports.getCommentsByPostId = async (req, res) => {
         const { postId } = req.params;
         const comments = await Comment.find({ post: postId })
             .populate('customer', 'fullName avatar')
+            .populate('store', 'storeName avatar')
             .sort({ createdAt: 1 })
             .lean()
             .exec();
@@ -123,9 +140,20 @@ exports.deleteComment = async (req, res) => {
             return res.status(401).json({ message: "Unauthorized." });
         }
 
-        const customer = await Customer.findOne({ accountId });
-        if (!customer) {
-            return res.status(404).json({ message: "Customer not found." });
+        let customer = null;
+        let store = null;
+        if (req.user?.role === 'manager') {
+            store = await Store.findOne({ ownerId: accountId });
+            if (!store) {
+                return res.status(404).json({ message: "Store not found." });
+            }
+        } else if (req.user?.role === 'customer') {
+            customer = await Customer.findOne({ accountId: accountId });
+            if (!customer) {
+                return res.status(404).json({ message: "Customer not found." });
+            }
+        } else {
+            return res.status(403).json({ message: "Invalid role." });
         }
 
         const comment = await Comment.findById(id);
@@ -134,7 +162,7 @@ exports.deleteComment = async (req, res) => {
         }
 
         // Only the owner of the comment can delete it
-        if (String(comment.customer) !== String(customer._id)) {
+        if (String(comment.customer) !== String(customer?._id) && String(comment.store) !== String(store?._id)) {
             return res.status(403).json({ message: "You can only delete your own comment." });
         }
 
@@ -171,10 +199,22 @@ exports.updateComment = async (req, res) => {
             return res.status(401).json({ message: "Unauthorized." });
         }
 
-        const customer = await Customer.findOne({ accountId });
-        if (!customer) {
-            return res.status(404).json({ message: "Customer not found." });
+        let customer = null;
+        let store = null;
+        if (req.user?.role === 'manager') {
+            store = await Store.findOne({ ownerId: accountId });
+            if (!store) {
+                return res.status(404).json({ message: "Store not found." });
+            }
+        } else if (req.user?.role === 'customer') {
+            customer = await Customer.findOne({ accountId: accountId });
+            if (!customer) {
+                return res.status(404).json({ message: "Customer not found." });
+            }
+        } else {
+            return res.status(403).json({ message: "Invalid role." });
         }
+
 
         const comment = await Comment.findById(id);
         if (!comment) {
@@ -182,7 +222,7 @@ exports.updateComment = async (req, res) => {
         }
 
         // Only the owner of the comment can update it
-        if (String(comment.customer) !== String(customer._id)) {
+        if (String(comment.customer) !== String(customer?._id) && String(comment.store) !== String(store?._id)) {
             return res.status(403).json({ message: "You can only update your own comment." });
         }
 

@@ -16,6 +16,9 @@ const CommentRouter = require('../modules/comment/CommentRouter');
 const LikeRouter = require('../modules/like/LikeRouter');
 const LikeCommentRouter = require('../modules/likeComment/LikeCommentRouter');
 const FollowRouter = require('../modules/follow/FollowRouter');
+const NotificationRouter = require('../modules/notification/NotificationRouter');
+const WishListRouter = require('../modules/wishList/wishListRouter');
+const TypeStoreRouter = require('../modules/typeStore/typeStoreRouter');
 
 const initRoute = (app) => {
 
@@ -35,6 +38,9 @@ const initRoute = (app) => {
     app.use('/api/v1/', LikeRouter);
     app.use('/api/v1/', LikeCommentRouter);
     app.use('/api/v1/', FollowRouter);
+    app.use('/api/v1/', NotificationRouter);
+    app.use('/api/v1/', WishListRouter);
+    app.use('/api/v1/', TypeStoreRouter);
 
 }
 

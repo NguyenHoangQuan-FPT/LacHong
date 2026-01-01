@@ -57,6 +57,11 @@ const storeSchema = joi.object({
         .messages({
             'string.max': 'Policy must be at most 1000 characters long'
         }),
+    description: joi.string()
+        .max(1000)
+        .messages({
+            'string.max': 'Description must be at most 1000 characters long'
+        }),
     typeStoreId: joi.string()
         .hex()
         .length(24)
