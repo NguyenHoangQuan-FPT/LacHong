@@ -3,7 +3,7 @@ import { productService } from "../../services/product.service";
 import ProductCard from "../../components/product/ProductCard";
 import type { ProductItem } from "../../components/product/ProductCard";
 import "../../assets/styles/Product.css";
-import Icon from "../../assets/icons/Icon";
+import Icon from "../../components/common/icons/Icon";
 
 type Category = { _id?: string; id?: string; name?: string };
 type Material = { _id?: string; id?: string; name?: string };

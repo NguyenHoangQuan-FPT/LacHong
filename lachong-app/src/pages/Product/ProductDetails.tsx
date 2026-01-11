@@ -8,7 +8,8 @@ import { ToastContainer, toast } from "react-toastify";
 import "../../assets/styles/ProductDetails.css";
 import ProductRelated from "../../components/product/ProductRelated";
 import ProductReview from "../../components/product/ProductReview";
-import Icon from "../../assets/icons/Icon";
+import Icon from "../../components/common/icons/Icon";
+import Toast from "../../components/common/toast/Toast";
 
 const normalizeImageUrl = (url?: string) => {
     if (!url) return "https://via.placeholder.com/400x300?text=No+Image";
@@ -270,7 +271,7 @@ export default function ProductDetail() {
                         {product.description && (
                             <div className="product-detail-desc">
                                 <h3>Mô tả sản phẩm</h3>
-                                <p>{product.description}</p>
+                                <p style={{ whiteSpace: "pre-line" }}>{product.description}</p>
                             </div>
                         )}
 
@@ -291,7 +292,19 @@ export default function ProductDetail() {
                         )}
                         {product.policy && (
                             <div className="product-detail-meta">
-                                <strong>Chính sách bảo hành:</strong> {product.policy}
+                                <strong >Chính sách bảo hành:</strong>
+                                <ul>
+                                    {product.policy ? (
+                                        product.policy
+                                            .split('\n')
+                                            .filter((line: string) => line.trim())
+                                            .map((line: string, idx: number) => (
+                                                <li key={idx}>{line}</li>
+                                            ))
+                                    ) : (
+                                        <li>Chưa có mô tả cho sản phẩm này.</li>
+                                    )}
+                                </ul>
                             </div>
                         )}
                         {user?.role !== "manager" && (
@@ -359,7 +372,7 @@ export default function ProductDetail() {
             </div>
             <ProductRelated product={product} currentCategoryId={currentCategoryId} />
             <ProductReview productId={id as string} />
-            <ToastContainer toastStyle={{ color: "white" }} autoClose={1000} />
+            <Toast></Toast>
         </div >
     );
 }

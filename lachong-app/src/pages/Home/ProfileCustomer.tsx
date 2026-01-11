@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import ReactCrop, {
     type Crop,
     type PixelCrop,
@@ -8,7 +9,7 @@ import ReactCrop, {
 import "react-image-crop/dist/ReactCrop.css";
 import customerService from "../../services/customer.service";
 import "../../assets/styles/ProfileCustomer.css";
-import Button from "../../assets/buttons/Button";
+import Button from "../../components/common/buttons/Button";
 
 function normalizeImageUrl(url?: string | null): string | null {
     if (!url) return null;
@@ -324,8 +325,8 @@ export default function ProfileCustomer() {
     return (
         <div className="profile-customer-page">
             <div className="profile-card">
-                <h1>Thông tin khách hàng</h1>
-                <p className="subtitle">Cập nhật hồ sơ của bạn</p>
+                <h1>Thông tin của tôi</h1>
+                <p className="subtitle">Cập nhật hồ sơ của tôi</p>
 
                 <div className="avatar-section">
                     <div className="avatar-preview">
@@ -358,57 +359,57 @@ export default function ProfileCustomer() {
                             />
                         </label>
 
-                        <button
-                            type="button"
-                            className="btn primary"
+                        <Button
+                            variant="add"
                             onClick={handleUpdateAvatar}
                             disabled={avatarSaving || !avatarFile}
                         >
                             {avatarSaving ? "Đang cập nhật..." : "Cập nhật avatar"}
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
-                {shouldShowCropper && (
-                    <div className="avatar-crop-panel">
-                        <div className="avatar-crop-title">Cắt ảnh avatar</div>
-                        <div className="avatar-crop-body">
-                            <ReactCrop
-                                crop={crop}
-                                onChange={(_, percentCrop) => setCrop(percentCrop)}
-                                onComplete={(c) => setCompletedCrop(c)}
-                                aspect={1}
-                                circularCrop
-                                keepSelection
-                            >
-                                <img
-                                    src={pendingAvatarUrl || ""}
-                                    alt="Crop avatar"
-                                    onLoad={onCropImageLoad}
-                                    className="avatar-crop-image"
-                                />
-                            </ReactCrop>
+                {shouldShowCropper && createPortal(
+                    <div className="avatar-crop-modal-overlay">
+                        <div className="avatar-crop-modal">
+                            <div className="avatar-crop-title">Cắt ảnh avatar</div>
+                            <div className="avatar-crop-body">
+                                <ReactCrop
+                                    crop={crop}
+                                    onChange={(_, percentCrop) => setCrop(percentCrop)}
+                                    onComplete={(c) => setCompletedCrop(c)}
+                                    aspect={1}
+                                    circularCrop
+                                    keepSelection
+                                >
+                                    <img
+                                        src={pendingAvatarUrl || ""}
+                                        alt="Crop avatar"
+                                        onLoad={onCropImageLoad}
+                                        className="avatar-crop-image"
+                                    />
+                                </ReactCrop>
+                            </div>
+                            <div className="avatar-crop-actions">
+                                <button
+                                    type="button"
+                                    className="btn secondary"
+                                    onClick={handleCancelCrop}
+                                    disabled={avatarSaving}
+                                >
+                                    Hủy
+                                </button>
+                                <Button
+                                    variant="submit"
+                                    onClick={handleApplyCrop}
+                                    disabled={avatarSaving || !completedCrop?.width || !completedCrop?.height}
+                                >
+                                    Áp dụng cắt
+                                </Button>
+                            </div>
                         </div>
-
-                        <div className="avatar-crop-actions">
-                            <button
-                                type="button"
-                                className="btn secondary"
-                                onClick={handleCancelCrop}
-                                disabled={avatarSaving}
-                            >
-                                Hủy
-                            </button>
-                            <button
-                                type="button"
-                                className="btn primary"
-                                onClick={handleApplyCrop}
-                                disabled={avatarSaving || !completedCrop?.width || !completedCrop?.height}
-                            >
-                                Áp dụng cắt
-                            </button>
-                        </div>
-                    </div>
+                    </div>,
+                    document.body
                 )}
 
                 <div className="form-grid">
@@ -452,7 +453,7 @@ export default function ProfileCustomer() {
                     </div>
                 </div>
 
-                <Button variant="primary" onClick={handleSave} disabled={saving}>
+                <Button variant="submit" onClick={handleSave} disabled={saving}>
                     {saving ? "Đang lưu..." : "Lưu thay đổi"}
                 </Button>
             </div>

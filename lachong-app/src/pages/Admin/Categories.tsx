@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import categoryService from "../../services/category.service";
 import "../../assets/styles/Categories.css";
-import Button from "../../assets/buttons/Button";
+import Button from "../../components/common/buttons/Button";
 import { toast, ToastContainer } from "react-toastify";
 
 interface Category {
@@ -93,7 +93,7 @@ export default function Categories() {
                     style={{ padding: 8, width: 300 }}
                 />
                 <span style={{ float: 'right' }}>
-                    <Button variant="primary" onClick={() => setShowModal(true)}>
+                    <Button variant="add" onClick={() => setShowModal(true)}>
                         Thêm danh mục
                     </Button>
                 </span>
@@ -122,7 +122,7 @@ export default function Categories() {
                                 </div>
                                 {addError && <div style={{ color: 'red', marginBottom: 8 }}>{addError}</div>}
                                 <div style={{ display: 'flex', gap: 8 }}>
-                                    <Button type="submit" variant="primary" disabled={addLoading}>
+                                    <Button type="submit" variant="add" disabled={addLoading}>
                                         {addLoading ? "Đang thêm..." : "Thêm"}
                                     </Button>
                                     <Button type="button" variant="secondary" onClick={() => setShowModal(false)}>

@@ -3,7 +3,7 @@ import { reviewService } from "../../services/review.service";
 import customerService from "../../services/customer.service";
 import { toast } from "react-toastify";
 import "../../assets/styles/ProductReview.css";
-import Icon from "../../assets/icons/Icon";
+import Icon from "../../components/common/icons/Icon";
 
 type ReviewItem = {
     _id?: string;

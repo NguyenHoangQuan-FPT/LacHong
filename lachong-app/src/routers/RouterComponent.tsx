@@ -4,6 +4,7 @@ import HomePage from "../pages/Home/HomePage";
 import UserRegister from "../pages/Auth/UserRegister";
 import BusinessRegister from "../pages/Auth/BusinessRegister";
 import Login from "../pages/Auth/Login";
+import ActiveAccount from "../pages/Auth/ActiveAccount";
 import Homestore from "../pages/Store/Homestore";
 import StoreProducts from "../pages/Store/Product";
 import AddProduct from "../pages/Store/AddProduct";
@@ -35,6 +36,9 @@ import TypeStore from "../pages/Admin/TypeStore";
 import NotificationAdmin from "../pages/Admin/NotificationAdmin";
 import ProductInStore from "../pages/Admin/ProductInStore";
 import ProductDetailCard from "../pages/Admin/ProductDetailCard";
+import MessageStore from "../pages/Store/MessageStore";
+import ChatList from "../components/chat/ChatList";
+import ChatModal from "../components/chat/ChatModal";
 
 
 export default function RouterComponent() {
@@ -51,8 +55,12 @@ export default function RouterComponent() {
             <Route path="/store/:id" element={<Layout><SidebarStore /></Layout>} />
             <Route path="/customer/profile" element={<Layout><SidebarCustomer /></Layout>} />
             <Route path="/customer/orders" element={<Layout><SidebarCustomer /></Layout>} />
+            <Route path="/message" element={<Layout><ChatList /></Layout>} />
+            <Route path="/message/:storeId" element={<Layout><ChatModal /></Layout>} />
+
 
             <Route path="/user-register" element={<UserRegister />} />
+            <Route path="/active-account/:token" element={<ActiveAccount />} />
             <Route path="/business-register" element={<BusinessRegister />} />
             <Route path="/login" element={<Login />} />
 
@@ -65,6 +73,7 @@ export default function RouterComponent() {
             <Route path="/store/orders" element={<StoreLayout><Orders /></StoreLayout>} />
             <Route path="/store/order/:id" element={<StoreLayout><OrderDetail /></StoreLayout>} />
             <Route path="/store/notifications" element={<StoreLayout><StoreNotification /></StoreLayout>} />
+            <Route path="/store/message" element={<StoreLayout><MessageStore /></StoreLayout>} />
 
             <Route path="/admin" element={<LayoutAdmin><Dashboard /></LayoutAdmin>} />
             <Route path="/admin/stores" element={<LayoutAdmin><Stores /></LayoutAdmin>} />

@@ -36,8 +36,8 @@ export default function UserRegister() {
         }
         setLoading(true);
         try {
-            const res = await authService.register(form.email, form.password);
-            // assume success -> redirect to login
+            await authService.register(form.email, form.password);
+            alert("Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.");
             navigate('/login');
         } catch (err: any) {
             console.error('Register error', err);
@@ -124,7 +124,7 @@ export default function UserRegister() {
 
                             <div className="ur-col ur-col-illustration" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
                                 <img
-                                    src="/images/Banner/Banner.jpg"
+                                    src="/images/Banner/Login.jpg"
                                     alt="Register mascot"
                                     className="ur-illustration"
                                     style={{ height: 330, maxWidth: "92%", borderRadius: 8, boxShadow: "0 2px 16px #0001" }}

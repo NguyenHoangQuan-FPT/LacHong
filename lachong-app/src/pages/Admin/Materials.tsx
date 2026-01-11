@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import materialService from "../../services/material.service";
 import "../../assets/styles/categories.css";
-import Button from "../../assets/buttons/Button";
+import Button from "../../components/common/buttons/Button";
 import { toast, ToastContainer } from "react-toastify";
 
 interface Material {
@@ -96,7 +96,7 @@ export default function Materials() {
                     style={{ marginBottom: 16, padding: 8, width: 300 }}
                 />
                 <span style={{ float: 'right' }}>
-                    <Button variant="primary" onClick={() => setShowModal(true)}>
+                    <Button variant="add" onClick={() => setShowModal(true)}>
                         Thêm chất liệu
                     </Button>
                 </span>
@@ -122,8 +122,8 @@ export default function Materials() {
                                     />
                                 </div>
                                 {addError && <div style={{ color: 'red', marginBottom: 8 }}>{addError}</div>}
-                                <div className="modal-actions">
-                                    <Button type="submit" variant="primary" disabled={addLoading}>
+                                <div className="modal-actions" style={{ display: 'flex', gap: 8 }}>
+                                    <Button type="submit" variant="add" disabled={addLoading}>
                                         {addLoading ? "Đang thêm..." : "Thêm"}
                                     </Button>
                                     <Button type="button" variant="secondary" onClick={() => setShowModal(false)}>

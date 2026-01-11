@@ -1,0 +1,197 @@
+/* Container chính */
+.chatbox-container-customer {
+    width: 100%;
+    max-height: 80vh;
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    padding-bottom: 10px;
+    margin-left: 10px;
+    /* RẤT QUAN TRỌNG */
+}
+
+/* Header */
+.chatbox-header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+    background: #ffffff;
+}
+
+.chatbox-header h3 {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+/* Messages area – CHỖ DUY NHẤT SCROLL */
+.chatbox-customer-messages {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    background: #f5f6f8;
+}
+
+/* Message wrapper */
+.chatbox-customer-messages>div {
+    margin-bottom: 10px;
+}
+
+/* Bubble */
+.message-bubble {
+    display: inline-block;
+    padding: 8px 12px;
+    border-radius: 12px;
+    max-width: 70%;
+    word-break: break-word;
+}
+
+/* Images trong message */
+.message-bubble img {
+    max-width: 180px;
+    max-height: 180px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* Timestamp */
+.chatbox-messages div[style*="font-size: 12px"] {
+    font-size: 11px !important;
+    color: #888;
+    margin-top: 2px;
+}
+
+/* Input area – cố định đáy */
+.chatbox-input {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-top: 1px solid #eee;
+    background: #ffffff;
+}
+
+/* Input */
+.chatbox-input input {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    outline: none;
+    font-size: 14px;
+}
+
+.chatbox-input input:focus {
+    border-color: #0084ff;
+}
+
+/* Add image */
+.add-image {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #0084ff;
+    color: #fff;
+    font-size: 18px;
+    margin-left: 8px;
+}
+
+.add-image:hover {
+    opacity: 0.85;
+}
+
+/* Send button */
+.chatbox-input button {
+    margin-left: 8px;
+    padding: 6px 14px;
+    border-radius: 16px;
+    border: none;
+    background: #0084ff;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.chatbox-input button:hover {
+    opacity: 0.9;
+}
+
+/* Image preview dưới input */
+
+
+.chatbox-image-preview-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.remove-image {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #ffffff;
+    color: #636363;
+    border: none;
+    border-radius: 50%;
+    width: 7px;
+    height: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-check {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    background: #fafafa;
+}
+
+/* Modal preview ảnh */
+.modal-img {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.preview-img {
+    max-width: 90%;
+    max-height: 90%;
+    border-radius: 12px;
+}
+
+/* Scrollbar đẹp */
+.chatbox-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chatbox-messages::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .chatbox-container-customer {
+        height: 100vh;
+        border-radius: 0;
+    }
+}

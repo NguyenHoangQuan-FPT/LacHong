@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import customerService from "../../services/customer.service";
 import "../../assets/styles/Stores.css";
-import Button from "../../assets/buttons/Button";
+import Button from "../../components/common/buttons/Button";
 import { Link } from "react-router";
 
 interface Customer {

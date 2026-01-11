@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { storeService } from "../../services/store.service";
 import "../../assets/styles/Orderdetail.css";
-import Button from "../../assets/buttons/Button";
-import Icon from "../../assets/icons/Icon";
+import Icon from "../../components/common/icons/Icon";
+import Button from "../../components/common/buttons/Button";
 import { toast, ToastContainer } from "react-toastify";
 
 interface Product {

@@ -1,3 +1,4 @@
+import { act } from "react";
 import axiosClient from "../api/axiosClient";
 
 export const authService = {
@@ -10,15 +11,16 @@ export const authService = {
     registerStore: (email: string, password: string, storeName: string, emailStore: string) => {
         return axiosClient.post("/register-store", { email, password, storeName, emailStore });
     },
+    activateAccount: (token: string) => {
+        return axiosClient.post("/activate-account", { token });
+    },
     logout: async () => {
         try {
             await axiosClient.post('/logout');
         } catch (e) {
             console.error('Logout api error', e);
         } finally {
-            // axiosClient reads token from `access_token`
             localStorage.removeItem('access_token');
-            // backward-compat / older key
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             localStorage.removeItem('store');

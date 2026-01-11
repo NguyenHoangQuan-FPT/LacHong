@@ -5,8 +5,8 @@ import Footer from "../../components/layout/Footer";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "../../assets/styles/Order.css";
-import Icon from "../../assets/icons/Icon";
-import Button from "../../assets/buttons/Button";
+import Icon from "../../components/common/icons/Icon";
+import Button from "../../components/common/buttons/Button";
 
 type OrderDto = {
     _id: string;
@@ -21,11 +21,8 @@ type OrderDto = {
 };
 
 const extractOrdersFromResponse = (data: any): OrderDto[] => {
-    // Backend returns: { orders: [...] }
     if (data && Array.isArray(data.orders)) return data.orders;
-    // Some APIs return array directly
     if (Array.isArray(data)) return data;
-    // Some wrappers: { data: { orders: [...] } }
     if (data?.data && Array.isArray(data.data.orders)) return data.data.orders;
     return [];
 };
@@ -40,7 +37,7 @@ const extractOrderFromResponse = (data: any): OrderDto | null => {
 const ORDER_STATUSES = [
     { value: "", label: "Tất cả đơn hàng" },
     { value: "Pending", label: "Chờ xử lý" },
-    { value: "Processing", label: "Đang xử lý" },
+    { value: "Processing", label: "Đang chuẩn bị hàng" },
     { value: "Shipped", label: "Đã gửi" },
     { value: "Delivered", label: "Đã giao" },
     { value: "Cancelled", label: "Đã hủy" },
@@ -146,7 +143,7 @@ export default function Order() {
         if (searchTerm.trim()) {
             const search = searchTerm.toLowerCase();
             result = result.filter((order) => {
-                const orderId = order._id?.toLowerCase() || "";
+                const orderId = order.code?.toLowerCase() || "";
                 const totalAmount = order.totalAmount?.toString() || "";
                 return orderId.includes(search) || totalAmount.includes(search);
             });
@@ -211,9 +208,6 @@ export default function Order() {
                                 <div>
                                     <div className="order-card__sub">• Mã đơn hàng: {selectedOrder.code}</div>
                                 </div>
-                                <div>
-                                    • {Array.isArray(selectedOrder.orderItems) ? selectedOrder.orderItems.reduce((sum, oi: any) => sum + (oi.products?.length || 0), 0) : 0} sản phẩm
-                                </div>
                                 {selectedOrder.address ? (
                                     <div>• Địa chỉ: {selectedOrder.address}</div>
                                 ) : null}
@@ -242,7 +236,6 @@ export default function Order() {
                                 </div>
                             </div>
                         </div>
-                        {/* Hiển thị sản phẩm từ orderItems */}
                         {Array.isArray(selectedOrder.orderItems) && selectedOrder.orderItems.length > 0 && selectedOrder.orderItems.map((orderItem: any, idx: number) => (
                             orderItem.products && orderItem.products.length > 0 && orderItem.products.map((p: any, pidx: number) => {
                                 const productObj = typeof p?.productId === "object" ? p.productId : null;
@@ -336,11 +329,6 @@ export default function Order() {
                                                 {getStatusLabel(order.status || "")}
                                             </div>
                                         </div>
-
-                                        <div className="order-card__meta">
-                                            {order.products?.length || 0} sản phẩm
-                                        </div>
-
                                         <div className="order-card__footer">
                                             <div>
                                                 <div className="order-card__sub">Tổng cộng</div>

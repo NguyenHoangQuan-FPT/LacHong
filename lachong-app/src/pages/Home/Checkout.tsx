@@ -110,6 +110,24 @@ export default function Checkout() {
         }
         setPlacing(true);
         try {
+            const selectedPayment = paymentMethods.find(pm => pm._id === selectedPaymentId);
+            if (selectedPayment && (selectedPayment.code === 'BANK' || selectedPayment.name?.toLowerCase().includes('bank'))) {
+                // Gọi API tạo thanh toán VNPay
+                const vnpayRes = await paymentService.createVNPayPayment({
+                    amount: grandTotal,
+                    orderInfo: `Thanh toán đơn hàng qua VNPay`,
+                    orderType: 'other',
+                });
+                if (vnpayRes?.data?.paymentUrl) {
+                    window.location.href = vnpayRes.data.paymentUrl;
+                    return;
+                } else {
+                    toast.error("Không tạo được link thanh toán VNPay");
+                }
+                setPlacing(false);
+                return;
+            }
+            // Nếu không phải banking thì đặt hàng như cũ
             const payload = {
                 cartIds: cartItems.map((it) => it._id),
                 paymentMethod: selectedPaymentId,

@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { productStoreService } from '../../services/product-store.service';
 import { Link } from 'react-router-dom';
 import '../../assets/styles/ProductStore.css';
-import Icon from '../../assets/icons/Icon';
-import Button from '../../assets/buttons/Button';
+import Icon from "../../components/common/icons/Icon";
+import Button from "../../components/common/buttons/Button";
 
 export default function StoreProducts() {
     const [products, setProducts] = useState<any[]>([]);
@@ -46,7 +46,7 @@ export default function StoreProducts() {
             <div className="product-header">Sản phẩm của cửa hàng
                 <span style={{ float: "right" }} >
                     <Link to="/store/products/new" className="button-link">
-                        <Button variant="secondary">
+                        <Button variant="add">
                             + Thêm sản phẩm
                         </Button>
                     </Link>

@@ -1,14 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams, Link, useNavigate } from "react-router-dom";
 import { productService } from "../../services/product.service";
-import { cartService } from "../../services/cart.service";
-import { wishListService } from "../../services/wishList.service";
 import customerService from "../../services/customer.service";
 import { ToastContainer, toast } from "react-toastify";
 import "../../assets/styles/ProductDetails.css";
-import ProductRelated from "../../components/product/ProductRelated";
-import ProductReview from "../../components/product/ProductReview";
-import Icon from "../../assets/icons/Icon";
+
+import Icon from "../../components/common/icons/Icon";
 
 const normalizeImageUrl = (url?: string) => {
     if (!url) return "https://via.placeholder.com/400x300?text=No+Image";

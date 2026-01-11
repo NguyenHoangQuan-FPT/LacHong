@@ -26,6 +26,7 @@ export type IconName =
     | 'overview'
     | 'caret'
     | 'start'
+    | 'chat'
     | 'logout';
 
 interface IconProps extends React.HTMLAttributes<HTMLElement> {
@@ -61,6 +62,7 @@ const ICON_CLASS_MAP: Record<IconName, string> = {
     overview: 'bi-layout-text-window-reverse',
     caret: 'bi-caret-right',
     start: 'bi-star-fill',
+    chat: 'bi-chat',
     'exclamation-circle': 'bi-exclamation-circle',
     'arrow-repeat': 'bi-arrow-repeat',
 };

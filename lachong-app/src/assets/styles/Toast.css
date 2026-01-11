@@ -1,0 +1,6 @@
+.toast {
+    min-height: 10px;
+    max-width: 360px;
+    color: #ffffff;
+    border-radius: none;
+}

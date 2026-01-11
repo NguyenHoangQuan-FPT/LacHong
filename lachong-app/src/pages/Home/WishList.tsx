@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { wishListService } from "../../services/wishList.service";
 import { Link } from "react-router-dom";
-import Icon from "../../assets/icons/Icon";
+import Icon from "../../components/common/icons/Icon";
 import "../../assets/styles/WishList.css";
 
 export default function WishList() {

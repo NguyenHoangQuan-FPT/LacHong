@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import "../../assets/styles/Header.css";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import Icon from "../../assets/icons/Icon";
+import Icon from "../../components/common/icons/Icon";
 import NotificationModal from "../notification/NotificationModal";
 import notificationService from "../../services/notification.service";
-
+import ChatList from "../chat/ChatList";
 export default function Header() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -15,6 +15,8 @@ export default function Header() {
     const [showNotificationPopup, setShowNotificationPopup] = useState(false);
     const [unread, setUnread] = useState<Notification[]>([]);
     const [error, setError] = useState("");
+    const [showChatList, setShowChatList] = useState(false);
+
 
     useEffect(() => {
         const savedUser = localStorage.getItem("user");
@@ -117,16 +119,6 @@ export default function Header() {
                         >
                             Community
                         </Link>
-
-                        <Link
-                            to="/about"
-                            className={`dashboard-tab${location.pathname.startsWith("/about")
-                                ? " active"
-                                : ""
-                                }`}
-                        >
-                            About
-                        </Link>
                     </div>
                 </div>
 
@@ -146,9 +138,24 @@ export default function Header() {
                                 <Link to="/cart" className="cart-link">
                                     <Icon name="cart" size={20} />
                                 </Link>
-                                <Link to="/wishlist" className="wishlist-link">
-                                    <Icon name="heart" size={20} />
-                                </Link>
+                                <span className="wishlist-link" onClick={() => setShowChatList(true)} style={{ cursor: 'pointer' }}>
+                                    <Icon name="chat" size={20} />
+                                </span>
+
+                                {showChatList && (
+                                    <div className="chat-modal-overlay">
+                                        <div style={{ position: 'relative', width: '90vw', maxWidth: 1200, maxHeight: '90vh', overflow: 'auto', borderRadius: 12, background: '#fff' }}>
+                                            <button
+                                                style={{ position: 'absolute', top: 8, right: 12, fontSize: 28, background: 'none', border: 'none', cursor: 'pointer', zIndex: 2 }}
+                                                onClick={() => setShowChatList(false)}
+                                                aria-label="Đóng chat"
+                                            >
+                                                &times;
+                                            </button>
+                                            <ChatList />
+                                        </div>
+                                    </div>
+                                )}
                             </span>
                         </>
                     )}
@@ -179,15 +186,27 @@ export default function Header() {
                                                 <span>Dashboard</span>
                                             </Link>
                                         ) : (
-                                            <Link
-                                                to="/customer/profile"
-                                                className="user-dropdown-item"
-                                                role="menuitem"
-                                                onClick={() => setIsUserMenuOpen(false)}
-                                            >
-                                                <Icon name="profile" size={16} />
-                                                <span>Profile</span>
-                                            </Link>
+                                            <>
+                                                <Link
+                                                    to="/customer/profile"
+                                                    className="user-dropdown-item"
+                                                    role="menuitem"
+                                                    onClick={() => setIsUserMenuOpen(false)}
+                                                >
+                                                    <Icon name="profile" size={16} />
+                                                    <span>Profile</span>
+                                                </Link>
+
+                                                <Link
+                                                    to="/wishlist"
+                                                    className="user-dropdown-item"
+                                                    role="menuitem"
+                                                    onClick={() => setIsUserMenuOpen(false)}
+                                                >
+                                                    <Icon name="heart" size={16} />
+                                                    <span>Wishlist</span>
+                                                </Link>
+                                            </>
                                         )}
 
                                         <button

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Icon from "../../assets/icons/Icon";
+import Icon from "../../components/common/icons/Icon";
 import "../../assets/styles/PostCommentModal.css";
 
 type CommentItem = {

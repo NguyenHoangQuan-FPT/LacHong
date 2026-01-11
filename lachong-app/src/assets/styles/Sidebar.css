@@ -155,7 +155,7 @@
 .lh-store-avatar {
     width: 56px;
     height: 56px;
-    border-radius: 8px;
+    border-radius: 50%;
     background: rgb(79, 70, 229);
     color: #fff;
     display: flex;
@@ -170,6 +170,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 50%;
 }
 
 /* Responsive: ẩn sidebar ở mobile như cũ */

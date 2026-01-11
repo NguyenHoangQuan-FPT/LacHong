@@ -1,25 +1,29 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { storeService } from "../../services/store.service";
 import { followService } from "../../services/follow.service";
 import "../../assets/styles/Store.css";
-import { toast, ToastContainer } from "react-toastify";
-
-const normalizeImageUrl = (url?: string) => {
-    if (!url) return "https://via.placeholder.com/200x200?text=No+Image";
-    if (/^https?:\/\//i.test(url)) return url;
-    const base = (import.meta.env.VITE_API_BASE_URL as string) || "";
-    return base ? base.replace(/\/$/, "") + "/" + url.replace(/^\//, "") : url;
-};
+import ChatModal from "../../components/chat/ChatModal";
+import { ToastContainer, toast } from "react-toastify";
 
 export default function StorePage() {
+    const [openChat, setOpenChat] = useState(false);
+    const normalizeImageUrl = (url?: string) => {
+        if (!url) return "https://via.placeholder.com/200x200?text=No+Image";
+        if (/^https?:\/\//i.test(url)) return url;
+        const base = (import.meta.env.VITE_API_BASE_URL as string) || "";
+        return base ? base.replace(/\/$/, "") + "/" + url.replace(/^\//, "") : url;
+    };
+
     const { id } = useParams<{ id?: string }>();
+    const navigate = useNavigate();
     const [store, setStore] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isFollowing, setIsFollowing] = useState<boolean>(false);
     const [followLoading, setFollowLoading] = useState(false);
     const [followerCount, setFollowerCount] = useState<number>(0);
+    const [productCount, setProductCount] = useState<number>(0);
 
     useEffect(() => {
         const fetchStore = async () => {
@@ -36,24 +40,27 @@ export default function StorePage() {
                 }
                 setStore(storeData);
 
-                // Kiểm tra follow đúng user
                 if (storeData?._id) {
                     try {
-                        // Lấy danh sách store user hiện tại đang theo dõi
                         const followRes = await followService.getFollowingStores();
                         const followingList = followRes?.data?.stores || followRes?.data || [];
-                        // followingList là mảng id (string)
                         setIsFollowing(followingList.some((id: string) => id === storeData._id));
                     } catch {
                         setIsFollowing(false);
                     }
-                    // Lấy số follower thực tế từ API mới getFollowingByStore
                     try {
                         const res = await followService.getFollowingByStore(storeData._id);
                         const follows = res?.data?.follows || [];
                         setFollowerCount(Array.isArray(follows) ? follows.length : 0);
                     } catch {
                         setFollowerCount(storeData.followerCount ?? 0);
+                    }
+                    try {
+                        const prodRes = await storeService.getProductsByStoreId(storeData._id);
+                        const products = prodRes?.data?.products || prodRes?.data || [];
+                        setProductCount(Array.isArray(products) ? products.length : 0);
+                    } catch {
+                        setProductCount(storeData.productCount ?? 0);
                     }
                 }
             } catch (err: any) {
@@ -65,7 +72,6 @@ export default function StorePage() {
         fetchStore();
     }, [id]);
 
-    // Xử lý follow/unfollow
     const getStoreId = () => store?._id || store?.storeId || store?.id;
     const handleFollowClick = async () => {
         const storeId = getStoreId();
@@ -76,14 +82,14 @@ export default function StorePage() {
         setFollowLoading(true);
         try {
             if (isFollowing) {
-                console.log("Unfollow storeId:", storeId);
                 await followService.unfollowStore(storeId);
                 setIsFollowing(false);
+                setFollowerCount((prev) => (prev > 0 ? prev - 1 : 0));
                 toast.success("Đã bỏ theo dõi cửa hàng");
             } else {
-                console.log("Follow storeId:", storeId);
                 await followService.followStore(storeId);
                 setIsFollowing(true);
+                setFollowerCount((prev) => prev + 1);
                 toast.success("Đã theo dõi cửa hàng");
             }
         } catch (err: any) {
@@ -92,6 +98,16 @@ export default function StorePage() {
             setFollowLoading(false);
         }
     };
+
+    const formatDate = (createdAt: string) => {
+        const options: Intl.DateTimeFormatOptions = {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        };
+        const date = new Date(createdAt);
+        return date.toLocaleDateString(undefined, options);
+    }
 
     if (loading) {
         return (
@@ -119,29 +135,19 @@ export default function StorePage() {
 
     const social = store.socialMedia || {};
 
-    // Dữ liệu demo cho các thống kê (nếu bạn có field thật thì map vào ở đây)
     const statsLeft = [
-        { label: "Sản Phẩm", value: store.productCount ?? 141 },
-        { label: "Đang Theo", value: store.followingCount ?? 15 },
-        {
-            label: "Tỉ Lệ Phản Hồi Chat",
-            value: store.chatResponseRate ?? "83%",
-            extra: "(Trong Vài Giờ)"
-        },
-        { label: "Tỉ Lệ Hủy Đơn", value: store.cancelRate ?? "3%" }
-    ];
-
-    const statsRight = [
+        { label: "Sản Phẩm", value: productCount },
         { label: "Người Theo Dõi", value: followerCount },
-        {
-            label: "Đánh Giá",
-            value: store.rating ? `${store.rating} (${store.ratingCount} Đánh Giá)` : "4.8 (182,8k Đánh Giá)"
-        },
-        { label: "Tham Gia", value: store.joinedTime ?? "5 Năm Trước" }
+        { label: "Tham Gia", value: formatDate(store.createdAt) }
     ];
 
     return (
         <div className="store-page">
+            <ChatModal
+                storeId={getStoreId()}
+                open={openChat}
+                onClose={() => setOpenChat(false)}
+            />
             <div className="store-header-row">
                 {/* Khối banner bên trái */}
                 <div className="store-banner">
@@ -167,7 +173,12 @@ export default function StorePage() {
                                 >
                                     {isFollowing ? "Đã Theo Dõi" : "+ Theo Dõi"}
                                 </button>
-                                <button className="btn-store-secondary">Chat</button>
+                                <button
+                                    className="btn-store-outline"
+                                    onClick={() => setOpenChat(true)}
+                                >
+                                    Chat
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -179,39 +190,35 @@ export default function StorePage() {
                         <div className="store-stat-item" key={idx}>
                             <span className="store-stat-label">{s.label}:</span>
                             <span className="store-stat-value">{s.value}</span>
-                            {s.extra && <span className="store-stat-extra"> {s.extra}</span>}
                         </div>
                     ))}
                 </div>
 
-                {/* Cột thống kê bên phải */}
-                <div className="store-stats-col">
-                    {statsRight.map((s, idx) => (
-                        <div className="store-stat-item" key={idx}>
-                            <span className="store-stat-label">{s.label}:</span>
-                            <span className="store-stat-value">{s.value}</span>
-                        </div>
-                    ))}
-                </div>
+
             </div>
 
-            {/* Thông tin chi tiết phía dưới (tuỳ chọn dùng/ẩn) */}
             <div className="store-detail-sections">
                 <div className="store-section">
                     <h3>Thông tin liên hệ</h3>
                     <ul>
-                        <li>Email: {store.emailStore || store.storeEmail || store.email || "—"}</li>
-                        <li>Điện thoại: {store.phone || store.phoneNumber || "—"}</li>
-                        <li>Địa chỉ: {store.address || "—"}</li>
+                        <p>Email: {store.emailStore || store.storeEmail || store.email || "—"}</p>
+                        <p>Điện thoại: {store.phone || store.phoneNumber || "—"}</p>
+                        <p>Địa chỉ: {store.address || "—"}</p   >
                     </ul>
                 </div>
 
                 <div className="store-section">
                     <h3>Thông tin khác</h3>
                     <ul>
-                        <li>Mô tả: {store.description || "—"}</li>
-                        <li>Chính sách: {store.policy || "—"}</li>
-                        <li>
+                        <p>Mô tả: {store.description || "—"}</p>
+                        <p>Chính sách:
+                            <ul style={{ whiteSpace: "pre-line" }}>
+                                {store.policy ? store.policy.split('\n').map((line: string, index: number) => (
+                                    <li key={index}>{line}</li>
+                                )) : "—"}
+                            </ul>
+                        </p>
+                        <p>
                             Social:&nbsp;
                             {(social.facebook || social.instagram || social.twitter) ? (
                                 <span>
@@ -252,7 +259,7 @@ export default function StorePage() {
                             ) : (
                                 "—"
                             )}
-                        </li>
+                        </p>
                     </ul>
                 </div>
             </div>

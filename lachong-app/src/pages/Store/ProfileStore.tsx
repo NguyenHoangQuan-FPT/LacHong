@@ -1,9 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import ReactCrop, { type Crop, type PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 import { storeService } from '../../services/store.service';
 import { typeStoreService } from '../../services/typeStore.service';
 import '../../assets/styles/ProfileStore.css';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Button from '../../components/common/buttons/Button';
 
 export default function ProfileStore() {
     const [typeStores, setTypeStores] = useState<any[]>([]);
@@ -32,6 +36,97 @@ export default function ProfileStore() {
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [avatarPreview, setAvatarPreview] = useState('');
     const [saving, setSaving] = useState(false);
+
+    // Avatar cropper states
+    const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+    const [pendingAvatarUrl, setPendingAvatarUrl] = useState<string | null>(null);
+    const imgRef = useRef<HTMLImageElement | null>(null);
+    const [crop, setCrop] = useState<Crop>();
+    const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+
+    useEffect(() => {
+        if (!pendingAvatarFile) {
+            setPendingAvatarUrl(null);
+            return;
+        }
+        const url = URL.createObjectURL(pendingAvatarFile);
+        setPendingAvatarUrl(url);
+        return () => URL.revokeObjectURL(url);
+    }, [pendingAvatarFile]);
+
+    const shouldShowCropper = useMemo(() => {
+        return Boolean(pendingAvatarUrl);
+    }, [pendingAvatarUrl]);
+
+    const onCropImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+        const image = e.currentTarget;
+        imgRef.current = image;
+        const { width, height } = image;
+        const cropWidthPercent = 90;
+        const initial = centerCrop(
+            makeAspectCrop({ unit: "%", width: cropWidthPercent }, 1, width, height),
+            width,
+            height
+        );
+        setCrop(initial);
+    };
+
+    const getCroppedBlob = async (image: HTMLImageElement, pixelCrop: PixelCrop) => {
+        const canvas = document.createElement("canvas");
+        const scaleX = image.naturalWidth / image.width;
+        const scaleY = image.naturalHeight / image.height;
+        const cropWidth = Math.floor(pixelCrop.width * scaleX);
+        const cropHeight = Math.floor(pixelCrop.height * scaleY);
+        canvas.width = cropWidth;
+        canvas.height = cropHeight;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("Canvas context không khả dụng");
+        ctx.drawImage(
+            image,
+            Math.floor(pixelCrop.x * scaleX),
+            Math.floor(pixelCrop.y * scaleY),
+            cropWidth,
+            cropHeight,
+            0,
+            0,
+            cropWidth,
+            cropHeight
+        );
+        return await new Promise<Blob>((resolve, reject) => {
+            canvas.toBlob(
+                (blob) => {
+                    if (!blob) {
+                        reject(new Error("Tạo ảnh crop thất bại"));
+                        return;
+                    }
+                    resolve(blob);
+                },
+                "image/jpeg",
+                0.92
+            );
+        });
+    };
+
+    const handleApplyCrop = async () => {
+        if (!pendingAvatarFile || !imgRef.current || !completedCrop) return;
+        try {
+            const blob = await getCroppedBlob(imgRef.current, completedCrop);
+            const croppedFile = new File([blob], "avatar.jpg", { type: blob.type });
+            setAvatarFile(croppedFile);
+            setAvatarPreview(URL.createObjectURL(croppedFile));
+            setPendingAvatarFile(null);
+            setCrop(undefined);
+            setCompletedCrop(undefined);
+        } catch (err: any) {
+            // handle error
+        }
+    };
+
+    const handleCancelCrop = () => {
+        setPendingAvatarFile(null);
+        setCrop(undefined);
+        setCompletedCrop(undefined);
+    };
 
     useEffect(() => {
         typeStoreService.getTypeStoreTrue().then((res: any) => {
@@ -130,10 +225,7 @@ export default function ProfileStore() {
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const f = e.target.files?.[0];
         if (!f) return;
-        setAvatarFile(f);
-        const reader = new FileReader();
-        reader.onloadend = () => setAvatarPreview(reader.result as string);
-        reader.readAsDataURL(f);
+        setPendingAvatarFile(f);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -162,6 +254,8 @@ export default function ProfileStore() {
         try {
             const res = await storeService.updateProfile(form);
             toast.success(res?.data?.message || 'Cập nhật hồ sơ cửa hàng thành công');
+            window.dispatchEvent(new Event('store-profile-updated'));
+            setAvatarPreview("");
             setTimeout(() => load(), 700);
         } catch (err: any) {
             console.error('Update profile error', err);
@@ -178,7 +272,7 @@ export default function ProfileStore() {
 
     return (
         <div className="profile-store-page">
-            <form className="profile-card" onSubmit={handleSubmit} encType="multipart/form-data">
+            <form className="profile-cards" onSubmit={handleSubmit} encType="multipart/form-data">
                 <div style={{ display: 'flex', gap: 18 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
                         <div className="profile-avatar" style={{ width: 120, height: 120, borderRadius: 12, overflow: 'hidden' }}>
@@ -186,6 +280,35 @@ export default function ProfileStore() {
                         </div>
                         <input type="file" accept="image/*" onChange={handleAvatarChange} />
                     </div>
+                    {shouldShowCropper && createPortal(
+                        <div className="avatar-crop-modal-overlay">
+                            <div className="avatar-crop-modal">
+                                <div className="avatar-crop-title">Cắt ảnh avatar</div>
+                                <div className="avatar-crop-body">
+                                    <ReactCrop
+                                        crop={crop}
+                                        onChange={(_, percentCrop) => setCrop(percentCrop)}
+                                        onComplete={(c) => setCompletedCrop(c)}
+                                        aspect={1}
+                                        circularCrop
+                                        keepSelection
+                                    >
+                                        <img
+                                            src={pendingAvatarUrl || ''}
+                                            alt="Crop avatar"
+                                            onLoad={onCropImageLoad}
+                                            className="avatar-crop-image"
+                                        />
+                                    </ReactCrop>
+                                </div>
+                                <div className="avatar-crop-actions">
+                                    <button type="button" className="btn btn-secondary" onClick={handleCancelCrop}>Hủy</button>
+                                    <Button variant="submit" onClick={handleApplyCrop} disabled={!completedCrop?.width || !completedCrop?.height}>Áp dụng cắt</Button>
+                                </div>
+                            </div>
+                        </div>,
+                        document.body
+                    )}
 
                     <div className="profile-body" style={{ flex: 1 }}>
                         <div style={{ display: 'flex', gap: 12 }}>
@@ -305,7 +428,7 @@ export default function ProfileStore() {
 
                             <div style={{ display: 'flex', gap: 8 }}>
                                 <button type="button" className="btn btn-secondary" onClick={() => load()}>Hủy</button>
-                                <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Đang lưu...' : 'Lưu thay đổi'}</button>
+                                <Button type="submit" variant='submit' disabled={saving}>{saving ? 'Đang lưu...' : 'Lưu thay đổi'}</Button>
                             </div>
                         </div>
                     </div>

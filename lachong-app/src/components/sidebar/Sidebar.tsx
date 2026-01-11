@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { storeService } from '../../services/store.service';
 import { authService } from '../../services/auth.service'; // nếu em tạo file này
 import '../../assets/styles/Sidebar.css';
-import Icon from '../../assets/icons/Icon';
+import Icon from "../../components/common/icons/Icon";
 
 type StoreInfo = {
     id?: string;
@@ -19,41 +19,32 @@ export default function Sidebar() {
     const [store, setStore] = useState<StoreInfo | null>(null);
 
     useEffect(() => {
-        const raw = localStorage.getItem('store');
-        if (raw) {
-            try {
-                const s = JSON.parse(raw);
-                setStore({
-                    id: s._id,
-                    storeName: s.storeName,
-                    emailStore: s.emailStore,
-                    avatar: s.avatar,
-                    status: s.status,
+        const fetchStore = () => {
+            storeService
+                .getStoreInfo()
+                .then((res: any) => {
+                    const data = res?.data ?? res;
+                    const s = data?.store ?? data?.data ?? data;
+                    const mapped: StoreInfo = {
+                        id: s._id,
+                        storeName: s.storeName,
+                        emailStore: s.emailStore,
+                        avatar: s.avatar,
+                        status: s.status,
+                    };
+                    setStore(mapped);
+                    localStorage.setItem('store', JSON.stringify(mapped));
+                })
+                .catch((err: any) => {
+                    console.error('Load store for sidebar error', err);
                 });
-                return;
-            } catch {
-                // parse lỗi thì fetch lại
-            }
-        }
-
-        storeService
-            .getStoreInfo()
-            .then((res: any) => {
-                const data = res?.data ?? res;
-                const s = data?.store ?? data?.data ?? data;
-                const mapped: StoreInfo = {
-                    id: s._id,
-                    storeName: s.storeName,
-                    emailStore: s.emailStore,
-                    avatar: s.avatar,
-                    status: s.status,
-                };
-                setStore(mapped);
-                localStorage.setItem('store', JSON.stringify(mapped));
-            })
-            .catch((err: any) => {
-                console.error('Load store for sidebar error', err);
-            });
+        };
+        fetchStore();
+        // Lắng nghe sự kiện cập nhật profile để tự động reload
+        window.addEventListener('store-profile-updated', fetchStore);
+        return () => {
+            window.removeEventListener('store-profile-updated', fetchStore);
+        };
     }, []);
 
     const links = [
@@ -61,6 +52,7 @@ export default function Sidebar() {
         { to: '/store/products', label: 'Products', icon: 'bi-box-seam' },
         { to: '/store/orders', label: 'Orders', icon: 'bi-receipt' },
         { to: '/store/notifications', label: 'Notifications', icon: 'bi-bell' },
+        { to: '/store/message', label: 'Messages', icon: 'bi-chat-dots' },
         { to: '/store/profile', label: 'Profile', icon: 'bi-person-circle' },
         { to: '/', label: 'Home', icon: 'bi-house' },
 

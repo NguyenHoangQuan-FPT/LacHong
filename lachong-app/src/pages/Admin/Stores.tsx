@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { storeService } from "../../services/store.service";
 import "../../assets/styles/Stores.css";
-import Button from "../../assets/buttons/Button";
+import Button from "../../components/common/buttons/Button";
 
 interface Store {
     _id: string;

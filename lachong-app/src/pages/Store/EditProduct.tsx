@@ -2,9 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { productStoreService } from '../../services/product-store.service';
 import '../../assets/styles/AddProduct.css';
-import Icon from '../../assets/icons/Icon';
+import Icon from "../../components/common/icons/Icon";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Toast from '../../components/common/toast/Toast';
+import { FiX } from 'react-icons/fi';
+import Button from '../../components/common/buttons/Button';
 
 export default function EditProduct() {
     const { id } = useParams();
@@ -146,6 +149,10 @@ export default function EditProduct() {
         setImagePreview('');
     };
 
+    const handleClose = () => {
+        navigate('/store/products');
+    };
+
     if (loading) return <div className="store-status store-status-loading">Đang tải...</div>;
     if (error) return <div className="store-status store-status-error">{error}</div>;
 
@@ -155,9 +162,15 @@ export default function EditProduct() {
                 <div className="modal-header">
                     <div>
                         <h2 className="modal-title">Sửa sản phẩm</h2>
-                        <p className="modal-subtitle">Sửa thông tin sản phẩm</p>
                     </div>
-                    <button className="modal-close-btn" onClick={() => navigate('/store/products')}><Icon name="x" size={18} /></button>
+                    <button
+                        onClick={handleClose}
+                        className="modal-close-btn"
+                        title="Đóng"
+                    >
+                        <FiX size={24} />
+                        X
+                    </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="add-product-form" onDragEnter={handleDrag}>
@@ -185,10 +198,21 @@ export default function EditProduct() {
                     <div className="form-row">
                         <div className="form-group">
                             <label className="form-label">Giá (VND) <span className="required">*</span></label>
-                            <div className="input-with-icon">
-                                <span className="currency">₫</span>
-                                <input className="form-input" type="number" value={price} onChange={e => setPrice(e.target.value === '' ? '' : Number(e.target.value))} />
-                            </div>
+                            <input
+                                className="form-input"
+                                type="text"
+                                inputMode="numeric"
+                                value={price === '' ? '' : Number(price).toLocaleString('vi-VN')}
+                                onChange={e => {
+                                    const raw = e.target.value.replace(/[^\d]/g, '');
+                                    setPrice(raw === '' ? '' : Number(raw));
+                                }}
+                                onBlur={e => {
+                                    if (price !== '' && !isNaN(Number(price))) {
+                                        setPrice(Number(price));
+                                    }
+                                }}
+                            />
                         </div>
 
                         <div className="form-group">
@@ -234,11 +258,11 @@ export default function EditProduct() {
 
                     <div className="form-actions">
                         <button type="button" onClick={() => navigate('/store/products')} className="btn btn-secondary">Hủy</button>
-                        <button type="submit" className="btn btn-primary" disabled={uploading}>{uploading ? 'Đang cập nhật...' : 'Lưu thay đổi'}</button>
+                        <Button type="submit" variant='add' disabled={uploading}>{uploading ? 'Đang cập nhật...' : 'Lưu thay đổi'}</Button>
                     </div>
                 </form>
-                <ToastContainer position="top-right" autoClose={3000} />
-            </div>
-        </div>
+                <Toast />
+            </div >
+        </div >
     );
 }

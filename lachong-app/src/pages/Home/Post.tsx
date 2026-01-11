@@ -9,7 +9,7 @@ import { commentService } from "../../services/comment.service";
 import { likeService } from "../../services/like.service";
 import likeCommentService from "../../services/likeComment.service";
 import "../../assets/styles/Post.css";
-import Icon from "../../assets/icons/Icon";
+import Icon from "../../components/common/icons/Icon";
 import PostCommentsModal from "../../components/post/PostCommentsModal";
 import PostFormModal from "../../components/post/PostForm";
 

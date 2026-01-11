@@ -50,6 +50,16 @@
     color: white;
 }
 
+.btn-submit {
+    background: #000000;
+    color: white;
+}
+
+.btn-add {
+    background: #afafaf;
+    color: rgb(0, 0, 0);
+}
+
 .btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;

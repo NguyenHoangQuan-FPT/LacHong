@@ -17,7 +17,7 @@ export default function SidebarCustomer() {
         <div className="sidebar-customer-page">
             <div className="sidebar-customer-container">
                 <div className="sidebar-customer-left">
-                    <h2 className="sidebar-customer-title">Thông tin khách hàng</h2>
+                    <h2 className="sidebar-customer-title">Thông tin của bạn</h2>
 
                     <div className="sidebar-customer-menu">
                         <button

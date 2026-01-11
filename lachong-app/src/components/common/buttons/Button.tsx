@@ -5,7 +5,7 @@ type ButtonProps = {
     children: React.ReactNode;
     onClick?: () => void;
     type?: "button" | "submit" | "reset";
-    variant?: "primary" | "secondary" | "danger" | "success";
+    variant?: "primary" | "secondary" | "danger" | "success" | "submit" | "add";
     size?: "sm" | "md" | "lg";
     disabled?: boolean;
     loading?: boolean;

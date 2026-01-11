@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import "../../assets/styles/Address.css";
 import { addressService } from "../../services/address.service";
+import Button from "../../components/common/buttons/Button";
+import { toast } from "react-toastify";
+import Toast from "../../components/common/toast/Toast";
 
 interface Address {
     id?: string;
@@ -158,6 +161,7 @@ export default function Address() {
         try {
             await addressService.deleteAddress(id);
             await loadAddresses();
+            toast.success("Xóa địa chỉ thành công");
         } catch (err: any) {
             alert(err?.response?.data?.message || "Xóa địa chỉ thất bại");
         }
@@ -192,6 +196,7 @@ export default function Address() {
             await loadAddresses();
             setShowForm(false);
             resetForm();
+            toast.success("Lưu địa chỉ thành công");
         } catch (err: any) {
             console.error("Save address error:", err);
             alert(err?.response?.data?.message || "Lưu địa chỉ thất bại");
@@ -221,6 +226,7 @@ export default function Address() {
         try {
             await addressService.setDefaultAddress(id);
             await loadAddresses();
+            toast.success("Cập nhật địa chỉ thành công");
         } catch (err: any) {
             alert(err?.response?.data?.message || "Cập nhật địa chỉ mặc định thất bại");
         } finally {
@@ -240,9 +246,9 @@ export default function Address() {
         <div className="address-page">
             <div className="address-header">
                 <h1>Địa chỉ của tôi</h1>
-                <button className="btn-add" onClick={handleAddNew}>
+                <Button variant="add" onClick={handleAddNew}>
                     + Thêm địa chỉ mới
-                </button>
+                </Button>
             </div>
 
             {error && <div className="status error">{error}</div>}
@@ -369,12 +375,17 @@ export default function Address() {
                         <button className="btn-cancel" onClick={handleCancel}>
                             Hủy
                         </button>
-                        <button className="btn-submit" onClick={handleSubmit} disabled={submitting}>
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={submitting}
+                            variant={editingId ? "submit" : "add"}
+                        >
                             {submitting ? "Đang lưu..." : editingId ? "Cập nhật" : "Thêm mới"}
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}
+            <Toast />
         </div>
     );
 }

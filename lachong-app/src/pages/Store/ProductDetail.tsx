@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { productStoreService } from '../../services/product-store.service';
 import '../../assets/styles/ProductDetail.css';
-import Icon from '../../assets/icons/Icon';
-import Button from '../../assets/buttons/Button';
+import Icon from "../../components/common/icons/Icon";
+import Button from "../../components/common/buttons/Button";
 
 export default function ProductDetail() {
     const { id } = useParams();

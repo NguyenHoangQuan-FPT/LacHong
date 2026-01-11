@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import customerService from "../../services/customer.service";
 import "../../assets/styles/StoreDetail.css";
-import Icon from "../../assets/icons/Icon";
+import Icon from "../../components/common/icons/Icon";
 import { toast, ToastContainer } from "react-toastify";
 
 interface Customer {

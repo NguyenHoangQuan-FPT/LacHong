@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { cartService } from "../../services/cart.service";
-import Footer from "../../components/layout/Footer";
 import { toast, ToastContainer } from "react-toastify";
 import "../../assets/styles/Cart.css";
 

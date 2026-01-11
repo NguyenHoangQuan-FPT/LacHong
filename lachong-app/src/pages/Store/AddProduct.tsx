@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { productStoreService } from '../../services/product-store.service';
 import '../../assets/styles/AddProduct.css';
 import { FiX, FiUploadCloud, FiCheck } from 'react-icons/fi';
+import Button from '../../components/common/buttons/Button';
 
 export default function AddProduct() {
     const navigate = useNavigate();
@@ -154,7 +155,6 @@ export default function AddProduct() {
         formData.append('category', category);
         formData.append('material', material);
 
-        // ⭐ gửi nhiều ảnh: backend dùng upload.array("images")
         imageFiles.forEach(file => {
             formData.append('images', file);
         });
@@ -186,9 +186,6 @@ export default function AddProduct() {
                 <div className="modal-header">
                     <div>
                         <h2 className="modal-title">Thêm sản phẩm mới</h2>
-                        <p className="modal-subtitle">
-                            Thêm sản phẩm thủ công mỹ nghệ vào cửa hàng
-                        </p>
                     </div>
                     <button
                         onClick={handleClose}
@@ -217,7 +214,6 @@ export default function AddProduct() {
                         </label>
                         <input
                             type="text"
-                            placeholder="VD: Tranh dệt tay truyền thống"
                             value={productName}
                             onChange={e => setProductName(e.target.value)}
                             className="form-input"
@@ -294,23 +290,26 @@ export default function AddProduct() {
                             <label className="form-label">
                                 Giá bán (VND) <span className="required">*</span>
                             </label>
-                            <div className="input-with-icon">
-                                <input
-                                    type="number"
-                                    placeholder="1000000"
-                                    value={price}
-                                    onChange={e =>
-                                        setPrice(
-                                            e.target.value === ''
-                                                ? ''
-                                                : Number(e.target.value)
-                                        )
+                            <input
+                                type="text"
+                                inputMode="numeric"
+                                placeholder="1.000.000"
+                                value={
+                                    price === '' ? '' : Number(price).toLocaleString('vi-VN')
+                                }
+                                onChange={e => {
+                                    const raw = e.target.value.replace(/[^\d]/g, '');
+                                    setPrice(raw === '' ? '' : Number(raw));
+                                }}
+                                onBlur={e => {
+                                    if (price !== '' && !isNaN(Number(price))) {
+                                        setPrice(Number(price));
                                     }
-                                    className="form-input"
-                                    min="0"
-                                    required
-                                />
-                            </div>
+                                }}
+                                className="form-input"
+                                min="0"
+                                required
+                            />
                         </div>
 
                         <div className="form-group">
@@ -330,6 +329,7 @@ export default function AddProduct() {
                                 }
                                 className="form-input"
                                 min="0"
+                                max="100"
                                 required
                             />
                         </div>
@@ -355,7 +355,6 @@ export default function AddProduct() {
                         />
                     </div>
 
-                    {/* ⭐ Image Upload (MULTI) */}
                     <div className="form-group">
                         <label className="form-label">
                             Ảnh sản phẩm <span className="required">*</span>
@@ -370,10 +369,8 @@ export default function AddProduct() {
                                 onDrop={handleDrop}
                             >
                                 <FiUploadCloud size={32} className="upload-icon" />
-                                <p className="upload-text">Kéo thả ảnh vào đây</p>
-                                <p className="upload-or">hoặc</p>
                                 <label className="upload-btn">
-                                    Chọn ảnh từ máy tính
+                                    Chọn ảnh
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -441,16 +438,16 @@ export default function AddProduct() {
                         >
                             Hủy
                         </button>
-                        <button
+                        <Button
+                            variant='add'
                             type="submit"
-                            className="btn btn-primary"
                             disabled={loading || imageFiles.length === 0}
                         >
                             {loading ? 'Đang thêm...' : 'Thêm sản phẩm'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { typeStoreService } from "../../services/typeStore.service";
 import "../../assets/styles/Stores.css";
-import Button from "../../assets/buttons/Button";
+import Button from "../../components/common/buttons/Button";
 
 interface TypeStore {
     _id: string;
@@ -115,7 +115,7 @@ export default function TypeStore() {
                     style={{ marginBottom: 16, padding: 8, width: 300 }}
                 />
                 <span style={{ float: 'right' }}>
-                    <Button variant="primary" onClick={() => setShowModal(true)}>
+                    <Button variant="add" onClick={() => setShowModal(true)}>
                         Thêm loại cửa hàng
                     </Button>
                 </span>
@@ -144,8 +144,8 @@ export default function TypeStore() {
                                 </div>
                                 {addError && <div style={{ color: 'red', marginBottom: 8 }}>{addError}</div>}
                                 <div style={{ display: 'flex', gap: 8 }}>
-                                    <button className="btn btn-primary" type="submit" disabled={addLoading}>{addLoading ? 'Đang thêm...' : 'Thêm'}</button>
-                                    <button className="btn btn-secondary" type="button" onClick={() => setShowModal(false)}>Huỷ</button>
+                                    <Button variant="add" type="submit" disabled={addLoading}>{addLoading ? 'Đang thêm...' : 'Thêm'}</Button>
+                                    <Button variant="secondary" type="button" onClick={() => setShowModal(false)}>Huỷ</Button>
                                 </div>
                             </form>
                         </div>
@@ -219,8 +219,8 @@ export default function TypeStore() {
                                             </div>
                                             {editError && <div style={{ color: 'red', marginBottom: 8 }}>{editError}</div>}
                                             <div style={{ display: 'flex', gap: 8 }}>
-                                                <button className="btn btn-primary" type="submit" disabled={editLoading}>{editLoading ? 'Đang cập nhật...' : 'Cập nhật'}</button>
-                                                <button className="btn btn-secondary" type="button" onClick={() => setEditModal({ open: false })}>Huỷ</button>
+                                                <Button variant="add" type="submit" disabled={editLoading}>{editLoading ? 'Đang cập nhật...' : 'Cập nhật'}</Button>
+                                                <Button variant="secondary" type="button" onClick={() => setEditModal({ open: false })}>Huỷ</Button>
                                             </div>
                                         </form>
                                     </div>

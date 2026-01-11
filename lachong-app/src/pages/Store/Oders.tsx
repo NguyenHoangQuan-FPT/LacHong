@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { storeService } from "../../services/store.service";
-import Button from "../../assets/buttons/Button";
+import Button from "../../components/common/buttons/Button";
 import { Link } from "react-router-dom";
 import "../../assets/styles/Orders.css";
 
