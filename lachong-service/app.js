@@ -25,9 +25,6 @@ const cors = require('cors');
 const initRoute = require('./src/loaders/routes');
 const { connectMongoDB } = require('./src/config/mongodb');
 
-
-app.use(express.json());
-
 const normalizeOrigin = (origin) => String(origin || '').trim().replace(/\/$/, '');
 
 const allowedOrigins = [
@@ -40,8 +37,7 @@ const allowedOrigins = [
     .map(normalizeOrigin)
     .filter(Boolean);
 
-// If you prefer setting only a domain (without protocol), support APP_DOMAIN.
-// Example: APP_DOMAIN=lachong.vn => allow https://lachong.vn and http://lachong.vn
+
 if (process.env.APP_DOMAIN) {
     const domain = normalizeOrigin(process.env.APP_DOMAIN).replace(/^https?:\/\//, '');
     if (domain) {
@@ -63,6 +59,9 @@ app.use(cors({
     },
     credentials: true
 }));
+
+app.use(express.json());
+
 
 // Health/root endpoints (useful when opening the domain in a browser)
 app.get('/', (req, res) => {
