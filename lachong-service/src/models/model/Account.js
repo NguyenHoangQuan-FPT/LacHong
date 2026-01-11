@@ -5,7 +5,10 @@ const accountSchema = new mongoose.Schema({
     password: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
     roleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Role' },
-    status: { type: Boolean, default: true }
+    status: { type: Boolean, default: true },
+    isActive: { type: Boolean, default: false },
+    activationToken: { type: String },
+    activationTokenExpires: { type: Date }
 }, {
     timestamps: true
 });

@@ -1,10 +1,16 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const fs = require('fs');
-const path = require('path');
+const app = express();
 
+const path = require('path');
+const { Server } = require('socket.io');
+const http = require('http');
 const envPath = path.resolve(__dirname, '.env');
 const envLocalPath = path.resolve(__dirname, '.env.local');
+const server = http.createServer(app);
+const { setIo } = require('./src/socket/io');
+const socketHandler = require('./src/socket/socket');
 
 if (fs.existsSync(envPath)) {
     dotenv.config({ path: envPath });
@@ -19,7 +25,6 @@ const cors = require('cors');
 const initRoute = require('./src/loaders/routes');
 const { connectMongoDB } = require('./src/config/mongodb');
 
-const app = express();
 
 app.use(express.json());
 
@@ -97,6 +102,20 @@ app.use((err, req, res, next) => {
     res.status(status).json({
         message: err?.message || 'Internal Server Error'
     });
+});
+
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:5173",
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+});
+setIo(io);
+socketHandler(io);
+
+server.listen(5000, () => {
+    console.log("Server is running on port 5000");
 });
 
 module.exports = app;

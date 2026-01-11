@@ -14,8 +14,7 @@ const storeSchema = new mongoose.Schema({
     description: { type: String },
     policy: { type: String },
     typeStoreId: { type: mongoose.Schema.Types.ObjectId, ref: 'TypeStore' },
-    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Account' },
-    status: {
+    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Account' }, status: {
         type: String,
         enum: ['PENDING', 'ACTIVE', 'INACTIVE'],
         default: 'PENDING'

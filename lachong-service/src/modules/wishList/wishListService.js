@@ -15,7 +15,6 @@ exports.getWishListByCustomerId = async (req, res) => {
             .populate('products')
             .exec();
 
-        // Flatten all products from all wishlists (should be one wishlist per customer)
         let products = [];
         if (wishLists.length > 0) {
             products = wishLists.reduce((acc, wl) => {

@@ -10,6 +10,7 @@ const CategoryRouter = require('../modules/categories/CategoryRouter');
 const MaterialRouter = require('../modules/material/MaterialRouter');
 const AddressRouter = require('../modules/address/AddressRouter');
 const PaymentRouter = require('../modules/payment/PaymentRouter');
+const VNPayRouter = require('../modules/vnpay/vnpayRouter');
 const ReviewRouter = require('../modules/review/ReviewRouter');
 const PostRouter = require('../modules/post/PostRouter');
 const CommentRouter = require('../modules/comment/CommentRouter');
@@ -19,6 +20,7 @@ const FollowRouter = require('../modules/follow/FollowRouter');
 const NotificationRouter = require('../modules/notification/NotificationRouter');
 const WishListRouter = require('../modules/wishList/wishListRouter');
 const TypeStoreRouter = require('../modules/typeStore/typeStoreRouter');
+const MessageRouter = require('../modules/message/MessageRouter');
 
 const initRoute = (app) => {
 
@@ -32,6 +34,7 @@ const initRoute = (app) => {
     app.use('/api/v1/', MaterialRouter);
     app.use('/api/v1/', AddressRouter);
     app.use('/api/v1/', PaymentRouter);
+    app.use('/api/v1/', VNPayRouter);
     app.use('/api/v1/', ReviewRouter);
     app.use('/api/v1/', PostRouter);
     app.use('/api/v1/', CommentRouter);
@@ -41,6 +44,7 @@ const initRoute = (app) => {
     app.use('/api/v1/', NotificationRouter);
     app.use('/api/v1/', WishListRouter);
     app.use('/api/v1/', TypeStoreRouter);
+    app.use('/api/v1/', MessageRouter);
 
 }
 
