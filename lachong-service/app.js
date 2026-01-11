@@ -117,8 +117,8 @@ const io = new Server(server, {
 setIo(io);
 socketHandler(io);
 
-server.listen(5000, () => {
-    console.log("Server is running on port 5000");
+server.listen(process.env.PORT || 5000, () => {
+    console.log(`Server is running on port ${process.env.PORT || 5000}`);
 });
 
 module.exports = app;
