@@ -73,6 +73,7 @@ app.get('/', (req, res) => {
     });
 });
 
+
 app.get('/api', (req, res) => {
     res.status(200).json({ message: 'Lac Hong Service is running.' });
 });
@@ -106,7 +107,7 @@ app.use((err, req, res, next) => {
 
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:5173",
+        origin: effectiveAllowedOrigins,
         methods: ["GET", "POST"],
         credentials: true
     }
