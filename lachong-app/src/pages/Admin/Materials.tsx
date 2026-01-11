@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import materialService from "../../services/material.service";
-import "../../assets/styles/categories.css";
+import "../../assets/styles/Categories.css";
 import Button from "../../components/common/buttons/Button";
 import { toast, ToastContainer } from "react-toastify";
 
