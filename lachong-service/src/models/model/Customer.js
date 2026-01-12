@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const customerSchema = new mongoose.Schema({
     fullName: { type: String },
     email: { type: String, required: true, unique: true },
-    phone: { type: String },
+    phone: { type: String, unique: true, sparse: true },
     avatar: { type: String },
     dob: { type: Date },
     accountId: { type: mongoose.Schema.Types.ObjectId, ref: 'Account' },

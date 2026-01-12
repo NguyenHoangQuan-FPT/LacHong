@@ -45,12 +45,17 @@ exports.registerUser = async (req, res) => {
 
         htmlTemplate = htmlTemplate.replace(/{{ACTIVE_LINK}}/g, activationLink);
 
-
-        await sendEmail(
-            email,
-            'Activate Your Account',
-            htmlTemplate
-        );
+        console.log('🔄 Attempting to send activation email to:', email);
+        try {
+            await sendEmail(
+                email,
+                'Activate Your Account',
+                htmlTemplate
+            );
+            console.log('✅ Activation email sent successfully');
+        } catch (emailError) {
+            console.error('❌ Failed to send activation email:', emailError);
+        }
 
         await user.save();
 
