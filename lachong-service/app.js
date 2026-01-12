@@ -57,13 +57,16 @@ app.use(cors({
         if (effectiveAllowedOrigins.includes(origin)) return callback(null, true);
         return callback(new Error(`CORS blocked for origin: ${origin}`));
     },
-    credentials: true
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 app.options(/.*/, cors());
 
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 
 // Health/root endpoints (useful when opening the domain in a browser)
@@ -110,10 +113,13 @@ app.use((err, req, res, next) => {
 const io = new Server(server, {
     cors: {
         origin: effectiveAllowedOrigins,
-        methods: ["GET", "POST"],
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Authorization", "Content-Type"],
         credentials: true
     }
 });
+
+
 setIo(io);
 socketHandler(io);
 
