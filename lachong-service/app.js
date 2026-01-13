@@ -112,6 +112,7 @@ app.use((err, req, res, next) => {
 
 const io = new Server(server, {
     cors: {
+        transports: ["websocket"],
         origin: effectiveAllowedOrigins,
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allowedHeaders: ["Authorization", "Content-Type"],
@@ -123,10 +124,9 @@ const io = new Server(server, {
 setIo(io);
 socketHandler(io);
 
-if (!process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
-    server.listen(process.env.PORT || 5000, () => {
-        console.log(`Server is running on port ${process.env.PORT || 5000}`);
-    });
-}
+server.listen(process.env.PORT || 5000, () => {
+    console.log(`Server is running on port ${process.env.PORT || 5000}`);
+});
+
 
 module.exports = app;
