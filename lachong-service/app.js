@@ -123,8 +123,10 @@ const io = new Server(server, {
 setIo(io);
 socketHandler(io);
 
-server.listen(process.env.PORT || 5000, () => {
-    console.log(`Server is running on port ${process.env.PORT || 5000}`);
-});
+if (!process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    server.listen(process.env.PORT || 5000, () => {
+        console.log(`Server is running on port ${process.env.PORT || 5000}`);
+    });
+}
 
 module.exports = app;
