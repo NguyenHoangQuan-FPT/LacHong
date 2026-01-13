@@ -12,6 +12,18 @@ const { sendEmail } = require('../../services/sendEmail');
 const fs = require("fs");
 const path = require("path");
 
+const pickFrontendOrigin = () => {
+    const candidates = [
+        process.env.CORS_ORIGINS,
+    ].filter(Boolean);
+
+    for (const raw of candidates) {
+        const first = String(raw).split(',')[0].trim();
+        if (first) return first.replace(/\/$/, '');
+    }
+    return 'http://localhost:5173';
+};
+
 exports.registerUser = async (req, res) => {
     let htmlTemplate = fs.readFileSync(
         path.join(__dirname, '../../template/sendEmail.html'), 'utf-8');
@@ -41,7 +53,7 @@ exports.registerUser = async (req, res) => {
             activationTokenExpires: Date.now() + 24 * 60 * 60 * 1000
         });
 
-        const activationLink = `${process.env.CORS_ORIGINS}/active-account/${activeAccount}`;
+        const activationLink = `${pickFrontendOrigin()}/active-account/${activeAccount}`;
 
         htmlTemplate = htmlTemplate.replace(/{{ACTIVE_LINK}}/g, activationLink);
 
