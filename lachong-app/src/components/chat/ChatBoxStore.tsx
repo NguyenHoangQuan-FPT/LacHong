@@ -64,15 +64,18 @@ export default function ChatBoxStore({ roomId, currentUserId }: ChatBoxProps) {
 
     // Socket join/leave and receiveMessage
     useEffect(() => {
-        if (!socket.connected) socket.connect();
-        socket.emit("joinRoom", roomId);
+        const roomIdStr = String(roomId);
+        socket.emit("joinRoom", roomIdStr);
+
         const handleReceiveMessage = (message: Message) => {
-            console.log('Received message from socket:', message);
+            console.log('📨 Received message from socket:', message);
             setMessages(prev => [...prev, message]);
         };
+
         socket.on("receiveMessage", handleReceiveMessage);
+
         return () => {
-            socket.emit("leaveRoom", roomId);
+            socket.emit("leaveRoom", roomIdStr);
             socket.off("receiveMessage", handleReceiveMessage);
         };
     }, [roomId]);
