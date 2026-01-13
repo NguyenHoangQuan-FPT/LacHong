@@ -4,13 +4,8 @@ const fs = require('fs');
 const app = express();
 
 const path = require('path');
-const { Server } = require('socket.io');
-const http = require('http');
 const envPath = path.resolve(__dirname, '.env');
 const envLocalPath = path.resolve(__dirname, '.env.local');
-const server = http.createServer(app);
-const { setIo } = require('./src/socket/io');
-const socketHandler = require('./src/socket/socket');
 
 if (fs.existsSync(envPath)) {
     dotenv.config({ path: envPath });
@@ -50,6 +45,9 @@ const defaultOrigins = ['http://localhost:5173', 'http://localhost:3000'];
 const effectiveAllowedOrigins = Array.from(new Set(allowedOrigins)).length
     ? Array.from(new Set(allowedOrigins))
     : defaultOrigins;
+
+// Expose to server.js (Socket.IO server is created there)
+app.set('effectiveAllowedOrigins', effectiveAllowedOrigins);
 
 app.use(cors({
     origin(origin, callback) {
@@ -109,24 +107,5 @@ app.use((err, req, res, next) => {
         message: err?.message || 'Internal Server Error'
     });
 });
-
-const io = new Server(server, {
-    cors: {
-        transports: ["websocket"],
-        origin: effectiveAllowedOrigins,
-        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Authorization", "Content-Type"],
-        credentials: true
-    }
-});
-
-
-setIo(io);
-socketHandler(io);
-
-server.listen(process.env.PORT || 5000, () => {
-    console.log(`Server is running on port ${process.env.PORT || 5000}`);
-});
-
 
 module.exports = app;
