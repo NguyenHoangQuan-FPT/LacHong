@@ -3,6 +3,7 @@ import { io } from "socket.io-client";
 const resolveSocketUrl = () => {
     const raw =
         (import.meta.env.VITE_SOCKET_URL as string | undefined) ||
+        (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
         (import.meta.env.VITE_APP_URL_LOCAL as string | undefined);
 
     if (!raw) return "http://localhost:3000";

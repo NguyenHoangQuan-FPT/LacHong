@@ -25,8 +25,7 @@ interface ChatBoxProps {
     store?: StoreInfo;
 }
 
-export default function ChatBoxCustomer(props: ChatBoxProps) {
-    const { roomId, store } = props;
+export default function ChatBoxCustomer({ roomId, currentUserId, store }: ChatBoxProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
@@ -37,14 +36,6 @@ export default function ChatBoxCustomer(props: ChatBoxProps) {
     const [internalRoomId, setInternalRoomId] = useState<string | undefined>(roomId);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Keep internalRoomId in sync when parent changes roomId
-    useEffect(() => {
-        if (roomId && roomId !== internalRoomId) {
-            setInternalRoomId(roomId);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [roomId]);
-
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -52,6 +43,7 @@ export default function ChatBoxCustomer(props: ChatBoxProps) {
         setImageFiles(prev => [...prev, file]);
         setImagePreviews(prev => [...prev, URL.createObjectURL(file)]);
 
+        // reset để lần sau chọn lại được cùng file
         e.target.value = "";
     };
 
@@ -81,6 +73,13 @@ export default function ChatBoxCustomer(props: ChatBoxProps) {
         prevMsgCount.current = messages.length;
     }, [messages, internalRoomId]);
 
+    // When switching room, scroll to bottom after messages are loaded
+    useEffect(() => {
+        if (!internalRoomId) return;
+        if (loading) return;
+        scrollToBottom(false);
+    }, [internalRoomId, loading, messages.length]);
+
     // Load old messages when roomId changes
     useEffect(() => {
         if (!internalRoomId) return;
@@ -97,28 +96,14 @@ export default function ChatBoxCustomer(props: ChatBoxProps) {
 
     useEffect(() => {
         if (!internalRoomId) return;
-        const roomIdStr = String(internalRoomId);
-
-        const joinRoom = () => socket.emit("joinRoom", roomIdStr);
-        if (socket.connected) {
-            joinRoom();
-        } else {
-            socket.connect();
-            socket.on("connect", joinRoom);
-        }
-
+        if (!socket.connected) socket.connect();
+        socket.emit("joinRoom", internalRoomId);
         const handleReceiveMessage = (message: Message) => {
-            setMessages(prev => {
-                if (!message?._id) return [...prev, message];
-                if (prev.some(m => m._id === message._id)) return prev;
-                return [...prev, message];
-            });
+            setMessages(prev => [...prev, message]);
         };
-
         socket.on("receiveMessage", handleReceiveMessage);
         return () => {
-            socket.emit("leaveRoom", roomIdStr);
-            socket.off("connect", joinRoom);
+            socket.emit("leaveRoom", internalRoomId);
             socket.off("receiveMessage", handleReceiveMessage);
         };
     }, [internalRoomId]);
@@ -139,21 +124,8 @@ export default function ChatBoxCustomer(props: ChatBoxProps) {
                 formData.append("storeId", store._id);
             }
             const res = await messageService.sendMessage(formData);
-
-            const createdRoomId: string | undefined = res?.data?.roomId;
-            const createdMessage: Message | undefined = res?.data?.message;
-
-            // First message may create room => set roomId so effect will join.
-            if (!internalRoomId && createdRoomId) {
-                setInternalRoomId(createdRoomId);
-            }
-
-            // Optimistic append: avoid needing reload if socket event is delayed/missed on production.
-            if (createdMessage) {
-                setMessages(prev => {
-                    if (prev.some(m => m._id === createdMessage._id)) return prev;
-                    return [...prev, createdMessage];
-                });
+            if (!internalRoomId && res?.data?.roomId) {
+                setInternalRoomId(res.data.roomId);
             }
             setInput("");
             setImageFiles([]);

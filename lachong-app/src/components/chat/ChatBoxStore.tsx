@@ -132,20 +132,26 @@ export default function ChatBoxStore(props: ChatBoxProps) {
                 {loading ? (
                     <div>Đang tải tin nhắn...</div>
                 ) : (
-                    messages.map((msg) => (
-                        <div
-                            key={msg._id}
-                            style={{
-                                marginBottom: 10,
-                                textAlign: msg.senderRole === "manager" ? "right" : "left"
-                            }}
-                        >
-                            <div className="chatbox-message-content">
+                    messages.map((msg) => {
+                        const isMine = msg.senderRole === "manager";
+                        const bubbleColor = isMine ? '#0084ff' : '#ffffff';
+                        const textColor = isMine ? '#ffffff' : '#000000';
+
+                        return (
+                            <div
+                                key={msg._id}
+                                style={{
+                                    marginBottom: 10,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: isMine ? 'flex-end' : 'flex-start',
+                                }}
+                            >
                                 {msg.content && (
                                     <div style={{
                                         display: 'inline-block',
-                                        background: msg.senderRole === "manager" ? '#0084ff' : '#ffffff',
-                                        color: msg.senderRole === "manager" ? '#ffffff' : '#000000',
+                                        background: bubbleColor,
+                                        color: textColor,
                                         borderRadius: 8,
                                         padding: '6px 12px',
                                         maxWidth: '70%'
@@ -153,28 +159,41 @@ export default function ChatBoxStore(props: ChatBoxProps) {
                                         {msg.content}
                                     </div>
                                 )}
-                            </div>
-                            {msg.images && msg.images.length > 0 && (
-                                <div className="chatbox-message-images">
-                                    {msg.images.map((img: string, idx: number) => (
-                                        <img
-                                            key={idx}
-                                            src={img}
-                                            alt="img"
-                                            style={{
-                                                maxWidth: '300px',
-                                                maxHeight: '200px',
-                                                cursor: 'pointer',
-                                                borderRadius: 8,
-                                                padding: '3px 6px',
-                                            }}
-                                        />
-                                    ))}
+
+                                {msg.images && msg.images.length > 0 && (
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: isMine ? 'flex-end' : 'flex-start',
+                                            gap: 4,
+                                            marginTop: msg.content ? 6 : 0,
+                                        }}
+                                    >
+                                        {msg.images.map((img: string, idx: number) => (
+                                            <img
+                                                key={idx}
+                                                src={img}
+                                                alt="img"
+                                                onClick={() => setModalImg(img)}
+                                                style={{
+                                                    maxWidth: '300px',
+                                                    maxHeight: '200px',
+                                                    cursor: 'pointer',
+                                                    borderRadius: 8,
+                                                    padding: '3px 6px',
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+
+                                <div className="chatbox-message-time" style={{ textAlign: isMine ? 'right' : 'left' }}>
+                                    {new Date(msg.timestamp).toLocaleTimeString()}
                                 </div>
-                            )}
-                            <div className="chatbox-message-time">{new Date(msg.timestamp).toLocaleTimeString()}</div>
-                        </div>
-                    ))
+                            </div>
+                        );
+                    })
                 )}
                 <div ref={messagesEndRef} />
             </div>
