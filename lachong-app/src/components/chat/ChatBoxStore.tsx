@@ -18,13 +18,12 @@ interface ChatBoxProps {
     currentUserId: string;
 }
 
-export default function ChatBoxStore({ roomId, currentUserId }: ChatBoxProps) {
+export default function ChatBoxStore(props: ChatBoxProps) {
+    const { roomId } = props;
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const [imageFile, setImageFile] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [modalImg, setModalImg] = useState<string | null>(null);
     const [imageFiles, setImageFiles] = useState<File[]>([]);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -65,17 +64,26 @@ export default function ChatBoxStore({ roomId, currentUserId }: ChatBoxProps) {
     // Socket join/leave and receiveMessage
     useEffect(() => {
         const roomIdStr = String(roomId);
-        socket.emit("joinRoom", roomIdStr);
+
+        const joinRoom = () => socket.emit("joinRoom", roomIdStr);
+        if (socket.connected) {
+            joinRoom();
+        } else {
+            socket.connect();
+            socket.on("connect", joinRoom);
+        }
 
         const handleReceiveMessage = (message: Message) => {
-            console.log('📨 Received message from socket:', message);
-            setMessages(prev => [...prev, message]);
+            setMessages(prev => {
+                if (message?._id && prev.some(m => m._id === message._id)) return prev;
+                return [...prev, message];
+            });
         };
 
         socket.on("receiveMessage", handleReceiveMessage);
-
         return () => {
             socket.emit("leaveRoom", roomIdStr);
+            socket.off("connect", joinRoom);
             socket.off("receiveMessage", handleReceiveMessage);
         };
     }, [roomId]);
@@ -84,11 +92,6 @@ export default function ChatBoxStore({ roomId, currentUserId }: ChatBoxProps) {
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
-
-    const handleRemoveImage = () => {
-        setImageFile(null);
-        setImagePreview(null);
-    };
 
     const handleSend = async () => {
         if (!input.trim() && imageFiles.length === 0) return;
@@ -102,7 +105,14 @@ export default function ChatBoxStore({ roomId, currentUserId }: ChatBoxProps) {
                 formData.append("images", file);
             });
 
-            await messageService.sendMessage(formData);
+            const res = await messageService.sendMessage(formData);
+            const createdMessage: Message | undefined = res?.data?.message;
+            if (createdMessage) {
+                setMessages(prev => {
+                    if (prev.some(m => m._id === createdMessage._id)) return prev;
+                    return [...prev, createdMessage];
+                });
+            }
 
             setInput("");
             setImageFiles([]);

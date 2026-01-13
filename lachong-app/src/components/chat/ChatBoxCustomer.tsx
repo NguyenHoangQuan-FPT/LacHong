@@ -25,7 +25,8 @@ interface ChatBoxProps {
     store?: StoreInfo;
 }
 
-export default function ChatBoxCustomer({ roomId, currentUserId, store }: ChatBoxProps) {
+export default function ChatBoxCustomer(props: ChatBoxProps) {
+    const { roomId, store } = props;
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
@@ -36,6 +37,14 @@ export default function ChatBoxCustomer({ roomId, currentUserId, store }: ChatBo
     const [internalRoomId, setInternalRoomId] = useState<string | undefined>(roomId);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Keep internalRoomId in sync when parent changes roomId
+    useEffect(() => {
+        if (roomId && roomId !== internalRoomId) {
+            setInternalRoomId(roomId);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [roomId]);
+
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -43,7 +52,6 @@ export default function ChatBoxCustomer({ roomId, currentUserId, store }: ChatBo
         setImageFiles(prev => [...prev, file]);
         setImagePreviews(prev => [...prev, URL.createObjectURL(file)]);
 
-        // reset để lần sau chọn lại được cùng file
         e.target.value = "";
     };
 
@@ -89,14 +97,28 @@ export default function ChatBoxCustomer({ roomId, currentUserId, store }: ChatBo
 
     useEffect(() => {
         if (!internalRoomId) return;
-        if (!socket.connected) socket.connect();
-        socket.emit("joinRoom", internalRoomId);
+        const roomIdStr = String(internalRoomId);
+
+        const joinRoom = () => socket.emit("joinRoom", roomIdStr);
+        if (socket.connected) {
+            joinRoom();
+        } else {
+            socket.connect();
+            socket.on("connect", joinRoom);
+        }
+
         const handleReceiveMessage = (message: Message) => {
-            setMessages(prev => [...prev, message]);
+            setMessages(prev => {
+                if (!message?._id) return [...prev, message];
+                if (prev.some(m => m._id === message._id)) return prev;
+                return [...prev, message];
+            });
         };
+
         socket.on("receiveMessage", handleReceiveMessage);
         return () => {
-            socket.emit("leaveRoom", internalRoomId);
+            socket.emit("leaveRoom", roomIdStr);
+            socket.off("connect", joinRoom);
             socket.off("receiveMessage", handleReceiveMessage);
         };
     }, [internalRoomId]);
@@ -117,8 +139,21 @@ export default function ChatBoxCustomer({ roomId, currentUserId, store }: ChatBo
                 formData.append("storeId", store._id);
             }
             const res = await messageService.sendMessage(formData);
-            if (!internalRoomId && res?.data?.roomId) {
-                setInternalRoomId(res.data.roomId);
+
+            const createdRoomId: string | undefined = res?.data?.roomId;
+            const createdMessage: Message | undefined = res?.data?.message;
+
+            // First message may create room => set roomId so effect will join.
+            if (!internalRoomId && createdRoomId) {
+                setInternalRoomId(createdRoomId);
+            }
+
+            // Optimistic append: avoid needing reload if socket event is delayed/missed on production.
+            if (createdMessage) {
+                setMessages(prev => {
+                    if (prev.some(m => m._id === createdMessage._id)) return prev;
+                    return [...prev, createdMessage];
+                });
             }
             setInput("");
             setImageFiles([]);
