@@ -32,7 +32,6 @@ const allowedOrigins = [
     .map(normalizeOrigin)
     .filter(Boolean);
 
-// Fallback for production when env is not set
 if (allowedOrigins.length === 0) {
     allowedOrigins.push(normalizeOrigin(process.env.FRONTEND_URL || 'https://lachong.store'));
 }
@@ -51,7 +50,6 @@ const effectiveAllowedOrigins = Array.from(new Set(allowedOrigins)).length
     ? Array.from(new Set(allowedOrigins))
     : defaultOrigins;
 
-// Expose to server.js (Socket.IO server is created there)
 app.set('effectiveAllowedOrigins', effectiveAllowedOrigins);
 
 app.use(cors({
@@ -72,7 +70,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-// Health/root endpoints (useful when opening the domain in a browser)
 app.get('/', (req, res) => {
     res.status(200).json({
         message: 'Lac Hong API is running.',
@@ -86,8 +83,7 @@ app.get('/api', (req, res) => {
     res.status(200).json({ message: 'Lac Hong Service is running.' });
 });
 
-// Ensure DB is connected (cached across invocations in serverless).
-// Skip DB connect for simple health endpoints to avoid "blank" timeouts.
+
 app.use(async (req, res, next) => {
     if (req.path === '/' || req.path === '/api') return next();
 
@@ -105,7 +101,6 @@ app.use(async (req, res, next) => {
 // App routes
 initRoute(app);
 
-// Basic error handler (returns JSON instead of an unclear blank response)
 app.use((err, req, res, next) => {
     const status = err?.statusCode || err?.status || 500;
     res.status(status).json({
