@@ -32,6 +32,11 @@ const allowedOrigins = [
     .map(normalizeOrigin)
     .filter(Boolean);
 
+// Fallback for production when env is not set
+if (allowedOrigins.length === 0) {
+    allowedOrigins.push(normalizeOrigin(process.env.FRONTEND_URL || 'https://lachong.store'));
+}
+
 
 if (process.env.APP_DOMAIN) {
     const domain = normalizeOrigin(process.env.APP_DOMAIN).replace(/^https?:\/\//, '');
