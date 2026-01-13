@@ -11,13 +11,20 @@ export default function ActiveAccount() {
     const [message, setMessage] = useState("");
 
     useEffect(() => {
+        if (!token) {
+            setStatus("error");
+            setMessage("Thiếu mã kích hoạt trong đường dẫn");
+            return;
+        }
+
         authService
-            .activateAccount(token!)
+            .activateAccount(token)
             .then((res) => {
                 setStatus("success");
                 setMessage(res.data.message || "Kích hoạt tài khoản thành công!");
             })
             .catch((err) => {
+                console.error("Activate account error", err);
                 setStatus("error");
                 setMessage(
                     err.response?.data?.message ||
