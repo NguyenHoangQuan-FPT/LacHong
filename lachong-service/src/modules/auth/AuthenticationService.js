@@ -14,7 +14,7 @@ const path = require("path");
 
 const pickFrontendOrigin = () => {
     const candidates = [
-        process.env.CORS_ORIGINS,
+        process.env.FRONTEND_URL || 'http://localhost:5173'
     ].filter(Boolean);
 
     for (const raw of candidates) {
