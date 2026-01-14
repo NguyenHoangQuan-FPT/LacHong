@@ -1,4 +1,3 @@
-import { act } from "react";
 import axiosClient from "../api/axiosClient";
 
 export const authService = {
@@ -12,7 +11,7 @@ export const authService = {
         return axiosClient.post("/register-store", { email, password, storeName, emailStore });
     },
     activateAccount: (token: string) => {
-        return axiosClient.post("/activate-account", { token });
+        return axiosClient.post(`/activate-account/${token}`);
     },
     logout: async () => {
         try {
