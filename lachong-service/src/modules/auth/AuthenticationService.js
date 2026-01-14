@@ -168,7 +168,7 @@ exports.logout = async (req, res) => {
 
 exports.activeAccount = async (req, res) => {
     try {
-        const { token } = req.body
+        const token = req.params.token || req.body.token;
 
         const account = await Account.findOne({ activationToken: token, activationTokenExpires: { $gt: Date.now() } });
         if (!account) {
