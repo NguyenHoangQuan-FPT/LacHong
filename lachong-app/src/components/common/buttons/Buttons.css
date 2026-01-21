@@ -51,8 +51,9 @@
 }
 
 .btn-submit {
-    background: #000000;
-    color: white;
+    color: #fff;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    box-shadow: 0 8px 22px rgba(59, 130, 246, 0.14);
 }
 
 .btn-add {

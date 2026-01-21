@@ -15,6 +15,7 @@ type OrderDto = {
     products?: Array<any>;
     totalAmount?: number;
     createdAt?: string;
+    orderItems?: Array<any>;
     store?: any;
     paymentMethod?: any;
     address?: string;
@@ -38,8 +39,7 @@ const ORDER_STATUSES = [
     { value: "", label: "Tất cả đơn hàng" },
     { value: "Pending", label: "Chờ xử lý" },
     { value: "Processing", label: "Đang chuẩn bị hàng" },
-    { value: "Shipped", label: "Đã gửi" },
-    { value: "Delivered", label: "Đã giao" },
+    { value: "Completed", label: "Đã nhận" },
     { value: "Cancelled", label: "Đã hủy" },
 ];
 
@@ -54,10 +54,8 @@ const getStatusColor = (status: string) => {
             return "#f59e0b";
         case "Processing":
             return "#3b82f6";
-        case "Shipped":
-            return "#8b5cf6";
-        case "Delivered":
-            return "#10b981";
+        case "Completed":
+            return "#14ac28";
         case "Cancelled":
             return "#ef4444";
         default:
@@ -72,6 +70,7 @@ export default function Order() {
     const [error, setError] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
+    const [showAllOrders, setShowAllOrders] = useState(false);
 
     const [selectedOrder, setSelectedOrder] = useState<OrderDto | null>(null);
     const [detailLoading, setDetailLoading] = useState(false);
@@ -149,7 +148,18 @@ export default function Order() {
             });
         }
         setFilteredOrders(result);
+        setShowAllOrders(false);
     }, [orders, statusFilter, searchTerm]);
+
+    const getOrderCreatedAtMs = (order: OrderDto) => {
+        const value = order.createdAt ? Date.parse(order.createdAt) : 0;
+        return Number.isFinite(value) ? value : 0;
+    };
+
+    const sortedFilteredOrders = [...filteredOrders].sort(
+        (a, b) => getOrderCreatedAtMs(b) - getOrderCreatedAtMs(a)
+    );
+    const visibleOrders = showAllOrders ? sortedFilteredOrders : sortedFilteredOrders.slice(0, 4);
 
     if (loading) {
         return (
@@ -290,7 +300,7 @@ export default function Order() {
                             </div>
 
                             <div className="order-filter">
-                                <label className="order-label">Tìm kiếm theo ID hoặc số tiền</label>
+                                <label className="order-label">Tìm kiếm</label>
                                 <input
                                     className="order-input"
                                     type="text"
@@ -309,7 +319,7 @@ export default function Order() {
                             </div>
                         ) : (
                             <div className="order-list">
-                                {filteredOrders.map((order) => (
+                                {visibleOrders.map((order) => (
                                     <div
                                         key={order._id}
                                         className="order-card"
@@ -356,7 +366,18 @@ export default function Order() {
 
                         {orders.length > 0 && (
                             <div className="order-summary">
-                                Hiển thị <strong>{filteredOrders.length}</strong> đơn hàng (tổng {orders.length})
+                                Hiển thị <strong>{visibleOrders.length}</strong>/{filteredOrders.length} đơn hàng (tổng {orders.length})
+                            </div>
+                        )}
+
+                        {filteredOrders.length > 4 && (
+                            <div className="order-viewall">
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => setShowAllOrders((v) => !v)}
+                                >
+                                    {showAllOrders ? "View less" : "View all"}
+                                </Button>
                             </div>
                         )}
                     </>

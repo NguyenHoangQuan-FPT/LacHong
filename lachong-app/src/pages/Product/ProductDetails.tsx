@@ -4,11 +4,11 @@ import { productService } from "../../services/product.service";
 import { cartService } from "../../services/cart.service";
 import { wishListService } from "../../services/wishList.service";
 import customerService from "../../services/customer.service";
-import { ToastContainer, toast } from "react-toastify";
 import "../../assets/styles/ProductDetails.css";
 import ProductRelated from "../../components/product/ProductRelated";
 import ProductReview from "../../components/product/ProductReview";
 import Icon from "../../components/common/icons/Icon";
+import { toast } from "react-toastify";
 import Toast from "../../components/common/toast/Toast";
 
 const normalizeImageUrl = (url?: string) => {
@@ -34,6 +34,8 @@ export default function ProductDetail() {
 
     const [error, setError] = useState<string | null>(null);
     const [customerProfile, setCustomerProfile] = useState<any | null>(null);
+
+    const [activeTab, setActiveTab] = useState<"related" | "reviews">("related");
 
     useEffect(() => {
         const savedUser = localStorage.getItem("user");
@@ -109,6 +111,13 @@ export default function ProductDetail() {
             mounted = false;
         };
     }, [id]);
+
+    useEffect(() => {
+        const tab = new URLSearchParams(location.search).get("tab");
+        if (tab === "related" || tab === "reviews") {
+            setActiveTab(tab);
+        }
+    }, [location.search]);
 
     const isProfileComplete = (profile: any | null) => {
         if (!profile) return false;
@@ -218,26 +227,25 @@ export default function ProductDetail() {
             <div className="product-detail-container">
                 <div className="product-detail-main">
                     <div className="product-detail-left">
-                        <div className="product-detail-image-wrap">
-                            {discountValue > 0 && (
-                                <span className="product-detail-badge">{discountValue}% off</span>
+                        <div className="product-detail-media">
+                            {productImages.length > 0 && (
+                                <div className="product-detail-thumbnails">
+                                    {productImages.map((img: string, idx: number) => (
+                                        <div
+                                            key={idx}
+                                            className={`thumbnail ${selectedImage === img ? "active" : ""}`}
+                                            onClick={() => setSelectedImage(img)}
+                                        >
+                                            <img src={normalizeImageUrl(img)} alt={`${product.productName || product.name} ${idx + 1}`} />
+                                        </div>
+                                    ))}
+                                </div>
                             )}
-                            <img src={normalizeImageUrl(mainImage)} alt={product.productName || product.name} />
-                        </div>
 
-                        {productImages.length > 0 && (
-                            <div className="product-detail-thumbnails">
-                                {productImages.map((img: string, idx: number) => (
-                                    <div
-                                        key={idx}
-                                        className={`thumbnail ${selectedImage === img ? 'active' : ''}`}
-                                        onClick={() => setSelectedImage(img)}
-                                    >
-                                        <img src={normalizeImageUrl(img)} alt={`${product.productName || product.name} ${idx + 1}`} />
-                                    </div>
-                                ))}
+                            <div className="product-detail-image-wrap">
+                                <img src={normalizeImageUrl(mainImage)} alt={product.productName || product.name} />
                             </div>
-                        )}
+                        </div>
                         <div className="product-detail-store">
                             <Link to={storeIdValue ? `/store/${storeIdValue}` : "/store"} className="store-link">
                                 {storeAvatar && <img src={normalizeImageUrl(storeAvatar)} className="avatar-store" />}  {storeName}
@@ -251,10 +259,9 @@ export default function ProductDetail() {
                             <span style={{ display: "flex", alignItems: "center" }}>
                                 {Array.from({ length: 5 }).map((_, i) => (
                                     <span key={i} style={{ color: i < Math.round(product.avgRating) ? '#ffc107' : '#e4e5e9', fontSize: 22, paddingRight: 2 }}>
-                                        <Icon name="start" size={12} />
+                                        <Icon name="star" size={12} />
                                     </span>
                                 ))}
-                                <span style={{ fontSize: 18, color: '#888', marginLeft: 4 }}>{product.avgRating ? product.avgRating.toFixed(1) : 'Chưa có đánh giá'}</span>
                             </span>
                         </div>
                         <div className="product-detail-prices">
@@ -265,9 +272,14 @@ export default function ProductDetail() {
                                 </>
                             ) : (
                                 <span className="price-neww">{(product.price ?? 0).toLocaleString()} VND</span>
-                            )}
-                        </div>
 
+                            )}
+                            <div>
+                                {discountValue > 0 && (
+                                    <span className="product-detail-badge">{discountValue}% off</span>
+                                )}
+                            </div>
+                        </div>
                         {product.description && (
                             <div className="product-detail-desc">
                                 <h3>Mô tả sản phẩm</h3>
@@ -307,10 +319,10 @@ export default function ProductDetail() {
                                 </ul>
                             </div>
                         )}
-                        {user?.role !== "manager" && (
+                        {user?.role !== "manager" && user?.role !== "admin" && (
 
                             <div className="product-detail-actions">
-                                <div className="quantity-control">
+                                <div className="quantity-controls">
                                     <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>−</button>
                                     <input type="number" min="1" value={quantity} onChange={e => setQuantity(Math.max(1, Number(e.target.value)))} />
                                     <button onClick={() => setQuantity(quantity + 1)}>+</button>
@@ -346,14 +358,14 @@ export default function ProductDetail() {
                                             if (!id || !product) return;
                                             const ok = await ensureCustomerProfileComplete();
                                             if (!ok) return;
-                                            setAddingToCart(true);
+                                            setAddingToWishList(true);
                                             try {
                                                 await wishListService.addToWishList(id);
                                                 toast.success("Đã thêm vào danh sách yêu thích!");
                                             } catch (err: any) {
                                                 toast.error(err?.response?.data?.message || "Không thể thêm vào danh sách yêu thích");
                                             } finally {
-                                                setAddingToCart(false);
+                                                setAddingToWishList(false);
                                             }
                                         }}
                                         disabled={addingToWishList}
@@ -364,14 +376,49 @@ export default function ProductDetail() {
                                 </div>
                             </div>
                         )}
-
-                        <Link to="/product" className="product-detail-back">← Quay lại danh sách sản phẩm</Link>
                     </div>
                 </div>
-                <hr className="hr"></hr>
             </div>
-            <ProductRelated product={product} currentCategoryId={currentCategoryId} />
-            <ProductReview productId={id as string} />
+            <div className="product-detail-tabs" role="tablist" aria-label="Chọn nội dung">
+                <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === "related"}
+                    className={activeTab === "related" ? "product-detail-tab active" : "product-detail-tab"}
+                    onClick={() => {
+                        setActiveTab("related");
+                        if (id) {
+                            navigate({ pathname: location.pathname, search: `?id=${id}&tab=related` }, { replace: true });
+                        }
+                    }}
+                >
+                    Sản phẩm liên quan
+                </button>
+                <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === "reviews"}
+                    className={activeTab === "reviews" ? "product-detail-tab active" : "product-detail-tab"}
+                    onClick={() => {
+                        setActiveTab("reviews");
+                        if (id) {
+                            navigate({ pathname: location.pathname, search: `?id=${id}&tab=reviews` }, { replace: true });
+                        }
+                    }}
+                >
+                    Đánh giá
+                </button>
+
+            </div>
+
+            <div className="product-detail-tab-panel" role="tabpanel">
+                {activeTab === "related" ? (
+                    <ProductRelated product={product} currentCategoryId={currentCategoryId} />
+
+                ) : (
+                    <ProductReview productId={id as string} />
+                )}
+            </div>
             <Toast></Toast>
         </div >
     );

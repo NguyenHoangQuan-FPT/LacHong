@@ -39,28 +39,41 @@
 
 /* Facebook-like feed layout */
 .post-page {
-    width: 100%;
     max-width: 890px;
     margin: 0 auto;
-    padding: 18px 12px 32px;
     box-sizing: border-box;
     min-height: calc(100vh - 80px);
-    background: #f0f2f5;
     border-radius: 12px;
+    margin-bottom: 30px;
+}
+
+.cus-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: #050505;
 }
 
 .post-header {
     display: flex;
     gap: 12px;
-    margin-bottom: 14px;
-    border-radius: 10px;
-    padding-left: 1230px;
+    justify-self: end;
+    justify-content: flex-end;
+    margin-bottom: 18px;
 
 }
 
-.post-btn {
+.add-post-button {
+    font-weight: 700;
+    border-radius: 8px;
     border: none;
-    background: #afafaf;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+}
+
+.post-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 18px;
 }
 
 .post-title {
@@ -76,14 +89,6 @@
     color: #65676b;
 }
 
-.post-btn {
-    border: none;
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: filter 0.15s ease;
-}
 
 .post-btn.primary {
     background: #1877f2;
@@ -684,6 +689,5 @@
     width: 400px;
     height: 100%;
     object-fit: cover;
-    border-radius: 8px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }

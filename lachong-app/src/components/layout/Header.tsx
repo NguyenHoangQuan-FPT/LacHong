@@ -9,14 +9,33 @@ export default function Header() {
     const location = useLocation();
     const navigate = useNavigate();
     const [user, setUser] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const userMenuRef = useRef<HTMLDivElement | null>(null);
     const [showNotificationPopup, setShowNotificationPopup] = useState(false);
     const [unread, setUnread] = useState<Notification[]>([]);
-    const [error, setError] = useState("");
     const [showChatList, setShowChatList] = useState(false);
+    const [search, setSearch] = useState("");
 
+    useEffect(() => {
+        if (!location.pathname.startsWith("/product")) return;
+        const q = new URLSearchParams(location.search).get("q") ?? "";
+        setSearch(q);
+    }, [location.pathname, location.search]);
+
+    const handleSearchSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        const term = search.trim();
+
+        const current = new URLSearchParams(location.search);
+        const category = current.get("category");
+
+        const params = new URLSearchParams();
+        if (category) params.set("category", category);
+        if (term) params.set("q", term);
+
+        const qs = params.toString();
+        navigate(qs ? `/product?${qs}` : "/product");
+    };
 
     useEffect(() => {
         const savedUser = localStorage.getItem("user");
@@ -36,15 +55,14 @@ export default function Header() {
                 console.error("Lỗi parse user:", e);
             }
         }
-        setLoading(false);
     }, []);
 
     const fetchUnread = () => {
-        setLoading(true);
         notificationService.getNotificationIsRead()
             .then((res: any) => setUnread(res?.data?.notifications || []))
-            .catch(() => setError("Không thể tải thông báo mới"))
-            .finally(() => setLoading(false));
+            .catch((e: any) => {
+                console.error("Không thể tải thông báo mới", e);
+            });
     };
     useEffect(() => {
         fetchUnread();
@@ -119,11 +137,32 @@ export default function Header() {
                         >
                             Community
                         </Link>
+
+                        <Link
+                            to="/about"
+                            className={`dashboard-tab${location.pathname.startsWith("/about")
+                                ? " active"
+                                : ""
+                                }`}
+                        >
+                            About
+                        </Link>
                     </div>
                 </div>
 
                 <div className="header-icons" style={{ position: 'relative' }}>
-                    {user?.role !== "manager" && (
+                    <div>
+                        <form className="header-search" onSubmit={handleSearchSubmit}>
+                            <input
+                                type="text"
+                                placeholder="Tìm kiếm sản phẩm..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                            <button type="submit"><Icon name="search" size={18} /></button>
+                        </form>
+                    </div>
+                    {user?.role !== "manager" && user?.role !== "admin" && (
                         <>
                             <span className="icon-header" title="Notifications" style={{ position: 'relative' }}>
                                 <span onClick={() => setShowNotificationPopup(v => !v)} style={{ cursor: 'pointer', position: 'relative', display: 'inline-block' }}>
@@ -175,7 +214,7 @@ export default function Header() {
 
                                 {isUserMenuOpen && (
                                     <div className="user-dropdown" role="menu">
-                                        {user?.role === "manager" ? (
+                                        {user?.role === "manager" && (
                                             <Link
                                                 to="/store"
                                                 className="user-dropdown-item"
@@ -185,7 +224,21 @@ export default function Header() {
                                                 <Icon name="home" size={16} />
                                                 <span>Dashboard</span>
                                             </Link>
-                                        ) : (
+                                        )}
+
+                                        {user?.role === "admin" && (
+                                            <Link
+                                                to="/admin"
+                                                className="user-dropdown-item"
+                                                role="menuitem"
+                                                onClick={() => setIsUserMenuOpen(false)}
+                                            >
+                                                <Icon name="home" size={16} />
+                                                <span>Dashboard</span>
+                                            </Link>
+                                        )}
+
+                                        {user?.role !== "manager" && user?.role !== "admin" && (
                                             <>
                                                 <Link
                                                     to="/customer/profile"
@@ -233,7 +286,7 @@ export default function Header() {
 
             <hr
                 style={{
-                    width: "90%",
+                    width: "100%",
                     margin: "auto",
                     border: "1px solid #eee",
                 }}

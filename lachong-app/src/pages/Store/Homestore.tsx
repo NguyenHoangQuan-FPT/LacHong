@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { storeService } from "../../services/store.service";
 import { Bar } from 'react-chartjs-2';
 import 'chart.js/auto';
+import '../../assets/styles/Homestore.css';
+import Icon from "../../components/common/icons/Icon";
 
 interface Order {
     _id: string;
@@ -24,26 +26,28 @@ export default function Homestore() {
     const [error, setError] = useState("");
     const [totalRevenue, setTotalRevenue] = useState(0);
     const [totalProducts, setTotalProducts] = useState(0);
+    const [totalPending, setTotalPending] = useState(0);
 
     useEffect(() => {
         setLoading(true);
+        setError("");
 
-        storeService.getProductsByStore()
-            .then((res: any) => {
-                const productsList = res?.data?.products || [];
-                // Tổng số sản phẩm đã bán = tổng sold của tất cả sản phẩm
-                const totalSold = productsList.reduce((sum: number, p: Product) => sum + (typeof p.sold === 'number' ? p.sold : 0), 0);
-                setTotalProducts(totalSold);
-            })
-            .catch(() => setError("Không thể tải dữ liệu thống kê sản phẩm"));
+        Promise.all([
+            storeService.getProductsByStore(),
+            storeService.getAllOrdersByStore(),
+        ])
+            .then(([productsRes, ordersRes]: any[]) => {
+                const productsList: Product[] = productsRes?.data?.products || [];
+                const orderList: Order[] = ordersRes?.data?.orders || [];
 
-        storeService.getAllOrdersByStore()
-            .then((res: any) => {
-                const orderList = res?.data?.orders || [];
                 setOrders(orderList);
-                // Tính tổng doanh thu
+                setTotalProducts(productsList.length);
+
                 const revenue = orderList.reduce((sum: number, o: Order) => sum + (o.totalAmount || 0), 0);
                 setTotalRevenue(revenue);
+
+                const pending = orderList.filter((o: Order) => (o.status || '').toLowerCase() === 'pending').length;
+                setTotalPending(pending);
             })
             .catch(() => setError("Không thể tải dữ liệu thống kê"))
             .finally(() => setLoading(false));
@@ -71,22 +75,77 @@ export default function Homestore() {
         };
     };
 
+    const statCards = useMemo(() => ([
+        {
+            label: 'Tổng sản phẩm',
+            value: totalProducts,
+            icon: 'boxes',
+            borderColor: '#4f46e5',
+            iconBg: '#eef2ff',
+        },
+        {
+            label: 'Tổng đơn hàng',
+            value: orders.length,
+            icon: 'cart-check',
+            borderColor: '#f59e0b',
+            iconBg: '#fff7ed',
+        },
+        {
+            label: 'Tổng doanh thu',
+            value: `${totalRevenue.toLocaleString('vi-VN')} VND`,
+            icon: 'cash-stack',
+            borderColor: '#10b981',
+            iconBg: '#ecfdf3',
+        },
+        {
+            label: 'Đơn hàng pending',
+            value: totalPending,
+            icon: 'clock-history',
+            borderColor: '#f97316',
+            iconBg: '#fff7ed',
+        },
+    ]), [orders.length, totalPending, totalProducts, totalRevenue]);
+
+    const todayLabel = useMemo(() => {
+        const now = new Date();
+        return now.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }, []);
+
     return (
-        <div className="orders-container">
-            <div className="orders-header">Thống kê tổng quan cửa hàng</div>
+        <div className="main-store">
             {loading ? (
-                <div>Đang tải...</div>
+                <div style={{ padding: 20 }}>Đang tải...</div>
             ) : error ? (
-                <div style={{ color: 'red' }}>{error}</div>
+                <div style={{ padding: 20, color: 'red' }}>{error}</div>
             ) : (
                 <>
-                    <div style={{ margin: '16px 0', fontWeight: 600, display: 'flex', gap: 32 }}>
-                        <div>Tổng đơn hàng: <span style={{ color: '#2563eb' }}>{orders.length}</span></div>
-                        <div>Tổng sản phẩm đã bán: <span style={{ color: '#16a34a' }}>{totalProducts}</span></div>
-                        <div>Tổng doanh thu: <span style={{ color: '#eab308' }}>{totalRevenue.toLocaleString()} VND</span></div>
+                    {/* STAT CARDS */}
+                    <div className="stats-section">
+                        {statCards.map((card, idx) => (
+                            <div
+                                key={idx}
+                                className="stat-card"
+                                style={{ borderLeftColor: card.borderColor }}
+                            >
+                                <div className="stat-icon" style={{ backgroundColor: card.iconBg }}>
+                                    <Icon name={card.icon} size={22} />
+                                </div>
+                                <div className="stat-content">
+                                    <p className="stat-label">{card.label}</p>
+                                    <p className="stat-value">{card.value}</p>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                    <div style={{ maxWidth: 700, margin: '0 auto' }}>
-                        <Bar data={chartData()} />
+                    <div className="chart-section">
+                        <div className="card">
+                            <div className="card-header">
+                                <h2>Doanh thu theo tháng</h2>
+                            </div>
+                            <div className="chart-wrapper">
+                                <Bar data={chartData()} />
+                            </div>
+                        </div>
                     </div>
                 </>
             )}

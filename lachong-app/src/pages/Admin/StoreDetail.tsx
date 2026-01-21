@@ -102,8 +102,8 @@ export default function StoreDetail() {
 
                 <div className="store-actions" style={{ display: 'flex', gap: 8 }}>
                     <span >
-                        <Button variant="primary" >
-                            <Link to={`/admin/store/product/${store._id}`} style={{ color: "#ffffff" }}>Xem sản phẩm của cửa hàng</Link>
+                        <Button variant="secondary" >
+                            <Link to={`/admin/store/product/${store._id}`} style={{ color: "#000000" }}>Xem sản phẩm</Link>
                         </Button>
                     </span>
                     <span>

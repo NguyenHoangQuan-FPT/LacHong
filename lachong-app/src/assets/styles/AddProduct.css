@@ -59,9 +59,11 @@
 }
 
 .image-preview-img {
-    width: 300px;
-    height: 100%;
+    width: 120px;
+    height: 120px;
     object-fit: cover;
+    display: block;
+    border-radius: 10px;
 }
 
 .modal-title {
@@ -93,10 +95,8 @@
 
 .modal-close-btn:hover {
     background: rgba(255, 255, 255, 0.3);
-    transform: rotate(90deg);
 }
 
-/* Form */
 .add-product-form {
     flex: 1;
     overflow-y: auto;
@@ -250,6 +250,81 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+/* Multi image preview (horizontal) */
+.image-preview-section-multi {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.image-preview-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.image-preview-item {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.btn-remove-thumb {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: rgba(112, 112, 112, 0.55);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-remove-thumb:hover {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.upload-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.upload-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px dashed rgba(79, 70, 229, 0.6);
+    background: #eef2ff;
+    color: rgb(55, 48, 163);
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+}
+
+.btn-remove {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #f3f4f6;
+    color: #111827;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-remove:hover {
+    background: #e5e7eb;
 }
 
 /* Messages */

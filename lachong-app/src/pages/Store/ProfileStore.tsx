@@ -278,7 +278,10 @@ export default function ProfileStore() {
                         <div className="profile-avatar" style={{ width: 120, height: 120, borderRadius: 12, overflow: 'hidden' }}>
                             {avatarPreview ? <img src={avatarPreview} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (store.storeName || 'S').charAt(0).toUpperCase()}
                         </div>
-                        <input type="file" accept="image/*" onChange={handleAvatarChange} />
+                        <label className='profile-avatar-label btn btn-secondary' style={{ cursor: 'pointer' }}>
+                            Chọn ảnh
+                            <input type="file" accept="image/*" onChange={handleAvatarChange} hidden />
+                        </label>
                     </div>
                     {shouldShowCropper && createPortal(
                         <div className="avatar-crop-modal-overlay">

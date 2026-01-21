@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import customerService from "../../services/customer.service";
 import "../../assets/styles/Stores.css";
 import Button from "../../components/common/buttons/Button";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 
 interface Customer {
     _id: string;
@@ -30,11 +30,10 @@ export default function Customer() {
     }, []);
 
     const filteredCustomers = customers.filter(customer => {
-        const s = search.toLowerCase();
-        return (
-            customer.fullName.toLowerCase().includes(s) ||
-            (customer.email && customer.email.toLowerCase().includes(s))
-        );
+        const s = (search || "").toLowerCase();
+        const name = (customer.fullName || "").toLowerCase();
+        const email = (customer.email || "").toLowerCase();
+        return name.includes(s) || email.includes(s);
     });
 
     const totalPages = Math.ceil(filteredCustomers.length / PAGE_SIZE);
@@ -71,16 +70,16 @@ export default function Customer() {
                         <tbody>
                             {pagedCustomers.length === 0 ? (
                                 <tr>
-                                    <td colSpan={4} style={{ textAlign: "center" }}>
+                                    <td colSpan={5} style={{ textAlign: "center" }}>
                                         Không có khách hàng
                                     </td>
                                 </tr>
                             ) : (
                                 pagedCustomers.map(customer => (
                                     <tr key={customer._id}>
-                                        <td>{customer.fullName}</td>
-                                        <td>{customer.email}</td>
-                                        <td>{customer.phone}</td>
+                                        <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordBreak: 'break-word' }}>{customer.fullName}</td>
+                                        <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordBreak: 'break-word' }}>{customer.email}</td>
+                                        <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordBreak: 'break-word' }}>{customer.phone}</td>
                                         <td>
                                             <span className={`status ${customer.status ? "active" : "locked"}`}>
                                                 {customer.status ? "Hoạt động" : "Khoá"}
@@ -88,7 +87,7 @@ export default function Customer() {
                                         </td>
                                         <td>
                                             <Button variant="secondary">
-                                                <Link to={`/admin/customer/${customer._id}`}>
+                                                <Link to={`/admin/customer/${customer._id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
                                                     Xem chi tiết
                                                 </Link>
                                             </Button>

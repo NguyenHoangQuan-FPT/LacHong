@@ -1,0 +1,95 @@
+/* Modal (Add/Edit Address) */
+
+.address-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 16px;
+    background: rgba(2, 6, 23, 0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.address-modal {
+    width: min(980px, 100%);
+    max-height: calc(100dvh - 56px);
+    overflow: auto;
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.92));
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+    transform-origin: 50% 35%;
+    animation: addressModalIn 140ms ease-out;
+}
+
+@keyframes addressModalIn {
+    from {
+        transform: translateY(8px) scale(0.985);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+/* Remove inner card visuals when inside modal */
+.address-modal .address-form-card {
+    max-width: none;
+    margin: 0;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    padding: 26px 26px 22px;
+}
+
+.address-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.address-modal-header h2 {
+    margin: 0;
+}
+
+.address-modal-close {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    background: rgba(255, 255, 255, 0.75);
+    color: #0f172a;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.address-modal-close:hover {
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 10px 26px rgba(2, 6, 23, 0.12);
+    transform: translateY(-1px);
+}
+
+.address-modal-close:active {
+    transform: translateY(0);
+}
+
+@media (max-width: 820px) {
+    .address-modal-overlay {
+        padding: 18px 12px;
+    }
+
+    .address-modal .address-form-card {
+        padding: 18px 16px 14px;
+    }
+}

@@ -43,6 +43,7 @@
 }
 
 .notification-item.unread {
+    background: #dddddd;
     opacity: 1;
 }
 

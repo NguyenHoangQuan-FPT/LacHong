@@ -9,16 +9,21 @@
     --glass: rgba(255, 255, 255, 0.96);
 }
 
-
-
-
 /* Page wrapper to visually match Home */
 .product-page {
-    max-width: 1400px;
-    margin: 18px auto 60px;
-    padding: 0 12px;
+    width: 100%;
+    max-width: none;
     box-sizing: border-box;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    margin-bottom: 30px;
+}
+
+/* Two-column layout: sticky controls (left) + results (right) */
+.product-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 22px;
+    align-items: start;
 }
 
 /* HERO area (same visual language as home banner) */
@@ -81,11 +86,19 @@
 
 /* CONTROLS: search + filters (align with Home styles) */
 .product-controls {
+    position: sticky;
+    top: 18px;
+    align-self: start;
     display: flex;
-    gap: 18px;
-    align-items: flex-start;
-    margin: 18px 0;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 14px;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--glass);
+    border: 1px solid rgba(99, 102, 241, 0.06);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.03);
+    max-height: calc(100vh - 36px);
+    overflow-y: auto;
 }
 
 /* Search box */
@@ -94,11 +107,13 @@
     align-items: center;
     gap: 8px;
     padding: 8px;
-    margin-top: 30px;
+    margin-top: 0;
     background: var(--glass);
     border-radius: 12px;
     border: 1px solid rgba(99, 102, 241, 0.06);
     box-shadow: 0 8px 20px rgba(15, 23, 42, 0.03);
+    height: 40px;
+
 }
 
 .product-search input {
@@ -106,7 +121,7 @@
     outline: none;
     background: transparent;
     padding: 8px 6px;
-    width: 260px;
+    width: 100%;
     font-size: 0.95rem;
     color: var(--text);
 }
@@ -124,42 +139,130 @@
 /* Filters area */
 .product-filters {
     display: flex;
+    flex-direction: column;
     gap: 12px;
-    align-items: flex-end;
-    flex-wrap: wrap;
 }
 
 .filter-item {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    min-width: 180px;
+    min-width: 100%;
 }
 
 .filter-item label {
-    font-weight: 700;
-    color: var(--muted);
+    font-weight: 500;
+    color: #000000;
     font-size: 0.88rem;
+
 }
 
 .filter-item select,
 .filter-item input[type="number"] {
     padding: 8px 10px;
-    border-radius: 10px;
+    border-radius: 50px;
     border: 1px solid rgba(15, 23, 42, 0.06);
-    background: #d1d0d0;
+    background: #ffffff;
+    color: #000000;
     outline: none;
     box-shadow: 0 6px 18px rgba(99, 102, 241, 0.03);
 }
 
+/* Radios (replace selects) */
+.filter-item .radio-group {
+    padding: 10px 12px;
+    border-radius: 14px;
+    color: #000000;
+
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    max-height: 220px;
+    overflow: auto;
+}
+
+.filter-item .radio-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-weight: 500;
+    user-select: none;
+}
+
+.filter-item .radio-option input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #6b7280;
+}
+
+.filter-item .radio-option span {
+    line-height: 1.2;
+}
+
+/* Dropdown options (note: styling support varies by OS/browser) */
+.filter-item select option {
+    background-color: #d1d0d0;
+    color: #000000;
+}
+
+
 /* Price filter (range) */
 .price-filter {
-    min-width: 240px;
+    min-width: 100%;
 }
 
 .price-filter input[type="range"] {
-    width: 220px;
+    width: 100%;
     margin-top: 6px;
+    accent-color: #9ca3af;
+}
+
+/* Range slider gray styling (cross-browser) */
+.price-filter input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 28px;
+    background: transparent;
+}
+
+.price-filter input[type="range"]::-webkit-slider-runnable-track {
+    height: 6px;
+    background: #d1d5db;
+    border-radius: 999px;
+}
+
+.price-filter input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #9ca3af;
+    border: 2px solid #6b7280;
+    margin-top: -5px;
+}
+
+.price-filter input[type="range"]::-moz-range-track {
+    height: 6px;
+    background: #d1d5db;
+    border-radius: 999px;
+}
+
+.price-filter input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #9ca3af;
+    border: 2px solid #6b7280;
+}
+
+.product-results {
+    min-width: 0;
+    min-height: 0;
+    max-height: calc(100dvh - 36px);
+    overflow-y: auto;
 }
 
 .price-range {
@@ -175,6 +278,12 @@
     align-items: center;
     gap: 8px;
 }
+
+.option-item {
+    font-weight: 500;
+    background: #ffffff;
+}
+
 
 .btn-clear {
     background: transparent;
@@ -204,9 +313,8 @@
 
 .product-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 30px;
-    padding: 10px;
+    grid-template-columns: repeat(4, minmax(220px, 1fr));
+    gap: 10px;
 }
 
 /* Card */
@@ -221,6 +329,7 @@
     flex-direction: column;
     min-height: 320px;
     transition: transform .12s ease, box-shadow .12s ease;
+    cursor: pointer;
 }
 
 
@@ -256,22 +365,6 @@
     font-size: 0.85rem;
 }
 
-/* Image */
-.product-image-wrap {
-    display: block;
-    width: 100%;
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.product-image-wrap img {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    display: block;
-    border-radius: 8px;
-    border: 1px solid rgba(15, 23, 42, 0.03);
-}
 
 /* Info */
 .product-info {
@@ -327,8 +420,7 @@
 /* Responsive tweaks */
 @media (max-width: 1000px) {
     .product-page {
-        padding: 0 10px;
-        max-width: 940px;
+        max-width: 100%;
     }
 
     .product-hero {
@@ -337,10 +429,20 @@
         gap: 12px;
     }
 
+    .product-layout {
+        grid-template-columns: 1fr;
+    }
+
     .product-controls {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
+        position: static;
+        max-height: none;
+        overflow: visible;
+        margin: 18px 0 0;
+    }
+
+    .product-results {
+        max-height: none;
+        overflow: visible;
     }
 
     .product-search input {

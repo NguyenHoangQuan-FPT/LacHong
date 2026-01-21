@@ -29,7 +29,7 @@ import Categories from "../pages/Admin/Categories";
 import Materials from "../pages/Admin/Materials";
 import Orders from "../pages/Store/Oders";
 import OrderDetail from "../pages/Store/OrderDetail";
-import Notification from "../components/notification/Notification";
+import Notification from "../pages/Home/Notification";
 import StoreNotification from "../pages/Store/StoreNotification";
 import WishList from "../pages/Home/WishList";
 import TypeStore from "../pages/Admin/TypeStore";
@@ -39,13 +39,15 @@ import ProductDetailCard from "../pages/Admin/ProductDetailCard";
 import MessageStore from "../pages/Store/MessageStore";
 import ChatList from "../components/chat/ChatList";
 import ChatModal from "../components/chat/ChatModal";
+import About from "../pages/Home/About";
 
 
 export default function RouterComponent() {
     return (
         <Routes>
             <Route path="/notification" element={<Layout><Notification /></Layout>} />
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<Layout><HomePage /></Layout>} />
+            <Route path="/about" element={<Layout><About /></Layout>} />
             <Route path="/community" element={<Layout><Post /></Layout>} />
             <Route path="/product" element={<Layout><Product /></Layout>} />
             <Route path="/wishlist" element={<Layout><WishList /></Layout>} />

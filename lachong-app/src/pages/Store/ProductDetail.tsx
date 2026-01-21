@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { productStoreService } from '../../services/product-store.service';
+import { reviewService } from '../../services/review.service';
 import '../../assets/styles/ProductDetail.css';
 import Icon from "../../components/common/icons/Icon";
 import Button from "../../components/common/buttons/Button";
@@ -12,6 +13,7 @@ export default function ProductDetail() {
     const [activeImage, setActiveImage] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [ratingInfo, setRatingInfo] = useState<{ avg: number; count: number }>({ avg: 0, count: 0 });
 
     useEffect(() => {
         if (!id) return;
@@ -40,6 +42,37 @@ export default function ProductDetail() {
                 setError('Không tải được thông tin sản phẩm');
             })
             .finally(() => setLoading(false));
+    }, [id]);
+
+    useEffect(() => {
+        if (!id) return;
+        let cancelled = false;
+        reviewService
+            .getReviewsByProductId(id)
+            .then((res: any) => {
+                const raw = Array.isArray(res?.data?.reviews)
+                    ? res.data.reviews
+                    : Array.isArray(res?.data)
+                        ? res.data
+                        : [];
+
+                const scores = raw
+                    .map((r: any) => Number(r?.rating) || 0)
+                    .filter((n: number) => !Number.isNaN(n));
+
+                const count = scores.length;
+                const avg = count > 0 ? scores.reduce((a, b) => a + b, 0) / count : 0;
+
+                if (!cancelled) setRatingInfo({ avg, count });
+            })
+            .catch((err: any) => {
+                console.error('Load reviews error', err);
+                if (!cancelled) setRatingInfo({ avg: 0, count: 0 });
+            });
+
+        return () => {
+            cancelled = true;
+        };
     }, [id]);
 
     const handleDelete = async () => {
@@ -172,9 +205,20 @@ export default function ProductDetail() {
 
                         <div className="detail-meta-row">
                             <span className="detail-meta-rating">
-                                <span className="detail-stars">★★★★★</span>
+                                <span className="detail-stars">
+                                    {Array.from({ length: 5 }).map((_, i) => (
+                                        <span
+                                            key={i}
+                                            style={{ color: i < Math.round(ratingInfo.avg) ? '#ffc107' : '#e4e5e9', paddingRight: 2 }}
+                                        >
+                                            <Icon name="start" size={14} />
+                                        </span>
+                                    ))}
+                                </span>
                                 <span className="detail-rating-text">
-                                    4.9 (2,130 đánh giá)
+                                    {ratingInfo.count > 0
+                                        ? `${ratingInfo.avg.toFixed(1)} (${ratingInfo.count} đánh giá)`
+                                        : 'Chưa có đánh giá'}
                                 </span>
                             </span>
                         </div>
@@ -186,7 +230,7 @@ export default function ProductDetail() {
                             </div>
                             {Number(product.discountPercent) > 0 && (
                                 <span className="detail-discount-pill">
-                                    -{product.discountPercent}%
+                                    {product.discountPercent}%
                                 </span>
                             )}
                         </div>

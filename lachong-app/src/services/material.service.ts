@@ -10,9 +10,9 @@ const materialService = {
     createMaterial: (name: string, description: string) => {
         return axiosClient.post('/materials', { name, description });
     },
-    updateStatusMaterial: (id: string, status: boolean) => {
-        return axiosClient.put(`/materials/${id}`, { status });
-    },
+    updateMaterial: (id: string, name: string, description: string, status: boolean) => {
+        return axiosClient.put(`/materials/admin/${id}`, { name, description, status });
+    }
 };
 
 export default materialService;

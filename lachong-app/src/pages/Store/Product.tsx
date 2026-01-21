@@ -46,7 +46,7 @@ export default function StoreProducts() {
             <div className="product-header">Sản phẩm của cửa hàng
                 <span style={{ float: "right" }} >
                     <Link to="/store/products/new" className="button-link">
-                        <Button variant="add">
+                        <Button variant="submit">
                             + Thêm sản phẩm
                         </Button>
                     </Link>
@@ -108,7 +108,7 @@ export default function StoreProducts() {
                                         </Link>
                                     </td>
                                     <td><span className="price">{Number(p.price).toLocaleString()} VND</span></td>
-                                    <td>{Number(p.discountPercent) > 0 ? `${p.discountPercent}%` : '-'}</td>
+                                    <td>{Number(p.discountPercent) > 0 ? `${p.discountPercent}%` : '0%'}</td>
                                     <td>{p.sold}</td>
                                     <td>
                                         {p.status === false ? (

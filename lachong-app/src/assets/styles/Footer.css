@@ -1,21 +1,21 @@
 /* Modern Footer Layout */
 .footer-section {
     width: 100%;
-    background: #eeeeee;
+    background: #dbdbdb;
     padding: 48px 0 0 0;
     border-top: 1.5px solid #f2f2f2;
     font-family: 'Segoe UI', Arial, sans-serif;
 }
 
 .footer-container {
-    max-width: 1300px;
+    max-width: 100%;
     margin: 0 auto;
     display: flex;
     gap: 32px;
     align-items: flex-start;
-    justify-content: flex-start;
+    justify-content: space-between;
     flex-wrap: wrap;
-    padding: 0 24px;
+    padding: 0 78px;
 }
 
 .footer-brand {
@@ -43,26 +43,40 @@
 }
 
 .footer-brand-title {
-    display: flex;
-    flex-direction: column;
     font-weight: 700;
-    font-size: 2rem;
-    color: #000000;
-    margin-bottom: 2px;
+    font-size: 22px;
+    letter-spacing: 2px;
+    margin-bottom: 3px;
+    color: #222;
+    line-height: 1.15;
 }
 
 .footer-brand-main {
-    font-size: 2rem;
-    color: #000000;
-    font-weight: 700;
+    display: block;
 }
 
 .footer-brand-sub {
-    font-size: 1.02rem;
+    display: inline-block;
+    font-weight: 400;
+    font-size: 14px;
+    letter-spacing: 3px;
+    color: #222;
+}
+
+.footer-socials {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.footer-social-link {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+.footer-social-icon {
     color: #000000;
-    font-weight: 600;
-    letter-spacing: 1px;
-    margin-top: -2px;
 }
 
 .footer-brand-desc {
@@ -96,9 +110,9 @@
 }
 
 .footer-col-title {
-    font-size: 1.18rem;
+    font-size: 15px;
     font-weight: 700;
-    color: #223344;
+    color: #222;
     margin-bottom: 10px;
 }
 
@@ -108,13 +122,13 @@
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 }
 
 .footer-link {
-    color: #223344;
+    color: #222;
     text-decoration: none;
-    font-size: 1.01rem;
+    font-size: 15px;
     transition: color 0.16s;
 }
 
@@ -135,11 +149,27 @@
     align-items: center;
     max-width: 1300px;
     margin: 0 auto;
-    padding: 18px 24px 18px 24px;
+    padding: 18px 48px 18px 48px;
     color: #4a5a6a;
     font-size: 1rem;
     flex-wrap: wrap;
     text-align: center;
+}
+
+.footer-bottom-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 18px 48px;
+    flex-wrap: wrap;
+    font-size: 15px;
+    color: #222;
+}
+
+.footer-copyright {
+    opacity: 0.7;
 }
 
 
@@ -169,11 +199,23 @@
 @media (max-width: 900px) {
 
     .footer-container,
-    .footer-bottom {
+    .footer-bottom,
+    .footer-bottom-row {
         flex-direction: column;
         gap: 18px;
-        padding: 0 12px;
         align-items: flex-start;
+    }
+
+    .footer-container {
+        padding: 0 12px;
+    }
+
+    .footer-bottom {
+        padding: 18px 12px;
+    }
+
+    .footer-bottom-row {
+        padding: 18px 12px;
     }
 
     .footer-col,

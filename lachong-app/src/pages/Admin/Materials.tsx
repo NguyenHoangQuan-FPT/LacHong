@@ -23,6 +23,12 @@ export default function Materials() {
     const [newDesc, setNewDesc] = useState("");
     const [addLoading, setAddLoading] = useState(false);
     const [addError, setAddError] = useState("");
+    const [editModal, setEditModal] = useState<{ open: boolean; material?: Material }>({ open: false });
+    const [editName, setEditName] = useState("");
+    const [editDesc, setEditDesc] = useState("");
+    const [editStatus, setEditStatus] = useState(true);
+    const [editLoading, setEditLoading] = useState(false);
+    const [editError, setEditError] = useState("");
 
     useEffect(() => {
         fetchMaterials();
@@ -38,16 +44,34 @@ export default function Materials() {
         }
     };
 
-    const handleUpdateStatus = async (id: string, status: boolean) => {
+    const openEditModal = (material: Material) => {
+        setEditName(material.name);
+        setEditDesc(material.description || "");
+        setEditStatus(material.status ?? true);
+        setEditModal({ open: true, material });
+        setEditError("");
+    };
+
+    const handleEditMaterial = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editModal.material) return;
+        setEditLoading(true);
+        setEditError("");
         setLoading(true);
         try {
-            await materialService.updateStatusMaterial(id, status);
+            await materialService.updateMaterial(editModal.material._id, editName, editDesc, editStatus);
             await fetchMaterials();
-            toast.success("Cập nhật thành công");
+            setEditModal({ open: false });
+            toast.success("Cập nhật chất liệu thành công");
+        } catch (err: any) {
+            const msg = err?.response?.data?.message;
+            setEditError(typeof msg === "string" ? msg : "Cập nhật chất liệu thất bại");
         } finally {
+            setEditLoading(false);
             setLoading(false);
         }
     };
+
 
     const handleAddMaterial = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -61,7 +85,8 @@ export default function Materials() {
             await fetchMaterials();
             toast.success("Thêm chất liệu thành công");
         } catch (err: any) {
-            setAddError(err?.response?.data?.message || "Thêm chất liệu thất bại");
+            const msg = err?.response?.data?.message;
+            setAddError(typeof msg === "string" ? msg : "Thêm chất liệu thất bại");
         } finally {
             setAddLoading(false);
         }
@@ -157,26 +182,76 @@ export default function Materials() {
                             ) : (
                                 pagedMaterials.map(mat => (
                                     <tr key={mat._id}>
-                                        <td>{mat.name}</td>
-                                        <td>{mat.description}</td>
+                                        <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordBreak: 'break-word' }}>{mat.name}</td>
+                                        <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordBreak: 'break-word' }}>{mat.description}</td>
                                         <td>
                                             <span className={`status ${mat.status ? "active" : "locked"}`}>
                                                 {mat.status ? "Hoạt động" : "Ngưng hoạt động"}
                                             </span>
                                         </td>
                                         <td>
-                                            <Button
-                                                variant="secondary"
-                                                onClick={() => handleUpdateStatus(mat._id, !mat.status)}
-                                            >
-                                                {mat.status ? "Ngưng hoạt động" : "Hoạt động"}
-                                            </Button>
+                                            <div style={{ display: "flex", gap: 8 }}>
+                                                <Button
+                                                    variant="secondary"
+                                                    onClick={() => openEditModal(mat)}
+                                                >
+                                                    Sửa
+                                                </Button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
                             )}
                         </tbody>
                     </table>
+                )}
+                {editModal.open && (
+                    <div className="modal-overlay">
+                        <div className="modal-content">
+                            <h3>Cập nhật chất liệu</h3>
+                            <form onSubmit={handleEditMaterial}>
+                                <div>
+                                    <label>Tên chất liệu</label>
+                                    <input
+                                        type="text"
+                                        value={editName}
+                                        onChange={e => setEditName(e.target.value)}
+                                        required
+                                        style={{ width: '100%', padding: 8, marginBottom: 8 }}
+                                    />
+                                </div>
+                                <div>
+                                    <label>Mô tả</label>
+                                    <textarea
+                                        value={editDesc}
+                                        onChange={e => setEditDesc(e.target.value)}
+                                        className="description-textarea"
+                                    />
+                                </div>
+                                <div>
+                                    <label>Trạng thái</label>
+                                    <select
+                                        value={editStatus ? 'active' : 'locked'}
+                                        onChange={e => setEditStatus(e.target.value === 'active')}
+                                        className="description-textarea"
+                                    >
+                                        <option value="active">Hoạt động</option>
+                                        <option value="locked">Ngưng hoạt động</option>
+                                    </select>
+                                </div>
+                                {editError && <div style={{ color: 'red', marginBottom: 8 }}>{editError}</div>}
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    <Button variant="add" type="submit" disabled={editLoading}>
+                                        {editLoading ? "Đang cập nhật..." : "Cập nhật"}
+                                    </Button>
+                                    <Button variant="secondary" type="button" onClick={() => setEditModal({ open: false })}>
+                                        Huỷ
+                                    </Button>
+                                </div>
+                            </form>
+                        </div>
+                        <div className="modal-backdrop" onClick={() => setEditModal({ open: false })} />
+                    </div>
                 )}
                 <ToastContainer
                     toastStyle={{ color: "white" }}

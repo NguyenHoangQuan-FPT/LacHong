@@ -17,7 +17,7 @@ export default function SidebarCustomer() {
         <div className="sidebar-customer-page">
             <div className="sidebar-customer-container">
                 <div className="sidebar-customer-left">
-                    <h2 className="sidebar-customer-title">Thông tin của bạn</h2>
+                    <h2 className="sidebar-customer-title">Thông tin của tôi</h2>
 
                     <div className="sidebar-customer-menu">
                         <button
@@ -28,15 +28,6 @@ export default function SidebarCustomer() {
                             onClick={() => setActiveTab("info")}
                         >
                             Thông tin
-                        </button>
-                        <button
-                            className={
-                                "sidebar-customer-tab" +
-                                (activeTab === "address" ? " active" : "")
-                            }
-                            onClick={() => setActiveTab("address")}
-                        >
-                            Địa chỉ
                         </button>
                         <button
                             className={

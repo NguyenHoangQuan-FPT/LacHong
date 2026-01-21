@@ -1,12 +1,10 @@
 .sidebar-customer-page {
-    min-height: 100vh;
     display: flex;
     justify-content: center;
-    padding: 32px 16px 40px;
+    margin-bottom: 30px;
 }
 
 .sidebar-customer-container {
-    max-width: 2000px;
     width: 100%;
     display: grid;
     grid-template-columns: 260px minmax(0, 1fr);
@@ -22,7 +20,7 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    height: 850px;
+    max-height: auto;
 }
 
 .sidebar-customer-title {
@@ -69,8 +67,7 @@
     border-radius: 18px;
     padding: 20px 22px;
     box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
-    height: 850px;
-    overflow: auto;
+    max-height: fit-content;
 }
 
 /* Normalize tab contents so switching tabs doesn't shift layout */

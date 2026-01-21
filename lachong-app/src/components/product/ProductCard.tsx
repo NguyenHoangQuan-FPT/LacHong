@@ -123,7 +123,6 @@ export default function ProductCard({ product }: { product: ProductItem }) {
 
     return (
         <div className="product-card">
-            {discount > 0 && <span className="product-badge">{discount}% off</span>}
             {!product.status && <span className="product-unavailable">Ngừng bán</span>}
             {product.stock === 0 && <span className="product-out">Hết hàng</span>}
 
@@ -142,8 +141,9 @@ export default function ProductCard({ product }: { product: ProductItem }) {
                 <div className="product-prices">
                     {discount > 0 ? (
                         <>
-                            <span className="price-old">{priceVal.toLocaleString()} VND</span>
                             <span className="price-card">{priceAfter.toLocaleString()} VND</span>
+                            <span className="price-old">{priceVal.toLocaleString()} VND</span>
+                            <span className="product-discount">{discount}%</span>
                         </>
                     ) : (
                         <span className="price-card">{priceVal.toLocaleString()} VND</span>

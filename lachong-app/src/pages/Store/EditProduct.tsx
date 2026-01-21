@@ -1,13 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { productStoreService } from '../../services/product-store.service';
 import '../../assets/styles/AddProduct.css';
-import Icon from "../../components/common/icons/Icon";
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Toast from '../../components/common/toast/Toast';
 import { FiX } from 'react-icons/fi';
 import Button from '../../components/common/buttons/Button';
+import Icon from '../../components/common/icons/Icon';
+
+function toPublicImageUrl(value?: string): string {
+    if (!value) return '';
+    if (/^https?:\/\//i.test(value) || value.startsWith('data:')) return value;
+    const base = (import.meta.env.VITE_API_BASE_URL as string | undefined) || '';
+    if (!base) return value;
+    return `${String(base).replace(/\/$/, '')}/${String(value).replace(/^\//, '')}`;
+}
 
 export default function EditProduct() {
     const { id } = useParams();
@@ -22,8 +30,9 @@ export default function EditProduct() {
     const [category, setCategory] = useState('');
     const [material, setMaterial] = useState('');
 
-    const [imageFile, setImageFile] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState('');
+    const [keptImages, setKeptImages] = useState<string[]>([]);
+    type SelectedImage = { key: string; file: File; previewUrl: string };
+    const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
     const [dragActive, setDragActive] = useState(false);
 
     const [categories, setCategories] = useState<any[]>([]);
@@ -32,6 +41,8 @@ export default function EditProduct() {
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const totalImages = useMemo(() => keptImages.length + selectedImages.length, [keptImages.length, selectedImages.length]);
 
     useEffect(() => {
         fetchMeta();
@@ -52,7 +63,14 @@ export default function EditProduct() {
                 setDiscountPercent(p.discountPercent ?? '');
                 setCategory(p.category?._id || p.category || '');
                 setMaterial(p.material?._id || p.material || '');
-                setImagePreview(p.imageUrl || '');
+                const images: string[] = Array.isArray(p.images)
+                    ? p.images.filter(Boolean)
+                    : (p.imageUrl ? [p.imageUrl] : []);
+                setKeptImages(images);
+                setSelectedImages((curr) => {
+                    curr.forEach((it) => URL.revokeObjectURL(it.previewUrl));
+                    return [];
+                });
             })
             .catch((err: any) => {
                 console.error('Load product for edit error', err);
@@ -76,25 +94,52 @@ export default function EditProduct() {
         }
     };
 
-    const processFile = (image: File) => {
-        if (!image.type.startsWith('image/')) {
-            setError('Vui lòng chọn file ảnh');
-            return;
+    useEffect(() => {
+        return () => {
+            setSelectedImages((curr) => {
+                curr.forEach((it) => URL.revokeObjectURL(it.previewUrl));
+                return curr;
+            });
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const processFiles = (files: File[]) => {
+        const MAX_SIZE = 5 * 1024 * 1024;
+        const valid: File[] = [];
+
+        for (const f of files) {
+            if (!f.type.startsWith('image/')) {
+                setError('Vui lòng chọn file ảnh hợp lệ');
+                continue;
+            }
+            if (f.size > MAX_SIZE) {
+                setError('Ảnh không được vượt quá 5MB');
+                continue;
+            }
+            valid.push(f);
         }
-        if (image.size > 5 * 1024 * 1024) {
-            setError('Ảnh không được vượt quá 5MB');
-            return;
-        }
-        setImageFile(image);
-        const reader = new FileReader();
-        reader.onloadend = () => setImagePreview(reader.result as string);
-        reader.readAsDataURL(image);
+
+        if (valid.length === 0) return;
+
         setError(null);
+        setSelectedImages((curr) => {
+            const existingKeys = new Set(curr.map((it) => it.key));
+            const next = [...curr];
+            for (const file of valid) {
+                const key = `${file.name}-${file.size}-${file.lastModified}`;
+                if (existingKeys.has(key)) continue;
+                existingKeys.add(key);
+                next.push({ key, file, previewUrl: URL.createObjectURL(file) });
+            }
+            return next;
+        });
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const image = e.target.files?.[0];
-        if (image) processFile(image);
+        const files = Array.from(e.target.files || []);
+        e.target.value = '';
+        if (files.length > 0) processFiles(files);
     };
 
     const handleDrag = (e: React.DragEvent) => {
@@ -107,15 +152,24 @@ export default function EditProduct() {
         e.preventDefault();
         e.stopPropagation();
         setDragActive(false);
-        const image = e.dataTransfer.files?.[0];
-        if (image) processFile(image);
+        const files = Array.from(e.dataTransfer.files || []).filter((f) => f.type.startsWith('image/'));
+        if (files.length === 0) {
+            setError('Vui lòng chọn file ảnh hợp lệ');
+            return;
+        }
+        processFiles(files);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        if (!productName || price === '' || stock === '') {
-            setError('Vui lòng nhập tên, giá và số lượng');
+        if (!productName || price === '' || stock === '' || !category || !material) {
+            setError('Vui lòng nhập đầy đủ tên, giá, số lượng, danh mục và chất liệu');
+            return;
+        }
+
+        if (totalImages === 0) {
+            setError('Vui lòng chọn ít nhất 1 ảnh sản phẩm');
             return;
         }
         const formData = new FormData();
@@ -127,7 +181,8 @@ export default function EditProduct() {
         formData.append('discountPercent', String(discountPercent === '' ? 0 : discountPercent));
         formData.append('category', category);
         formData.append('material', material);
-        if (imageFile) formData.append('imageUrl', imageFile);
+        formData.append('keepImages', JSON.stringify(keptImages));
+        selectedImages.forEach((it) => formData.append('images', it.file));
 
         try {
             setUploading(true);
@@ -144,9 +199,24 @@ export default function EditProduct() {
         }
     };
 
-    const handleRemoveImage = () => {
-        setImageFile(null);
-        setImagePreview('');
+    const handleRemoveKeptImage = (url: string) => {
+        setKeptImages((prev) => prev.filter((x) => x !== url));
+    };
+
+    const handleRemoveSelectedImage = (key: string) => {
+        setSelectedImages((prev) => {
+            const found = prev.find((it) => it.key === key);
+            if (found) URL.revokeObjectURL(found.previewUrl);
+            return prev.filter((it) => it.key !== key);
+        });
+    };
+
+    const handleClearAllImages = () => {
+        setKeptImages([]);
+        setSelectedImages((prev) => {
+            prev.forEach((it) => URL.revokeObjectURL(it.previewUrl));
+            return [];
+        });
     };
 
     const handleClose = () => {
@@ -207,7 +277,7 @@ export default function EditProduct() {
                                     const raw = e.target.value.replace(/[^\d]/g, '');
                                     setPrice(raw === '' ? '' : Number(raw));
                                 }}
-                                onBlur={e => {
+                                onBlur={() => {
                                     if (price !== '' && !isNaN(Number(price))) {
                                         setPrice(Number(price));
                                     }
@@ -239,17 +309,69 @@ export default function EditProduct() {
 
                     <div className="form-group">
                         <label className="form-label">Ảnh sản phẩm</label>
-                        {!imagePreview ? (
+                        {totalImages === 0 ? (
                             <div className={`image-upload-area ${dragActive ? 'drag-active' : ''}`} onDragEnter={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}>
                                 <p>Thả ảnh vào đây hoặc chọn file</p>
                                 <label className="upload-btn">Chọn ảnh
-                                    <input type="file" accept="image/*" hidden onChange={handleFileChange} />
+                                    <input type="file" accept="image/*" multiple hidden onChange={handleFileChange} />
                                 </label>
                             </div>
                         ) : (
-                            <div className="image-preview-section">
-                                <img src={imagePreview} alt="preview" className="image-preview-img" />
-                                <div className="upload-actions"><button type="button" className="btn-remove" onClick={handleRemoveImage}>Chọn lại</button></div>
+                            <div className="image-preview-section-multi">
+                                <div className="image-preview-list">
+                                    {keptImages.map((src, idx) => (
+                                        <div key={`kept-${src}-${idx}`} className="image-preview-item">
+                                            <img
+                                                src={toPublicImageUrl(src)}
+                                                alt={`Preview ${idx + 1}`}
+                                                className="image-preview-img"
+                                            />
+                                            <button
+                                                type="button"
+                                                className="btn-remove-thumb"
+                                                onClick={() => handleRemoveKeptImage(src)}
+                                            >
+                                                <Icon name="trash" size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+
+                                    {selectedImages.map((it, idx) => (
+                                        <div key={it.key} className="image-preview-item">
+                                            <img
+                                                src={it.previewUrl}
+                                                alt={`New ${idx + 1}`}
+                                                className="image-preview-img"
+                                            />
+                                            <button
+                                                type="button"
+                                                className="btn-remove-thumb"
+                                                onClick={() => handleRemoveSelectedImage(it.key)}
+                                            >
+                                                <Icon name="trash" size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="upload-actions">
+                                    <label>
+                                        Thêm ảnh khác
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            multiple
+                                            onChange={handleFileChange}
+                                            hidden
+                                        />
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={handleClearAllImages}
+                                    >
+                                        Xóa tất cả
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -258,7 +380,7 @@ export default function EditProduct() {
 
                     <div className="form-actions">
                         <button type="button" onClick={() => navigate('/store/products')} className="btn btn-secondary">Hủy</button>
-                        <Button type="submit" variant='add' disabled={uploading}>{uploading ? 'Đang cập nhật...' : 'Lưu thay đổi'}</Button>
+                        <Button type="submit" variant='submit' disabled={uploading}>{uploading ? 'Đang cập nhật...' : 'Lưu thay đổi'}</Button>
                     </div>
                 </form>
                 <Toast />

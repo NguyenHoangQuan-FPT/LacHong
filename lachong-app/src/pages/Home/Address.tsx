@@ -3,7 +3,6 @@ import "../../assets/styles/Address.css";
 import { addressService } from "../../services/address.service";
 import Button from "../../components/common/buttons/Button";
 import { toast } from "react-toastify";
-import Toast from "../../components/common/toast/Toast";
 
 interface Address {
     id?: string;
@@ -244,16 +243,12 @@ export default function Address() {
 
     return (
         <div className="address-page">
-            <div className="address-header">
-                <h1>Địa chỉ của tôi</h1>
-                <Button variant="add" onClick={handleAddNew}>
-                    + Thêm địa chỉ mới
+            <div style={{ paddingBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '18px', fontWeight: '500', borderRadius: '50%' }}>
+                <Button variant="secondary" onClick={handleAddNew} >
+                    <span style={{ fontWeight: 700, fontSize: 15 }}>+</span>
                 </Button>
             </div>
-
             {error && <div className="status error">{error}</div>}
-
-            {/* Address List */}
             {!showForm && (
                 <div className="address-list">
                     {addresses.length === 0 ? (
@@ -296,96 +291,122 @@ export default function Address() {
                 </div>
             )}
 
-            {/* Add/Edit Form */}
             {showForm && (
-                <div className="address-form-card">
-                    <h2>{editingId ? "Cập nhật địa chỉ" : "Thêm địa chỉ mới"}</h2>
+                <div
+                    className="address-modal-overlay"
+                    onClick={handleCancel}
+                >
+                    <div
+                        className="address-modal"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="address-form-card">
+                            <div className="address-modal-header">
+                                <h2>{editingId ? "Cập nhật địa chỉ" : "Thêm địa chỉ mới"}</h2>
+                                <button
+                                    className="address-modal-close"
+                                    onClick={handleCancel}
+                                >
+                                    ×
+                                </button>
+                            </div>
 
-                    <div className="form-grid">
-                        <div className="form-item">
-                            <label>Tỉnh/Thành phố</label>
-                            <select
-                                value={selectedProvince?.code || ""}
-                                onChange={(e) => {
-                                    const code = e.target.value;
-                                    const p = provinces.find((x) => String(x.code) === String(code));
-                                    setSelectedProvince(p || null);
-                                }}
-                            >
-                                <option value="">-- Chọn tỉnh/thành --</option>
-                                {provinces.map((p) => (
-                                    <option key={p.code} value={p.code}>
-                                        {p.name}
-                                    </option>
-                                ))}
-                            </select>
+                            <div className="form-grid">
+                                <div className="form-item">
+                                    <label>Tỉnh/Thành phố</label>
+                                    <select
+                                        value={selectedProvince?.code || ""}
+                                        onChange={(e) => {
+                                            const code = e.target.value;
+                                            const p = provinces.find(
+                                                (x) => String(x.code) === String(code)
+                                            );
+                                            setSelectedProvince(p || null);
+                                        }}
+                                    >
+                                        <option value="">-- Chọn tỉnh/thành --</option>
+                                        {provinces.map((p) => (
+                                            <option key={p.code} value={p.code}>
+                                                {p.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="form-item">
+                                    <label>Quận/Huyện</label>
+                                    <select
+                                        value={selectedDistrict?.code || ""}
+                                        onChange={(e) => {
+                                            const code = e.target.value;
+                                            const d = districts.find(
+                                                (x) => String(x.code) === String(code)
+                                            );
+                                            setSelectedDistrict(d || null);
+                                        }}
+                                        disabled={!selectedProvince}
+                                    >
+                                        <option value="">-- Chọn quận/huyện --</option>
+                                        {districts.map((d) => (
+                                            <option key={d.code} value={d.code}>
+                                                {d.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="form-item">
+                                    <label>Phường/Xã</label>
+                                    <select
+                                        value={selectedWard?.code || ""}
+                                        onChange={(e) => {
+                                            const code = e.target.value;
+                                            const w = wards.find(
+                                                (x) => String(x.code) === String(code)
+                                            );
+                                            setSelectedWard(w || null);
+                                        }}
+                                        disabled={!selectedDistrict}
+                                    >
+                                        <option value="">-- Chọn phường/xã --</option>
+                                        {wards.map((w) => (
+                                            <option key={w.code} value={w.code}>
+                                                {w.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="form-item span-2">
+                                    <label>Địa chỉ chi tiết</label>
+                                    <input
+                                        value={detail}
+                                        onChange={(e) => setDetail(e.target.value)}
+                                        placeholder="Số nhà, tên đường"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-actions">
+                                <button className="btn-cancel" onClick={handleCancel}>
+                                    Hủy
+                                </button>
+                                <Button
+                                    onClick={handleSubmit}
+                                    disabled={submitting}
+                                    variant={editingId ? "submit" : "submit"}
+                                >
+                                    {submitting
+                                        ? "Đang lưu..."
+                                        : editingId
+                                            ? "Cập nhật"
+                                            : "Thêm mới"}
+                                </Button>
+                            </div>
                         </div>
-
-                        <div className="form-item">
-                            <label>Quận/Huyện</label>
-                            <select
-                                value={selectedDistrict?.code || ""}
-                                onChange={(e) => {
-                                    const code = e.target.value;
-                                    const d = districts.find((x) => String(x.code) === String(code));
-                                    setSelectedDistrict(d || null);
-                                }}
-                                disabled={!selectedProvince}
-                            >
-                                <option value="">-- Chọn quận/huyện --</option>
-                                {districts.map((d) => (
-                                    <option key={d.code} value={d.code}>
-                                        {d.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="form-item">
-                            <label>Phường/Xã</label>
-                            <select
-                                value={selectedWard?.code || ""}
-                                onChange={(e) => {
-                                    const code = e.target.value;
-                                    const w = wards.find((x) => String(x.code) === String(code));
-                                    setSelectedWard(w || null);
-                                }}
-                                disabled={!selectedDistrict}
-                            >
-                                <option value="">-- Chọn phường/xã --</option>
-                                {wards.map((w) => (
-                                    <option key={w.code} value={w.code}>
-                                        {w.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="form-item span-2">
-                            <label>Địa chỉ chi tiết</label>
-                            <input
-                                value={detail}
-                                onChange={(e) => setDetail(e.target.value)}
-                                placeholder="Số nhà, tên đường"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="form-actions">
-                        <button className="btn-cancel" onClick={handleCancel}>
-                            Hủy
-                        </button>
-                        <Button
-                            onClick={handleSubmit}
-                            disabled={submitting}
-                            variant={editingId ? "submit" : "add"}
-                        >
-                            {submitting ? "Đang lưu..." : editingId ? "Cập nhật" : "Thêm mới"}
-                        </Button>
                     </div>
                 </div>
             )}
-            <Toast />
         </div>
     );
 }

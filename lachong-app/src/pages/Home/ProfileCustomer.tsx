@@ -10,6 +10,8 @@ import "react-image-crop/dist/ReactCrop.css";
 import customerService from "../../services/customer.service";
 import "../../assets/styles/ProfileCustomer.css";
 import Button from "../../components/common/buttons/Button";
+import Address from "./Address";
+import { toast } from "react-toastify";
 
 function normalizeImageUrl(url?: string | null): string | null {
     if (!url) return null;
@@ -36,7 +38,6 @@ export default function ProfileCustomer() {
 
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
-    const [avatarSaving, setAvatarSaving] = useState(false);
     const [avatarLoadError, setAvatarLoadError] = useState(false);
 
     const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
@@ -51,13 +52,6 @@ export default function ProfileCustomer() {
     const [phone, setPhone] = useState("");
     const [address, setAddress] = useState("");
     const [dob, setDob] = useState("");
-    // provinces API state
-    const [provinces, setProvinces] = useState<any[]>([]);
-    const [districts, setDistricts] = useState<any[]>([]);
-    const [wards, setWards] = useState<any[]>([]);
-    const [selectedProvince, setSelectedProvince] = useState<any | null>(null);
-    const [selectedDistrict, setSelectedDistrict] = useState<any | null>(null);
-    const [selectedWard, setSelectedWard] = useState<any | null>(null);
 
     useEffect(() => {
         setLoading(true);
@@ -103,7 +97,6 @@ export default function ProfileCustomer() {
     }, [pendingAvatarFile]);
 
     useEffect(() => {
-        // reset image error when profile avatar or preview changes
         setAvatarLoadError(false);
     }, [avatarPreviewUrl, profile?.avatar]);
 
@@ -114,7 +107,6 @@ export default function ProfileCustomer() {
     const onCropImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
         const image = e.currentTarget;
         imgRef.current = image;
-        // Center a square crop at 90% of the smallest dimension
         const { width, height } = image;
         const cropWidthPercent = 90;
         const initial = centerCrop(
@@ -190,77 +182,15 @@ export default function ProfileCustomer() {
         setCompletedCrop(undefined);
     };
 
-    // load provinces on mount
-    useEffect(() => {
-        fetch("https://provinces.open-api.vn/api/p/")
-            .then(res => res.json())
-            .then(data => {
-                setProvinces(Array.isArray(data) ? data : []);
-            })
-            .catch(err => {
-                console.error("Load provinces error", err);
-            });
-    }, []);
-
-    // when province changes, load districts
-    useEffect(() => {
-        const code = selectedProvince?.code;
-        if (!code) {
-            setDistricts([]);
-            setSelectedDistrict(null);
-            return;
-        }
-        fetch(`https://provinces.open-api.vn/api/p/${code}?depth=2`)
-            .then(res => res.json())
-            .then(data => {
-                const d = data?.districts || [];
-                setDistricts(Array.isArray(d) ? d : []);
-                setSelectedDistrict(null);
-                setWards([]);
-                setSelectedWard(null);
-            })
-            .catch(err => {
-                console.error("Load districts error", err);
-            });
-    }, [selectedProvince]);
-
-    // when district changes, load wards
-    useEffect(() => {
-        const code = selectedDistrict?.code;
-        if (!code) {
-            setWards([]);
-            setSelectedWard(null);
-            return;
-        }
-        fetch(`https://provinces.open-api.vn/api/d/${code}?depth=2`)
-            .then(res => res.json())
-            .then(data => {
-                const w = data?.wards || [];
-                setWards(Array.isArray(w) ? w : []);
-                setSelectedWard(null);
-            })
-            .catch(err => {
-                console.error("Load wards error", err);
-            });
-    }, [selectedDistrict]);
-
     const handleSave = async () => {
         if (saving) return;
         setSaving(true);
         setError(null);
         try {
-            // compose address from selections + detail
-            const addressParts = [
-                address?.trim(),
-                selectedWard?.name,
-                selectedDistrict?.name,
-                selectedProvince?.name,
-            ].filter(Boolean);
-
             const payload = {
                 fullName: name,
                 phone,
-                address: addressParts.join(", "),
+                address: address?.trim() || "",
             };
 
             const formData = new FormData();
@@ -268,41 +198,29 @@ export default function ProfileCustomer() {
             formData.append("phone", payload.phone || "");
             formData.append("address", payload.address || "");
             formData.append("dob", dob || "");
+            if (avatarFile) {
+                formData.append("avatar", avatarFile);
+            }
 
             const res = await customerService.updateProfileCustomer(formData);
             const data = res?.data ?? res;
             const c = data?.customer ?? data?.data ?? data;
             setProfile(c);
-            // reflect changes in local form state if backend normalizes fields
+            toast.success(avatarFile ? "Cập nhật thông tin & avatar thành công" : "Cập nhật thông tin thành công");
             setName(c?.name || c?.fullName || name);
             setEmail(c?.email || email);
             setPhone(c?.phone || c?.phoneNumber || phone);
-            setAddress(c?.address || addressParts.join(", ") || address);
+            setAddress(c?.address || payload.address || address);
             setDob(c?.dob ? toDateInputValue(c.dob) : dob);
+
+            if (avatarFile) {
+                setAvatarFile(null);
+                setAvatarPreviewUrl(null);
+            }
         } catch (err: any) {
             setError(err?.response?.data?.message || "Lưu thay đổi thất bại");
         } finally {
             setSaving(false);
-        }
-    };
-
-    const handleUpdateAvatar = async () => {
-        if (!avatarFile || avatarSaving) return;
-        setAvatarSaving(true);
-        setError(null);
-        try {
-            const formData = new FormData();
-            formData.append("avatar", avatarFile);
-            const res = await customerService.updateProfileCustomer(formData);
-            const data = res?.data ?? res;
-            const c = data?.customer ?? data?.data ?? data;
-            setProfile(c);
-            setAvatarFile(null);
-            setAvatarPreviewUrl(null);
-        } catch (err: any) {
-            setError(err?.response?.data?.message || "Cập nhật avatar thất bại");
-        } finally {
-            setAvatarSaving(false);
         }
     };
 
@@ -325,9 +243,7 @@ export default function ProfileCustomer() {
     return (
         <div className="profile-customer-page">
             <div className="profile-card">
-                <h1>Thông tin của tôi</h1>
-                <p className="subtitle">Cập nhật hồ sơ của tôi</p>
-
+                <h3 >Thông tin của tôi</h3>
                 <div className="avatar-section">
                     <div className="avatar-preview">
                         {!avatarLoadError && (avatarPreviewUrl || profile?.avatar) ? (
@@ -355,17 +271,9 @@ export default function ProfileCustomer() {
                                     setPendingAvatarFile(file);
                                 }}
                                 style={{ display: "none" }}
-                                disabled={avatarSaving}
+                                disabled={saving}
                             />
                         </label>
-
-                        <Button
-                            variant="add"
-                            onClick={handleUpdateAvatar}
-                            disabled={avatarSaving || !avatarFile}
-                        >
-                            {avatarSaving ? "Đang cập nhật..." : "Cập nhật avatar"}
-                        </Button>
                     </div>
                 </div>
 
@@ -395,14 +303,14 @@ export default function ProfileCustomer() {
                                     type="button"
                                     className="btn secondary"
                                     onClick={handleCancelCrop}
-                                    disabled={avatarSaving}
+                                    disabled={saving}
                                 >
                                     Hủy
                                 </button>
                                 <Button
                                     variant="submit"
                                     onClick={handleApplyCrop}
-                                    disabled={avatarSaving || !completedCrop?.width || !completedCrop?.height}
+                                    disabled={saving || !completedCrop?.width || !completedCrop?.height}
                                 >
                                     Áp dụng cắt
                                 </Button>
@@ -452,11 +360,14 @@ export default function ProfileCustomer() {
                         />
                     </div>
                 </div>
-
-                <Button variant="submit" onClick={handleSave} disabled={saving}>
-                    {saving ? "Đang lưu..." : "Lưu thay đổi"}
-                </Button>
+                <div className="submit-profile">
+                    <Button variant="submit" onClick={handleSave} disabled={saving}>
+                        {saving ? "Đang lưu..." : "Lưu thay đổi"}
+                    </Button>
+                </div>
             </div>
+            <h3>Địa chỉ</h3>
+            <Address />
         </div >
     );
 }

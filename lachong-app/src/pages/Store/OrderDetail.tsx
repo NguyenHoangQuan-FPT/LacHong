@@ -34,6 +34,29 @@ interface OrderDetail {
     createdAt?: string;
 }
 
+type OrderStatus = "Pending" | "Processing" | "Completed" | "Cancelled";
+
+function normalizeStatus(raw?: string | null): OrderStatus {
+    const v = String(raw || "").trim().toLowerCase();
+    if (v === "processing") return "Processing";
+    if (v === "completed") return "Completed";
+    if (v === "cancelled" || v === "canceled") return "Cancelled";
+    return "Pending";
+}
+
+function getAllowedNextStatuses(current: OrderStatus): OrderStatus[] {
+    switch (current) {
+        case "Pending":
+            return ["Processing", "Completed", "Cancelled"];
+        case "Processing":
+            return ["Completed", "Cancelled"];
+        case "Completed":
+        case "Cancelled":
+        default:
+            return [];
+    }
+}
+
 export default function OrderDetail() {
     const { id } = useParams<{ id: string }>();
     const [order, setOrder] = useState<OrderDetail | null>(null);
@@ -54,23 +77,51 @@ export default function OrderDetail() {
                     );
                 }
                 setOrder(order);
-                setStatusValue(order?.status || "Pending");
+                setStatusValue(normalizeStatus(order?.status));
             })
             .catch(() => setError("Không thể tải chi tiết đơn hàng"))
             .finally(() => setLoading(false));
     }, [id]);
 
-    const statusOptions = [
-        { value: "Pending", label: "Chờ xác nhận" },
-        { value: "Processing", label: "Chuẩn bị hàng" },
-        { value: "Completed", label: "Hoàn thành" },
-        { value: "Cancelled", label: "Đã hủy" },
+    const statusLabels: Record<OrderStatus, string> = {
+        Pending: "Chờ xác nhận",
+        Processing: "Chuẩn bị hàng",
+        Completed: "Hoàn thành",
+        Cancelled: "Đã hủy",
+    };
+
+    const currentStatus = normalizeStatus(order?.status);
+    const allowedNext = getAllowedNextStatuses(currentStatus);
+    const statusOptions: Array<{ value: OrderStatus; label: string }> = [
+        { value: currentStatus, label: statusLabels[currentStatus] },
+        ...allowedNext
+            .filter((s) => s !== currentStatus)
+            .map((s) => ({ value: s, label: statusLabels[s] })),
     ];
 
+    const isStatusLocked = currentStatus === "Completed" || currentStatus === "Cancelled";
+
     const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const newStatus = e.target.value;
+        const newStatus = normalizeStatus(e.target.value);
+        if (!order?._id) return;
+        if (isStatusLocked) {
+            setStatusValue(currentStatus);
+            toast.info("Đơn hàng đã kết thúc, không thể cập nhật trạng thái");
+            return;
+        }
+
+        if (newStatus === currentStatus) {
+            setStatusValue(currentStatus);
+            return;
+        }
+
+        if (!allowedNext.includes(newStatus)) {
+            setStatusValue(currentStatus);
+            toast.info("Không thể chuyển sang trạng thái này");
+            return;
+        }
+
         setStatusValue(newStatus);
-        if (!order?._id || !newStatus || newStatus === order.status) return;
         setUpdating(true);
         storeService.updateStatusOrder(order._id, newStatus)
             .then(() => {
@@ -78,7 +129,8 @@ export default function OrderDetail() {
                 toast.success("Cập nhật trạng thái thành công");
             })
             .catch(() => {
-                alert("Cập nhật trạng thái thất bại");
+                setStatusValue(currentStatus);
+                toast.error("Cập nhật trạng thái thất bại");
             })
             .finally(() => setUpdating(false));
     };
@@ -106,7 +158,12 @@ export default function OrderDetail() {
 
                     <div>
                         <strong>Trạng thái:</strong>
-                        <select value={statusValue} onChange={handleStatusChange} disabled={updating} className="update-status">
+                        <select
+                            value={statusValue}
+                            onChange={handleStatusChange}
+                            disabled={updating || isStatusLocked}
+                            className="update-status"
+                        >
                             {statusOptions.map(opt => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
                             ))}

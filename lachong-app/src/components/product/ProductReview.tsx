@@ -4,6 +4,7 @@ import customerService from "../../services/customer.service";
 import { toast } from "react-toastify";
 import "../../assets/styles/ProductReview.css";
 import Icon from "../../components/common/icons/Icon";
+import Button from "../common/buttons/Button";
 
 type ReviewItem = {
     _id?: string;
@@ -11,6 +12,7 @@ type ReviewItem = {
     product?: string;
     rating?: number;
     comment?: string;
+    images?: string[];
     createdAt?: string;
     customer?: {
         _id?: string;
@@ -30,15 +32,33 @@ function extractId(value: any): string | null {
     return null;
 }
 
+function toPublicImageUrl(value?: string): string {
+    if (!value) return "";
+    if (/^https?:\/\//i.test(value) || value.startsWith("data:")) return value;
+    const base = (import.meta as any)?.env?.VITE_API_BASE_URL as string | undefined;
+    if (!base) return value;
+    return `${String(base).replace(/\/$/, "")}/${String(value).replace(/^\//, "")}`;
+}
+
 export default function ProductReview({ productId }: ProductReviewProps) {
     const [reviews, setReviews] = useState<ReviewItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [form, setForm] = useState({ rating: 5, comment: "" });
+    const [hoverRating, setHoverRating] = useState<number | null>(null);
     const [showModal, setShowModal] = useState(false);
     const [viewerCustomerId, setViewerCustomerId] = useState<string | null>(null);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [keptImages, setKeptImages] = useState<string[]>([]);
+
+    const [imageViewerUrl, setImageViewerUrl] = useState<string | null>(null);
+
+    type SelectedImage = { key: string; file: File; previewUrl: string };
+    const MAX_IMAGES = 5;
+    const MAX_IMAGE_SIZE_MB = 5;
+    const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
 
     const PAGE_SIZE = 5;
     const [page, setPage] = useState(1);
@@ -52,6 +72,11 @@ export default function ProductReview({ productId }: ProductReviewProps) {
             return null;
         }
     }, []);
+
+    const isAdmin = useMemo(() => {
+        const role = currentUser?.role || currentUser?.roleId?.name || currentUser?.name;
+        return String(role).toLowerCase() === "admin";
+    }, [currentUser]);
 
     useEffect(() => {
         const fromLocal = extractId(currentUser?.customer);
@@ -104,6 +129,15 @@ export default function ProductReview({ productId }: ProductReviewProps) {
             document.removeEventListener("keydown", onKeyDown);
         };
     }, [openMenuId]);
+
+    useEffect(() => {
+        if (!imageViewerUrl) return;
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") setImageViewerUrl(null);
+        };
+        document.addEventListener("keydown", onKeyDown);
+        return () => document.removeEventListener("keydown", onKeyDown);
+    }, [imageViewerUrl]);
 
     const canSubmit = useMemo(() => form.rating >= 1 && form.rating <= 5 && form.comment.trim().length > 0, [form]);
 
@@ -169,21 +203,117 @@ export default function ProductReview({ productId }: ProductReviewProps) {
         if (page > totalPages) setPage(totalPages);
     }, [page, totalPages]);
 
+    const clearSelectedImages = () => {
+        setSelectedImages((curr) => {
+            curr.forEach((it) => URL.revokeObjectURL(it.previewUrl));
+            return [];
+        });
+    };
+
+    useEffect(() => {
+        return () => {
+            setSelectedImages((curr) => {
+                curr.forEach((it) => URL.revokeObjectURL(it.previewUrl));
+                return curr;
+            });
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     const resetForm = () => {
         setForm({ rating: 5, comment: "" });
         setEditingId(null);
+        setHoverRating(null);
+        setSubmitError(null);
+        clearSelectedImages();
+        setKeptImages([]);
+    };
+
+    const closeModal = () => {
+        if (submitting) return;
+        setShowModal(false);
+        setOpenMenuId(null);
+        resetForm();
+    };
+
+    const handlePickImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        e.target.value = "";
+        if (files.length === 0) return;
+
+        const valid: File[] = [];
+        for (const f of files) {
+            if (!f.type?.startsWith("image/")) {
+                toast.info("Chỉ hỗ trợ file ảnh");
+                continue;
+            }
+            if (f.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
+                toast.info(`Ảnh quá lớn (tối đa ${MAX_IMAGE_SIZE_MB}MB/ảnh)`);
+                continue;
+            }
+            valid.push(f);
+        }
+
+        if (valid.length === 0) return;
+
+        setSelectedImages((curr) => {
+            const existingKeys = new Set(curr.map((it) => `${it.file.name}-${it.file.size}-${it.file.lastModified}`));
+            const next = [...curr];
+
+            for (const f of valid) {
+                const sig = `${f.name}-${f.size}-${f.lastModified}`;
+                if (existingKeys.has(sig)) continue;
+                if (keptImages.length + next.length >= MAX_IMAGES) break;
+                existingKeys.add(sig);
+                next.push({
+                    key: `${sig}-${Math.random().toString(16).slice(2)}`,
+                    file: f,
+                    previewUrl: URL.createObjectURL(f),
+                });
+            }
+
+            if (keptImages.length + curr.length + valid.length > MAX_IMAGES) {
+                toast.info(`Tối đa ${MAX_IMAGES} ảnh cho mỗi đánh giá`);
+            }
+            return next;
+        });
+    };
+
+    const removeSelectedImage = (key: string) => {
+        setSelectedImages((curr) => {
+            const found = curr.find((it) => it.key === key);
+            if (found) URL.revokeObjectURL(found.previewUrl);
+            return curr.filter((it) => it.key !== key);
+        });
+    };
+
+    const removeKeptImage = (url: string) => {
+        setKeptImages((curr) => curr.filter((x) => x !== url));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!productId || !canSubmit) return;
         setSubmitting(true);
+        setSubmitError(null);
         try {
             if (editingId) {
-                await reviewService.updateReview(editingId, { rating: form.rating, comment: form.comment.trim() });
+                const payload = new FormData();
+                payload.append("rating", String(form.rating));
+                payload.append("comment", form.comment.trim());
+                payload.append("keepImages", JSON.stringify(keptImages));
+                selectedImages.forEach((it) => payload.append("images", it.file));
+
+                await reviewService.updateReview(editingId, payload);
                 toast.success("Đã cập nhật đánh giá");
             } else {
-                await reviewService.addReview({ product: productId, rating: form.rating, comment: form.comment.trim() });
+                const payload = new FormData();
+                payload.append("product", productId);
+                payload.append("rating", String(form.rating));
+                payload.append("comment", form.comment.trim());
+                selectedImages.forEach((it) => payload.append("images", it.file));
+
+                await reviewService.addReview(payload);
                 toast.success("Đã thêm đánh giá");
             }
             await fetchReviews();
@@ -191,7 +321,8 @@ export default function ProductReview({ productId }: ProductReviewProps) {
             setShowModal(false);
         } catch (err: any) {
             console.error("[ProductReview] submit error", err);
-            toast.error(err?.response?.data?.message || "Không thể lưu đánh giá");
+            const msg = err?.response?.data?.message || err?.message || "Không thể lưu đánh giá";
+            toast.error(String(msg));
         } finally {
             setSubmitting(false);
         }
@@ -199,7 +330,6 @@ export default function ProductReview({ productId }: ProductReviewProps) {
 
     const handleDelete = async (reviewId?: string) => {
         if (!reviewId) return;
-        if (!window.confirm("Xóa đánh giá này?")) return;
         try {
             await reviewService.deleteReview(reviewId);
             toast.success("Đã xóa đánh giá");
@@ -213,7 +343,7 @@ export default function ProductReview({ productId }: ProductReviewProps) {
     const renderStars = (rating?: number) => {
         const val = Math.max(0, Math.min(5, Number(rating) || 0));
         return Array.from({ length: 5 }).map((_, i) => (
-            <span key={i} className={i < val ? "star filled" : "star"}>★</span>
+            <span key={i} className={i < val ? "star filled" : "star"}><Icon name="star" /></span>
         ));
     };
     const fomattedDate = (dateStr?: string) => {
@@ -248,16 +378,22 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                         </div>
                     )}
                     <div className="review-count">{reviews.length} đánh giá</div>
-                    <button
-                        type="button"
-                        className="add-review"
-                        onClick={() => {
-                            resetForm();
-                            setShowModal(true);
-                        }}
-                    >
-                        + Thêm đánh giá
-                    </button>
+                    {!isAdmin && (
+                        <Button
+                            variant="secondary"
+                            type="button"
+                            onClick={() => {
+                                if (!viewerCustomerId) {
+                                    toast.info("Vui lòng đăng nhập để đánh giá sản phẩm");
+                                    return;
+                                }
+                                resetForm();
+                                setShowModal(true);
+                            }}
+                        >
+                            + Đánh giá
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -283,123 +419,232 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                                     <div className="review-user">{rev.customer?.fullName || "Ẩn danh"}</div>
                                 </div>
                                 <div className="review-date">{fomattedDate(rev.createdAt)}</div>
-                                <div className="review-comment">{rev.comment}</div>
-                                <div className="review-stars">{renderStars(rev.rating)}</div>
-
-                                {isOwner && (
-                                    <div className="review-actions">
-                                        <button
-                                            type="button"
-                                            className="link review-options-button"
-                                            aria-label="Tùy chọn"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                if (!reviewId) return;
-                                                setOpenMenuId((curr) => (curr === reviewId ? null : reviewId));
-                                            }}
-                                        >
-                                            <Icon name="options"></Icon>
-                                        </button>
-
-                                        {reviewId && openMenuId === reviewId && (
-                                            <div
-                                                className="review-options-menu"
-                                                onClick={(e) => e.stopPropagation()}
+                                <div className="review-content">
+                                    <div className="review-comment">{rev.comment}</div>
+                                    <div className="review-stars">{renderStars(rev.rating)}</div>
+                                </div>
+                                {
+                                    Array.isArray(rev.images) && rev.images.length > 0 && (
+                                        <div className="review-images" aria-label="Ảnh đánh giá">
+                                            {rev.images.filter(Boolean).map((url, idx) => (
+                                                <button
+                                                    key={`${reviewId}-img-${idx}`}
+                                                    className="review-image-link"
+                                                    aria-label={`Ảnh ${idx + 1}`}
+                                                    type="button"
+                                                    onClick={() => setImageViewerUrl(toPublicImageUrl(url))}
+                                                >
+                                                    <img className="review-image" src={toPublicImageUrl(url)} alt={`review-${idx + 1}`} />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )
+                                }
+                                {
+                                    isOwner && (
+                                        <div className="review-actions">
+                                            <button
+                                                type="button"
+                                                className="link review-options-button"
+                                                aria-label="Tùy chọn"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (!reviewId) return;
+                                                    setOpenMenuId((curr) => (curr === reviewId ? null : reviewId));
+                                                }}
                                             >
-                                                <button
-                                                    type="button"
-                                                    className="review-options-item"
-                                                    onClick={() => {
-                                                        setOpenMenuId(null);
-                                                        setEditingId(reviewId);
-                                                        setForm({ rating: rev.rating || 5, comment: rev.comment || "" });
-                                                        setShowModal(true);
-                                                    }}
+                                                <Icon name="options"></Icon>
+                                            </button>
+
+                                            {reviewId && openMenuId === reviewId && (
+                                                <div
+                                                    className="review-options-menu"
+                                                    onClick={(e) => e.stopPropagation()}
                                                 >
-                                                    Sửa
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="review-options-item"
-                                                    onClick={() => {
-                                                        setOpenMenuId(null);
-                                                        handleDelete(reviewId);
-                                                    }}
-                                                >
-                                                    Xóa
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+                                                    <button
+                                                        type="button"
+                                                        className="review-options-item"
+                                                        onClick={() => {
+                                                            setOpenMenuId(null);
+                                                            setEditingId(reviewId);
+                                                            setForm({ rating: rev.rating || 5, comment: rev.comment || "" });
+                                                            setKeptImages(Array.isArray(rev.images) ? rev.images.filter(Boolean) : []);
+                                                            clearSelectedImages();
+                                                            setHoverRating(null);
+                                                            setSubmitError(null);
+                                                            setShowModal(true);
+                                                        }}
+                                                    >
+                                                        Sửa
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="review-options-item"
+                                                        onClick={() => {
+                                                            setOpenMenuId(null);
+                                                            handleDelete(reviewId);
+                                                        }}
+                                                    >
+                                                        Xóa
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                }
                             </div>
                         );
                     })
                 )}
             </div>
 
-            {!loading && reviews.length > PAGE_SIZE && (
-                <div className="review-pagination">
-                    <button
-                        type="button"
-                        className="btn ghost"
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={page <= 1}
-                    >
-                        Trước
-                    </button>
-                    <div className="review-page-indicator">Trang {page} / {totalPages}</div>
-                    <button
-                        type="button"
-                        className="btn ghost"
-                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                        disabled={page >= totalPages}
-                    >
-                        Sau
-                    </button>
-                </div>
-            )}
+            {
+                !loading && reviews.length > PAGE_SIZE && (
+                    <div className="review-pagination">
+                        <button
+                            type="button"
+                            className="btn ghost"
+                            onClick={() => setPage((p) => Math.max(1, p - 1))}
+                            disabled={page <= 1}
+                        >
+                            Trước
+                        </button>
+                        <div className="review-page-indicator">Trang {page} / {totalPages}</div>
+                        <button
+                            type="button"
+                            className="btn ghost"
+                            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                            disabled={page >= totalPages}
+                        >
+                            Sau
+                        </button>
+                    </div>
+                )
+            }
 
-            {showModal && (
-                <div className="review-modal-backdrop" onClick={() => !submitting && setShowModal(false)}>
-                    <div className="review-modal" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3>{editingId ? "Cập nhật đánh giá" : "Thêm đánh giá"}</h3>
-                            <button className="close" onClick={() => !submitting && setShowModal(false)}>×</button>
+            {
+                showModal && (
+                    <div className="review-modal-backdrop" onClick={closeModal}>
+                        <div className="review-modal" onClick={(e) => e.stopPropagation()}>
+                            <div className="modal-review-header">
+                                <h3>{editingId ? "Cập nhật đánh giá" : "Thêm đánh giá"}</h3>
+                                <button className="close" onClick={closeModal}>×</button>
+                            </div>
+                            <form onSubmit={handleSubmit} className="modal-form">
+                                <div className="form-row">
+                                    <label>Đánh giá</label>
+                                    <div className="rating-picker" role="radiogroup" aria-label="Đánh giá">
+                                        {[1, 2, 3, 4, 5].map((n) => {
+                                            const active = (hoverRating ?? form.rating) >= n;
+                                            return (
+                                                <button
+                                                    key={n}
+                                                    type="button"
+                                                    className={`rating-star ${active ? "active" : ""}`}
+                                                    onMouseEnter={() => setHoverRating(n)}
+                                                    onMouseLeave={() => setHoverRating(null)}
+                                                    onFocus={() => setHoverRating(n)}
+                                                    onBlur={() => setHoverRating(null)}
+                                                    onClick={() => setForm((f) => ({ ...f, rating: n }))}
+                                                    disabled={submitting}
+                                                    aria-label={`${n} sao`}
+                                                    aria-pressed={form.rating === n}
+                                                >
+                                                    <Icon name="star" />
+                                                </button>
+                                            );
+                                        })}
+                                        <span className="rating-text">{form.rating}/5</span>
+                                    </div>
+                                    <div className="rating-hint">Chỉ có thể đánh giá khi đã mua sản phẩm.</div>
+                                </div>
+
+                                <div className="form-row">
+                                    <label>Nhận xét</label>
+                                    <textarea
+                                        className="text-review"
+                                        value={form.comment}
+                                        onChange={(e) => setForm((f) => ({ ...f, comment: e.target.value }))}
+                                        placeholder="Chia sẻ trải nghiệm của bạn..."
+                                        rows={3}
+                                    />
+                                </div>
+
+                                <div className="form-row">
+                                    <label>Ảnh đánh giá (tối đa {MAX_IMAGES})</label>
+
+                                    {(keptImages.length > 0 || selectedImages.length > 0) && (
+                                        <div className="review-image-previews" aria-label="Ảnh đã chọn">
+                                            {keptImages.map((url) => (
+                                                <div key={`kept-${url}`} className="review-image-preview">
+                                                    <img className="review-image-preview-img" src={toPublicImageUrl(url)} alt="review" />
+                                                    <button
+                                                        type="button"
+                                                        className="review-image-remove"
+                                                        onClick={() => removeKeptImage(url)}
+                                                        disabled={submitting}
+                                                        aria-label="Xóa ảnh"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            ))}
+
+                                            {selectedImages.map((it) => (
+                                                <div key={it.key} className="review-image-preview">
+                                                    <img className="review-image-preview-img" src={it.previewUrl} alt={it.file.name} />
+                                                    <button
+                                                        type="button"
+                                                        className="review-image-remove"
+                                                        onClick={() => removeSelectedImage(it.key)}
+                                                        disabled={submitting}
+                                                        aria-label="Xóa ảnh"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <label className="upload-image-btn">
+                                        Chọn ảnh
+                                        <input
+                                            className="review-image-input"
+                                            type="file"
+                                            accept="image/*"
+                                            multiple
+                                            onChange={handlePickImages}
+                                            disabled={submitting}
+                                            hidden
+                                        />
+                                    </label>
+
+                                </div>
+
+                                <div className="form-actions">
+                                    <button type="button" className="btn ghost" onClick={closeModal}>Hủy</button>
+                                    <Button type="submit" variant="submit" disabled={!canSubmit || submitting}>
+                                        {submitting ? "Đang lưu..." : editingId ? "Cập nhật" : "Gửi đánh giá"}
+                                    </Button>
+                                </div>
+
+                                {submitError && <div className="review-submit-error">{submitError}</div>}
+                            </form>
                         </div>
-                        <form onSubmit={handleSubmit} className="modal-form">
-                            <div className="form-row">
-                                <label>Đánh giá</label>
-                                <select
-                                    value={form.rating}
-                                    onChange={(e) => setForm((f) => ({ ...f, rating: Number(e.target.value) }))}
-                                >
-                                    {[1, 2, 3, 4, 5].map((n) => (
-                                        <option key={n} value={n}>{n} sao</option>
-                                    ))}
-                                </select>
-                            </div>
+                    </div>
+                )
+            }
 
-                            <div className="form-row">
-                                <label>Nhận xét</label>
-                                <textarea
-                                    value={form.comment}
-                                    onChange={(e) => setForm((f) => ({ ...f, comment: e.target.value }))}
-                                    placeholder="Chia sẻ trải nghiệm của bạn..."
-                                    rows={3}
-                                />
-                            </div>
-
-                            <div className="form-actions">
-                                <button type="button" className="btn ghost" onClick={() => { if (!submitting) { resetForm(); setShowModal(false); } }}>Hủy</button>
-                                <button type="submit" className="btn primary" disabled={!canSubmit || submitting}>
-                                    {submitting ? "Đang lưu..." : editingId ? "Cập nhật" : "Gửi đánh giá"}
-                                </button>
-                            </div>
-                        </form>
+            {imageViewerUrl && (
+                <div className="image-viewer-backdrop" onClick={() => setImageViewerUrl(null)}>
+                    <div className="image-viewer" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Xem ảnh">
+                        <button className="image-viewer-close" type="button" onClick={() => setImageViewerUrl(null)} aria-label="Đóng">
+                            ×
+                        </button>
+                        <img className="image-viewer-img" src={imageViewerUrl} alt="review" />
                     </div>
                 </div>
             )}
-        </div>
+        </div >
     );
 }

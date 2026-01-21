@@ -16,4 +16,13 @@ export const productService = {
     getRelatedProducts: (categoryId: string, productId: string) => {
         return axiosClient.get(`/products/related/${categoryId}/${productId}`);
     },
+    getDiscountedProducts: () => {
+        return axiosClient.get("/products/discounted");
+    },
+    getBestSellingProducts: () => {
+        return axiosClient.get("/products/best-selling");
+    },
+    getNewProducts: () => {
+        return axiosClient.get("/products/new");
+    },
 };

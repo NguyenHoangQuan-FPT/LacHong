@@ -1,6 +1,7 @@
 .product-related {
     width: 100%;
-    max-width: 1120px;
+    justify-content: center;
+    justify-self: center;
     border-radius: 16px;
     padding: 24px 28px;
     box-sizing: border-box;

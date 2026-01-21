@@ -12,6 +12,7 @@ import "../../assets/styles/Post.css";
 import Icon from "../../components/common/icons/Icon";
 import PostCommentsModal from "../../components/post/PostCommentsModal";
 import PostFormModal from "../../components/post/PostForm";
+import Button from "../../components/common/buttons/Button";
 
 type PostItem = {
     _id?: string;
@@ -173,6 +174,21 @@ export default function Post() {
     }, [posts, openCommentsPostId]);
 
     const canSubmit = useMemo(() => form.title.trim().length > 0 && form.content.trim().length > 0, [form]);
+
+    const currentUser = useMemo(() => {
+        const raw = localStorage.getItem("user");
+        if (!raw) return null;
+        try {
+            return JSON.parse(raw);
+        } catch {
+            return null;
+        }
+    }, []);
+
+    const isAdmin = useMemo(() => {
+        const role = currentUser?.role || currentUser?.roleId?.name || currentUser?.name;
+        return String(role).toLowerCase() === "admin";
+    }, [currentUser]);
 
     useEffect(() => {
         let cancelled = false;
@@ -459,14 +475,19 @@ export default function Post() {
 
     return (
         <>
-            <div className="post-header">
-                <button type="button" className="post-btn" onClick={openCreate}>
-                    + Thêm bài viết
-                </button>
-            </div>
             <div className="post-page">
-                <ToastContainer position="top-right" autoClose={2000} />
+                <div className="post-header">
 
+                    {!isAdmin && (
+                        <Button
+                            className="add-post-button"
+                            variant="submit"
+                            onClick={openCreate}
+                        >
+                            + Thêm bài viết
+                        </Button>
+                    )}
+                </div>
                 {loading ? (
                     <div className="post-status">Đang tải bài viết...</div>
                 ) : posts.length === 0 ? (
@@ -526,7 +547,7 @@ export default function Post() {
                                                                 "https://www.gravatar.com/avatar/?d=mp&f=y&s=48";
                                                         }}
                                                     />
-                                                    <span>{authorName || "Ẩn danh"}</span>
+                                                    <span className="cus-name">{authorName || "Ẩn danh"}</span>
                                                     <span className="dot">•</span>
                                                     <span>{formatDate(p.createdAt)}</span>
                                                 </div>

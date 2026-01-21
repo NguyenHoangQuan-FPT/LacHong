@@ -4,6 +4,7 @@ import { productStoreService } from '../../services/product-store.service';
 import '../../assets/styles/AddProduct.css';
 import { FiX, FiUploadCloud, FiCheck } from 'react-icons/fi';
 import Button from '../../components/common/buttons/Button';
+import Icon from '../../components/common/icons/Icon';
 
 export default function AddProduct() {
     const navigate = useNavigate();
@@ -86,7 +87,6 @@ export default function AddProduct() {
         const MAX_SIZE = 5 * 1024 * 1024;
 
         const validFiles: File[] = [];
-        const newPreviews: string[] = [];
 
         files.forEach(file => {
             if (!file.type.startsWith('image/')) {
@@ -301,7 +301,7 @@ export default function AddProduct() {
                                     const raw = e.target.value.replace(/[^\d]/g, '');
                                     setPrice(raw === '' ? '' : Number(raw));
                                 }}
-                                onBlur={e => {
+                                onBlur={() => {
                                     if (price !== '' && !isNaN(Number(price))) {
                                         setPrice(Number(price));
                                     }
@@ -369,7 +369,7 @@ export default function AddProduct() {
                                 onDrop={handleDrop}
                             >
                                 <FiUploadCloud size={32} className="upload-icon" />
-                                <label className="upload-btn">
+                                <label >
                                     Chọn ảnh
                                     <input
                                         type="file"
@@ -379,9 +379,6 @@ export default function AddProduct() {
                                         hidden
                                     />
                                 </label>
-                                <p className="upload-hint">
-                                    PNG, JPG, GIF (tối đa 5MB mỗi ảnh, có thể chọn nhiều ảnh)
-                                </p>
                             </div>
                         ) : (
                             <div className="image-preview-section-multi">
@@ -398,13 +395,13 @@ export default function AddProduct() {
                                                 className="btn-remove-thumb"
                                                 onClick={() => handleRemoveImageAt(idx)}
                                             >
-                                                <FiX size={16} />
+                                                <Icon name="trash" size={16} />
                                             </button>
                                         </div>
                                     ))}
                                 </div>
                                 <div className="upload-actions">
-                                    <label className="upload-btn">
+                                    <label >
                                         Thêm ảnh khác
                                         <input
                                             type="file"
@@ -417,7 +414,6 @@ export default function AddProduct() {
                                     <button
                                         type="button"
                                         onClick={handleClearAllImages}
-                                        className="btn-remove"
                                     >
                                         Xóa tất cả
                                     </button>
@@ -439,7 +435,7 @@ export default function AddProduct() {
                             Hủy
                         </button>
                         <Button
-                            variant='add'
+                            variant='submit'
                             type="submit"
                             disabled={loading || imageFiles.length === 0}
                         >

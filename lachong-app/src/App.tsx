@@ -3,6 +3,7 @@ import './App.css'
 import { BrowserRouter, useLocation } from 'react-router-dom'
 import RouterComponent from './routers/RouterComponent'
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import Toast from './components/common/toast/Toast';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -20,6 +21,7 @@ function App() {
     <BrowserRouter>
       <ScrollToTop />
       <RouterComponent></RouterComponent>
+      <Toast />
     </BrowserRouter>
   )
 }

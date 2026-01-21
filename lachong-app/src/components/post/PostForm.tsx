@@ -123,21 +123,23 @@ export default function PostFormModal({
                     </div>
 
                     <div className="post-form-row">
-                        <label>Ảnh (tuỳ chọn)</label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            onChange={(e) => {
-                                const files = Array.from(e.target.files || []);
-                                setSelectedImages(prev => {
-                                    const merged = [...prev, ...files];
-                                    onImagesChange(merged);
-                                    return merged;
-                                });
-                            }}
-                            disabled={submitting}
-                        />
+                        <label className="upload-image-btn">Ảnh
+                            <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={(e) => {
+                                    const files = Array.from(e.target.files || []);
+                                    setSelectedImages(prev => {
+                                        const merged = [...prev, ...files];
+                                        onImagesChange(merged);
+                                        return merged;
+                                    });
+                                }}
+                                disabled={submitting}
+                                hidden
+                            />
+                        </label>
                         {selectedImages.length > 0 && (
                             <div className="post-form-preview-list">
                                 {selectedImages.map((img, idx) => {

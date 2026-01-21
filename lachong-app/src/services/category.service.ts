@@ -10,9 +10,9 @@ const categoryService = {
     createCategory: (name: string, description: string) => {
         return axiosClient.post('/categories', { name, description });
     },
-    updateStatusCategory: (id: string, status: boolean) => {
-        return axiosClient.put(`/categories/${id}`, { status });
-    },
+    updateCategory: (id: string, name: string, description: string, status: boolean) => {
+        return axiosClient.put(`/categories/admin/${id}`, { name, description, status });
+    }
 };
 
 export default categoryService;

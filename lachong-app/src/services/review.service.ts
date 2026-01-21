@@ -4,11 +4,11 @@ export const reviewService = {
     getReviewsByProductId: (productId: string) => {
         return axiosClient.get(`/reviews/${productId}`);
     },
-    addReview: (data: { product: string; rating: number; comment: string }) => {
-        return axiosClient.post("/review", data);
+    addReview: (payload: FormData) => {
+        return axiosClient.post("/review", payload);
     },
-    updateReview: (reviewId: string, data: { rating?: number; comment?: string }) => {
-        return axiosClient.put(`/review/${reviewId}`, data);
+    updateReview: (reviewId: string, payload: FormData) => {
+        return axiosClient.put(`/review/${reviewId}`, payload);
     },
     deleteReview: (reviewId: string) => {
         return axiosClient.delete(`/review/${reviewId}`);

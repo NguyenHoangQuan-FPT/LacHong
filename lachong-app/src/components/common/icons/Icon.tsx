@@ -25,9 +25,13 @@ export type IconName =
     | 'home'
     | 'overview'
     | 'caret'
-    | 'start'
+    | 'star'
     | 'chat'
-    | 'logout';
+    | 'logout'
+    | 'boxes'
+    | 'cart-check'
+    | 'cash-stack'
+    | 'clock-history';
 
 interface IconProps extends React.HTMLAttributes<HTMLElement> {
     name: IconName;
@@ -61,10 +65,14 @@ const ICON_CLASS_MAP: Record<IconName, string> = {
     home: 'bi-house',
     overview: 'bi-layout-text-window-reverse',
     caret: 'bi-caret-right',
-    start: 'bi-star-fill',
+    star: 'bi-star-fill',
     chat: 'bi-chat',
     'exclamation-circle': 'bi-exclamation-circle',
     'arrow-repeat': 'bi-arrow-repeat',
+    boxes: 'bi-box2',
+    'cart-check': 'bi-cart-check',
+    'cash-stack': 'bi-cash-stack',
+    'clock-history': 'bi-clock-history',
 };
 
 const Icon: React.FC<IconProps> = ({ name, size = 16, color, className = '', ...rest }) => {

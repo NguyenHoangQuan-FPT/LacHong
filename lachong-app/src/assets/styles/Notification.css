@@ -1,7 +1,6 @@
 .notification-page {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 24px;
+    margin-bottom: 30px;
+    width: 100%;
 }
 
 .notification-header {
@@ -27,14 +26,15 @@
 .notification-list {
     padding: 0;
     list-style: none;
+    max-height: fit-content;
 }
 
 /* Item */
 .notification-item {
     background: #f3f6fa;
     margin-bottom: 12px;
-    padding: 16px;
     border-radius: 8px;
+    width: 100%;
 }
 
 /* Title */
@@ -59,4 +59,26 @@
     font-size: 12px;
     color: #888;
     margin-top: 4px;
+}
+
+.notification-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 12px;
+}
+
+.notification-view-all {
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #111827;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.notification-view-all:hover {
+    background: #f9fafb;
+    border-color: #000000;
+
 }

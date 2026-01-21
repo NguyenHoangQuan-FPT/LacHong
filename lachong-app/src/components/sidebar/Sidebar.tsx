@@ -54,7 +54,7 @@ export default function Sidebar() {
         { to: '/store/notifications', label: 'Notifications', icon: 'bi-bell' },
         { to: '/store/message', label: 'Messages', icon: 'bi-chat-dots' },
         { to: '/store/profile', label: 'Profile', icon: 'bi-person-circle' },
-        { to: '/', label: 'Home', icon: 'bi-house' },
+        { to: '/', label: 'View Website', icon: 'bi-house' },
 
     ];
 

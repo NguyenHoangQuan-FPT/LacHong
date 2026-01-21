@@ -174,8 +174,8 @@ export default function TypeStore() {
                             ) : (
                                 pagedTypeStores.map(typeStore => (
                                     <tr key={typeStore._id}>
-                                        <td>{typeStore.typeName}</td>
-                                        <td>{typeStore.description}</td>
+                                        <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordBreak: 'break-word' }}>{typeStore.typeName}</td>
+                                        <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordBreak: 'break-word' }}>{typeStore.description}</td>
                                         <td>
                                             <span className={`status ${typeStore.status ? "active" : "locked"}`}>
                                                 {typeStore.status ? "Hoạt động" : "Khoá"}

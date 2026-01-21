@@ -81,9 +81,9 @@ export default function Stores() {
                             ) : (
                                 pagedStores.map(store => (
                                     <tr key={store._id}>
-                                        <td>{store.storeName}</td>
-                                        <td>{store.emailStore}</td>
-                                        <td>{store.phone || "Chưa cập nhật"}</td>
+                                        <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordBreak: 'break-word' }}>{store.storeName}</td>
+                                        <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordBreak: 'break-word' }}>{store.emailStore}</td>
+                                        <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordBreak: 'break-word' }}>{store.phone || "Chưa cập nhật"}</td>
                                         <td>
                                             <span className={`status ${store.status.toLowerCase()}`}>
                                                 {store.status === 'PENDING' ? 'Chờ duyệt' : store.status === 'ACTIVE' ? 'Hoạt động' : 'Khoá'}
@@ -91,7 +91,7 @@ export default function Stores() {
                                         </td>
                                         <td style={{ display: 'flex', gap: 8 }}>
                                             <Button variant="secondary">
-                                                <Link to={`/admin/store/${store._id}`}>
+                                                <Link to={`/admin/store/${store._id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
                                                     Xem chi tiết
                                                 </Link>
                                             </Button>

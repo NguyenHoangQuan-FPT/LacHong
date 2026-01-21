@@ -1,29 +1,28 @@
-/* Layout full width (chiếm toàn bộ chiều ngang) */
-
 .layout-container {
+    width: 100%;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    width: 1900px;
+    min-height: 100dvh;
+    max-width: 100%;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    overflow-x: hidden;
-    /* tránh cuộn ngang do phần tử con */
+    background: #f9f9f9;
 }
 
-/* Main content: chiếm toàn bộ chiều rộng, không có margin 2 bên */
 .main-content {
     flex: 1 1 auto;
     width: 100%;
-    max-width: 100%;
-    margin: 0;
-    /* loại bỏ margin auto */
-    padding: 20px;
-    /* khoảng đệm nội dung (tùy chỉnh) */
-    background-color: #ffffff;
     box-sizing: border-box;
-    overflow-x: hidden;
+}
+
+.layout-inner {
+    width: 100%;
+    max-width: 1550px;
+    margin: 0 auto;
+    padding: 0 16px;
+    box-sizing: border-box;
 }
 
 /* Footer full-width */
@@ -40,43 +39,14 @@
     box-sizing: border-box;
 }
 
-/* Nếu Header/Card components có inner container giới hạn chiều rộng (ví dụ .container, .wrap),
-   override để đảm bảo chúng cũng kéo rộng theo trang. Giữ !important vì có thể bị ghi đè. */
-.container,
-.wrap,
-.inner,
-.header-top,
-.main-header,
-.main-header .header-top,
-.main-header>.header-top {
-    max-width: 100% !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding-left: 16px !important;
-    padding-right: 16px !important;
-    box-sizing: border-box;
-    height: 100px;
-}
-
-/* Tùy chọn: nếu muốn header/fixed bar không che nội dung khi cố định,
-   uncomment và điều chỉnh padding-top cho .main-content tương ứng */
-/*
-.main-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-}
-.main-content {
-  padding-top: 72px; // điều chỉnh bằng chiều cao header
-}
-*/
-
 /* Responsive: giữ full-width trên mobile, nhưng giảm padding */
 @media (max-width: 900px) {
     .main-content {
         padding: 12px;
+    }
+
+    .layout-inner {
+        padding: 0 10px;
     }
 
     .footer {

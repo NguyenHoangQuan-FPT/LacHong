@@ -25,6 +25,7 @@ export default function SidebarAdmin() {
         { to: '/admin/materials', label: 'Materials' },
         { to: '/admin/typeStores', label: 'Type Stores' },
         { to: '/admin/notifications', label: 'Notifications', badge: unreadCount },
+        { to: '/', label: 'View Website' },
     ];
 
     const isActive = (path: string) => {
