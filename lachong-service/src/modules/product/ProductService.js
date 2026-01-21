@@ -1,4 +1,5 @@
 const Product = require('../../models/model/Product');
+const mongoose = require('mongoose');
 
 
 const Review = require('../../models/model/Review');
@@ -37,6 +38,9 @@ exports.getAllProducts = async (req, res) => {
 
 exports.getProductById = async (req, res) => {
     const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: "Invalid product id." });
+    }
     try {
         const product = await Product.findById(id).populate('storeId').populate('category').populate('material').lean().exec();
         if (!product) {
@@ -66,11 +70,17 @@ exports.getProductById = async (req, res) => {
 exports.getRelatedProducts = async (req, res) => {
     try {
         const { categoryId, productId } = req.params;
-        const relatedProducts = await Product.find({
+        let relatedProducts = await Product.find({
+            status: true,
             category: categoryId,
             _id: { $ne: productId },
-            status: true
-        }).limit(4).lean().exec();
+        })
+            .populate({ path: 'storeId', match: { status: 'ACTIVE' } })
+            .limit(4)
+            .lean()
+            .exec();
+
+        relatedProducts = relatedProducts.filter(p => p.storeId && p.storeId.status === 'ACTIVE');
 
         res.status(200).json({
             message: "Related products retrieved successfully.",
@@ -78,6 +88,69 @@ exports.getRelatedProducts = async (req, res) => {
         });
     } catch (error) {
         console.error("Error getting related products:", error);
+        res.status(500).json({ message: "Internal server error." });
+    }
+}
+
+exports.getNewProducts = async (req, res) => {
+    try {
+        let newProducts = await Product.find({ status: true })
+            .populate({ path: 'storeId', match: { status: 'ACTIVE' } })
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .lean()
+            .exec();
+
+        newProducts = newProducts.filter(p => p.storeId && p.storeId.status === 'ACTIVE');
+
+        res.status(200).json({
+            message: "New products retrieved successfully.",
+            newProducts
+        });
+    } catch (error) {
+        console.error("Error getting new products:", error);
+        res.status(500).json({ message: "Internal server error." });
+    }
+}
+
+exports.getDiscountedProducts = async (req, res) => {
+    try {
+        let discountedProducts = await Product.find({ status: true, discountPercent: { $gt: 0 } })
+            .populate({ path: 'storeId', match: { status: 'ACTIVE' } })
+            .sort({ discountPercent: -1, createdAt: -1 })
+            .limit(10)
+            .lean()
+            .exec();
+
+        discountedProducts = discountedProducts.filter(p => p.storeId && p.storeId.status === 'ACTIVE');
+
+        res.status(200).json({
+            message: "Top discounted products retrieved successfully.",
+            discountedProducts
+        });
+    } catch (error) {
+        console.error("Error getting top discounted products:", error);
+        res.status(500).json({ message: "Internal server error." });
+    }
+}
+
+exports.getBestSellingProducts = async (req, res) => {
+    try {
+        let bestSellingProducts = await Product.find({ status: true })
+            .populate({ path: 'storeId', match: { status: 'ACTIVE' } })
+            .sort({ sold: -1, createdAt: -1 })
+            .limit(10)
+            .lean()
+            .exec();
+
+        bestSellingProducts = bestSellingProducts.filter(p => p.storeId && p.storeId.status === 'ACTIVE');
+
+        res.status(200).json({
+            message: "Best-selling products retrieved successfully.",
+            bestSellingProducts
+        });
+    } catch (error) {
+        console.error("Error getting best-selling products:", error);
         res.status(500).json({ message: "Internal server error." });
     }
 }

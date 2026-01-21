@@ -66,7 +66,8 @@ exports.createMaterial = async (req, res) => {
     }
 }
 
-exports.updateStatusMaterial = async (req, res) => {
+
+exports.updateMaterial = async (req, res) => {
     try {
         const accountId = req.user?.id;
         if (!accountId) {
@@ -79,22 +80,24 @@ exports.updateStatusMaterial = async (req, res) => {
         }
 
         const { id } = req.params;
-        const { status } = req.body;
+        const { name, description, status } = req.body;
 
         const material = await Material.findById(id);
         if (!material) {
             return res.status(404).json({ message: "Material not found." });
         }
 
-        material.status = status;
+        material.name = name || material.name;
+        material.description = description || material.description;
+        material.status = status !== undefined ? status : material.status;
         await material.save();
 
         res.status(200).json({
-            message: "Material status updated successfully.",
+            message: "Material updated successfully.",
             material
         });
     } catch (error) {
-        console.error("Error updating material status:", error);
+        console.error("Error updating material:", error);
         res.status(500).json({ message: "Internal server error." });
     }
 }

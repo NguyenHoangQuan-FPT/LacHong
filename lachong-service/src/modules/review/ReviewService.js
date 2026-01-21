@@ -1,6 +1,9 @@
 const { number } = require('joi');
+const mongoose = require('mongoose');
 const Review = require('../../models/model/Review');
 const Customer = require('../../models/model/Customer');
+const Order = require('../../models/model/Order');
+const OrderItem = require('../../models/model/OrderItem');
 
 exports.getReviewsByProductId = async (req, res) => {
     const { productId } = req.params;
@@ -28,7 +31,12 @@ exports.addReview = async (req, res) => {
 
     const { product, rating, comment } = req.body;
 
-    if (typeof rating !== 'number' || rating < 1 || rating > 5) {
+    if (!product || !mongoose.isValidObjectId(product)) {
+        return res.status(400).json({ message: "Invalid product." });
+    }
+
+    const ratingNumber = Number(rating);
+    if (!Number.isFinite(ratingNumber) || ratingNumber < 1 || ratingNumber > 5) {
         return res.status(400).json({ message: "Rating must be a number between 1 and 5." });
     }
     if (!comment || comment.trim() === "") {
@@ -40,13 +48,41 @@ exports.addReview = async (req, res) => {
         return res.status(404).json({ message: "Customer not found." });
     }
     try {
+        const existing = await Review.findOne({ product, customer: customer._id, status: true }).lean();
+        if (existing) {
+            return res.status(409).json({ message: "Bạn đã đánh giá sản phẩm này rồi." });
+        }
+
+        const completedOrders = await Order.find({ customer: customer._id, status: 'Completed' })
+            .select('orderItems')
+            .lean();
+
+        const orderItemIds = (completedOrders || [])
+            .flatMap((o) => Array.isArray(o.orderItems) ? o.orderItems : [])
+            .filter(Boolean);
+
+        if (orderItemIds.length === 0) {
+            return res.status(403).json({ message: "Bạn chỉ có thể đánh giá khi đã mua sản phẩm." });
+        }
+
+        const hasPurchased = await OrderItem.exists({
+            _id: { $in: orderItemIds },
+            'products.productId': product
+        });
+
+        if (!hasPurchased) {
+            return res.status(403).json({ message: "Bạn chỉ có thể đánh giá khi đã mua sản phẩm." });
+        }
+        const files = req.files || [];
+        const imageUrls = files.map(f => f.path);
+
         const newReview = new Review({
             product,
             customer: customer._id,
-            rating,
+            rating: ratingNumber,
             comment,
+            images: imageUrls,
             status: true,
-            createdAt: new Date()
         });
         await newReview.save();
         res.status(201).json({
@@ -72,7 +108,6 @@ exports.updateReview = async (req, res) => {
 
         const { id } = req.params;
         const { rating, comment } = req.body;
-
         const review = await Review.findById(id);
         if (!review) {
             return res.status(404).json({ message: "Review not found." });
@@ -82,7 +117,38 @@ exports.updateReview = async (req, res) => {
             return res.status(403).json({ message: "You can only update your own review." });
         }
 
-        review.rating = rating !== undefined ? rating : review.rating;
+        const keepImagesRaw = req.body.keepImages ?? req.body.images;
+        let oldImages = [];
+        if (keepImagesRaw) {
+            try {
+                if (typeof keepImagesRaw === 'string') {
+                    if (keepImagesRaw.trim().startsWith('[')) {
+                        oldImages = JSON.parse(keepImagesRaw);
+                    } else {
+                        oldImages = [keepImagesRaw];
+                    }
+                } else if (Array.isArray(keepImagesRaw)) {
+                    oldImages = keepImagesRaw;
+                }
+            } catch (e) {
+                oldImages = [];
+            }
+        }
+
+        const files = req.files || [];
+        const newImages = files.map((f) => f.path);
+        const mergedImages = [...(Array.isArray(oldImages) ? oldImages : []), ...newImages]
+            .filter(Boolean);
+
+        review.images = mergedImages;
+
+        if (rating !== undefined) {
+            const ratingNumber = Number(rating);
+            if (!Number.isFinite(ratingNumber) || ratingNumber < 1 || ratingNumber > 5) {
+                return res.status(400).json({ message: "Rating must be a number between 1 and 5." });
+            }
+            review.rating = ratingNumber;
+        }
         review.comment = comment !== undefined ? comment : review.comment;
         review.updatedAt = new Date();
         await review.save();

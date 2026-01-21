@@ -172,20 +172,72 @@ exports.updateProductByStore = async (req, res) => {
         if (!store) {
             return res.status(404).json({ message: "Store not found." });
         }
-        const { error, value } = ProductDTO.validate(req.body);
+        const keepImagesRaw = req.body?.keepImages ?? req.body?.images;
+
+        const bodyForValidation = { ...req.body };
+        delete bodyForValidation.keepImages;
+
+        // In some clients, "images" may be sent as a helper field for keeping old images.
+        // It's not part of ProductDTO, so we strip it out before validating.
+        delete bodyForValidation.images;
+
+        const { error, value } = ProductDTO.validate(bodyForValidation, {
+            allowUnknown: true,
+            stripUnknown: true,
+        });
         if (error) {
             return res.status(400).json({ message: error.details[0].message });
         }
 
-        const updateProduct = await Product.findOneAndUpdate(
-            { _id: id, storeId: store._id },
-            { $set: value },
-            { new: true }
-        );
-
-        if (!updateProduct) {
+        const existingProduct = await Product.findOne({ _id: id, storeId: store._id });
+        if (!existingProduct) {
             return res.status(404).json({ message: "Product not found or you do not have permission to update this product." });
         }
+
+        let keptImages = [];
+        if (keepImagesRaw != null) {
+            try {
+                if (typeof keepImagesRaw === 'string') {
+                    const s = keepImagesRaw.trim();
+                    if (s.startsWith('[')) {
+                        keptImages = JSON.parse(s);
+                    } else if (s.length > 0) {
+                        keptImages = [s];
+                    }
+                } else if (Array.isArray(keepImagesRaw)) {
+                    keptImages = keepImagesRaw;
+                }
+            } catch {
+                keptImages = [];
+            }
+        } else {
+            keptImages = Array.isArray(existingProduct.images) && existingProduct.images.length > 0
+                ? existingProduct.images
+                : (existingProduct.imageUrl ? [existingProduct.imageUrl] : []);
+        }
+
+        const files = req.files || [];
+        const newImages = files.map((f) => f.path).filter(Boolean);
+        const merged = [...(Array.isArray(keptImages) ? keptImages : []), ...newImages].filter(Boolean);
+        const seen = new Set();
+        const finalImages = merged.filter((u) => {
+            const key = String(u);
+            if (!key || seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+
+        const updatePayload = { ...value };
+        if (keepImagesRaw != null || newImages.length > 0) {
+            updatePayload.images = finalImages;
+            updatePayload.imageUrl = finalImages[0] || "";
+        }
+
+        const updateProduct = await Product.findOneAndUpdate(
+            { _id: id, storeId: store._id },
+            { $set: updatePayload },
+            { new: true }
+        );
 
         res.status(200).json({
             message: "Product updated successfully.",

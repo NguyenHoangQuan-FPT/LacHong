@@ -12,7 +12,10 @@ exports.getWishListByCustomerId = async (req, res) => {
             return res.status(404).json({ message: "Customer not found." });
         }
         const wishLists = await WishList.find({ customer: customer._id })
-            .populate('products')
+            .populate({
+                path: 'products',
+                match: { status: true }
+            })
             .exec();
 
         let products = [];

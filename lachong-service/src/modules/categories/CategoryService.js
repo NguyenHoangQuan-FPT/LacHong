@@ -68,7 +68,7 @@ exports.createCategory = async (req, res) => {
     }
 }
 
-exports.updateStatusCategory = async (req, res) => {
+exports.updateCategory = async (req, res) => {
     try {
         const accountId = req.user?.id;
         if (!accountId) {
@@ -80,25 +80,26 @@ exports.updateStatusCategory = async (req, res) => {
             return res.status(403).json({ message: "Forbidden: Admins only." });
         }
 
-        const { id } = req.params;
-        const { status } = req.body;
+        const categoryId = req.params.id;
+        const { name, description, status } = req.body;
 
-        const updatedCategory = await Category.findByIdAndUpdate(
-            id,
-            { status },
-            { new: true }
-        );
-
-        if (!updatedCategory) {
+        const category = await Category.findById(categoryId);
+        if (!category) {
             return res.status(404).json({ message: "Category not found." });
         }
 
+        category.name = name !== undefined ? name : category.name;
+        category.description = description !== undefined ? description : category.description;
+        category.status = status !== undefined ? status : category.status;
+
+        await category.save();
+
         res.status(200).json({
-            message: "Category status updated successfully.",
-            category: updatedCategory
+            message: "Category updated successfully.",
+            category
         });
     } catch (error) {
-        console.error("Error updating category status:", error);
+        console.error("Error updating category:", error);
         res.status(500).json({ message: "Internal server error." });
     }
 }

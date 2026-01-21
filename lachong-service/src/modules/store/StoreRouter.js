@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-
 const StoreService = require('./StoreService');
 const upload = require('../../config/multer');
 const verifyStoreToken = require('../../services/middleware');
