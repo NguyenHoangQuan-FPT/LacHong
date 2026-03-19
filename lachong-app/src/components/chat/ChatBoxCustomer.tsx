@@ -21,15 +21,16 @@ interface StoreInfo {
 
 interface ChatBoxProps {
     roomId?: string;
-    currentUserId: string;
+    currentUserId?: string;
     store?: StoreInfo;
 }
 
-export default function ChatBoxCustomer({ roomId, currentUserId, store }: ChatBoxProps) {
+export default function ChatBoxCustomer({ roomId, store }: ChatBoxProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
     const [imageFiles, setImageFiles] = useState<File[]>([]);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [modalImg, setModalImg] = useState<string | null>(null);
@@ -55,9 +56,16 @@ export default function ChatBoxCustomer({ roomId, currentUserId, store }: ChatBo
     };
 
     const scrollToBottom = (smooth = true) => {
-        messagesEndRef.current?.scrollIntoView({
-            behavior: smooth ? "smooth" : "auto"
-        });
+        const container = messagesContainerRef.current;
+        if (container) {
+            container.scrollTo({
+                top: container.scrollHeight,
+                behavior: smooth ? 'smooth' : 'auto',
+            });
+            return;
+        }
+        // Fallback: try to only scroll nearest container (avoid hard page jumps)
+        messagesEndRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'nearest' });
     };
 
     const prevRoomId = useRef<string | undefined>(undefined);
@@ -80,6 +88,13 @@ export default function ChatBoxCustomer({ roomId, currentUserId, store }: ChatBo
         scrollToBottom(false);
     }, [internalRoomId, loading, messages.length]);
 
+    // Reset when switching rooms
+    useEffect(() => {
+        if (!roomId) return;
+        setMessages([]);
+        setInternalRoomId(roomId);
+    }, [roomId]);
+
     // Load old messages when roomId changes
     useEffect(() => {
         if (!internalRoomId) return;
@@ -96,14 +111,29 @@ export default function ChatBoxCustomer({ roomId, currentUserId, store }: ChatBo
 
     useEffect(() => {
         if (!internalRoomId) return;
-        if (!socket.connected) socket.connect();
-        socket.emit("joinRoom", internalRoomId);
+
+        const roomStr = String(internalRoomId);
+        const joinRoom = () => socket.emit("joinRoom", roomStr);
+
+        if (!socket.connected) {
+            socket.connect();
+            socket.on("connect", joinRoom);
+        } else {
+            joinRoom();
+        }
+
         const handleReceiveMessage = (message: Message) => {
-            setMessages(prev => [...prev, message]);
+            setMessages(prev => {
+                const exists = prev.some(m => m._id === message._id);
+                return exists ? prev : [...prev, message];
+            });
         };
+
         socket.on("receiveMessage", handleReceiveMessage);
+
         return () => {
-            socket.emit("leaveRoom", internalRoomId);
+            socket.emit("leaveRoom", roomStr);
+            socket.off("connect", joinRoom);
             socket.off("receiveMessage", handleReceiveMessage);
         };
     }, [internalRoomId]);
@@ -124,8 +154,18 @@ export default function ChatBoxCustomer({ roomId, currentUserId, store }: ChatBo
                 formData.append("storeId", store._id);
             }
             const res = await messageService.sendMessage(formData);
-            if (!internalRoomId && res?.data?.roomId) {
-                setInternalRoomId(res.data.roomId);
+            const newRoomId = internalRoomId || res?.data?.roomId;
+            if (!internalRoomId && newRoomId) {
+                setInternalRoomId(newRoomId);
+            }
+
+            const newMessage = res?.data?.message;
+            if (newMessage) {
+                setMessages(prev => {
+                    const exists = prev.some(m => m._id === newMessage._id);
+                    return exists ? prev : [...prev, newMessage];
+                });
+                // Broadcast already happens server-side after save; no client echo to avoid duplicates
             }
             setInput("");
             setImageFiles([]);
@@ -149,7 +189,7 @@ export default function ChatBoxCustomer({ roomId, currentUserId, store }: ChatBo
                 />
                 <h3 style={{ margin: 0 }}>Chat với {store?.storeName || 'Cửa hàng'}</h3>
             </div>
-            <div className="chatbox-customer-messages">
+            <div className="chatbox-customer-messages" ref={messagesContainerRef}>
                 {loading ? (
                     <div>Đang tải tin nhắn...</div>
                 ) : (
@@ -194,7 +234,9 @@ export default function ChatBoxCustomer({ roomId, currentUserId, store }: ChatBo
                                     ))}
                                 </div>
                             )}
-                            <div style={{ fontSize: 12, color: '#888', marginBottom: 2 }}>{new Date(msg.timestamp).toLocaleTimeString()}</div>
+                            <div style={{ fontSize: 12, color: '#888', marginBottom: 2 }}>
+                                {new Date((msg as any).timestamp || (msg as any).createdAt || Date.now()).toLocaleTimeString()}
+                            </div>
                         </div>
                     ))
                 )}

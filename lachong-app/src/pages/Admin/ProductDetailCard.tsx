@@ -1,8 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import { useLocation, useParams, Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useParams, Link } from "react-router-dom";
 import { productService } from "../../services/product.service";
-import customerService from "../../services/customer.service";
-import { ToastContainer, toast } from "react-toastify";
 import "../../assets/styles/ProductDetails.css";
 
 import Icon from "../../components/common/icons/Icon";
@@ -19,36 +17,13 @@ export default function ProductDetail() {
     const location = useLocation();
     const searchId = new URLSearchParams(location.search).get("id");
     const id = paramId || searchId;
-    const navigate = useNavigate();
-    const [user, setUser] = useState<any>(null);
     const [product, setProduct] = useState<any>(null);
     const [selectedImage, setSelectedImage] = useState<string>("");
-    const [quantity, setQuantity] = useState(1);
     const [loading, setLoading] = useState(false);
-    const [addingToCart, setAddingToCart] = useState(false);
-    const [addingToWishList, setAddingToWishList] = useState(false);
 
     const [error, setError] = useState<string | null>(null);
-    const [customerProfile, setCustomerProfile] = useState<any | null>(null);
 
     useEffect(() => {
-        const savedUser = localStorage.getItem("user");
-        if (savedUser) {
-            try {
-                const parsedUser = JSON.parse(savedUser);
-                let role = "customer";
-                if (parsedUser.role) {
-                    role = parsedUser.role;
-                } else if (parsedUser.roleId && typeof parsedUser.roleId === "object" && parsedUser.roleId.name) {
-                    role = parsedUser.roleId.name;
-                } else if (parsedUser.name) {
-                    role = parsedUser.name;
-                }
-                setUser({ ...parsedUser, role });
-            } catch (e) {
-                console.error("Lỗi parse user:", e);
-            }
-        }
         setLoading(false);
     }, []);
     useEffect(() => {
@@ -106,50 +81,6 @@ export default function ProductDetail() {
         };
     }, [id]);
 
-    const isProfileComplete = (profile: any | null) => {
-        if (!profile) return false;
-        const name = String(profile?.fullName || profile?.name || "").trim();
-        const phone = String(profile?.phone || profile?.phoneNumber || "").trim();
-        return !!name && !!phone;
-    };
-
-    const ensureCustomerProfileComplete = async () => {
-        const token = localStorage.getItem("access_token");
-        if (!token) {
-            toast.info("Vui lòng đăng nhập để thêm vào giỏ hàng");
-            navigate("/login");
-            return false;
-        }
-
-        if (isProfileComplete(customerProfile)) return true;
-
-        try {
-            const res: any = await customerService.getProfileCustomer();
-            const data = res?.data ?? res;
-            const c = data?.customer ?? data?.data ?? data;
-            setCustomerProfile(c);
-
-            if (isProfileComplete(c)) return true;
-
-            toast.error("Vui lòng cập nhật thông tin cá nhân trước khi thêm vào giỏ hàng");
-
-            navigate("/product/detail" + (id ? `?id=${id}` : ""));
-            return false;
-        } catch (err: any) {
-            toast.error(err?.response?.data?.message || "Không lấy được thông tin tài khoản");
-            navigate("/product/detail" + (id ? `?id=${id}` : ""));
-            return false;
-        }
-    };
-
-    const getCategoryId = (cate: any) => {
-        if (!cate) return null;
-        if (typeof cate === "string") return cate;
-        return cate._id || cate.id || null;
-    };
-
-    const currentCategoryId = useMemo(() => getCategoryId(product?.category), [product?.category]);
-
     if (loading) {
         return (
             <div className="product-detail-page">
@@ -182,62 +113,40 @@ export default function ProductDetail() {
             ? Math.round((product.price || 0) * (1 - product.discount / 100))
             : product.price;
 
-    const storeName =
-        product.storeName ||
-        product.store?.storeName ||
-        product.store?.name ||
-        product.storeId?.storeName ||
-        product.storeId?.name ||
-        "Lac Hong Store";
-
-    const storeAvatar =
-        product.storeAvatar ||
-        product.store?.storeAvatar ||
-        product.store?.avatar ||
-        product.storeId?.storeAvatar ||
-        product.storeId?.avatar ||
-        "Lac Hong Store";
-
     const productImages = product.images || [];
     const mainImage = selectedImage || product.imageUrl || product.image || (productImages.length > 0 ? productImages[0] : "");
     const discountValue = product.discountPercent || product.discount || 0;
-    const storeIdValue =
+    const storeIdForBack =
         (typeof product.storeId === "object"
             ? product.storeId._id || product.storeId.id
             : product.storeId) ||
         (typeof product.store === "object"
             ? product.store._id || product.store.id
-            : undefined);
+            : "");
 
     return (
         <div className="product-detail-page">
             <div className="product-detail-container">
                 <div className="product-detail-main">
                     <div className="product-detail-left">
-                        <div className="product-detail-image-wrap">
-                            {discountValue > 0 && (
-                                <span className="product-detail-badge">{discountValue}% off</span>
+                        <div className="product-detail-media">
+                            {productImages.length > 0 && (
+                                <div className="product-detail-thumbnails">
+                                    {productImages.map((img: string, idx: number) => (
+                                        <div
+                                            key={idx}
+                                            className={`thumbnail ${selectedImage === img ? "active" : ""}`}
+                                            onClick={() => setSelectedImage(img)}
+                                        >
+                                            <img src={normalizeImageUrl(img)} alt={`${product.productName || product.name} ${idx + 1}`} />
+                                        </div>
+                                    ))}
+                                </div>
                             )}
-                            <img src={normalizeImageUrl(mainImage)} alt={product.productName || product.name} />
-                        </div>
 
-                        {productImages.length > 0 && (
-                            <div className="product-detail-thumbnails">
-                                {productImages.map((img: string, idx: number) => (
-                                    <div
-                                        key={idx}
-                                        className={`thumbnail ${selectedImage === img ? 'active' : ''}`}
-                                        onClick={() => setSelectedImage(img)}
-                                    >
-                                        <img src={normalizeImageUrl(img)} alt={`${product.productName || product.name} ${idx + 1}`} />
-                                    </div>
-                                ))}
+                            <div className="product-detail-image-wrap">
+                                <img src={normalizeImageUrl(mainImage)} alt={product.productName || product.name} />
                             </div>
-                        )}
-                        <div className="product-detail-store">
-                            <Link to={storeIdValue ? `/store/${storeIdValue}` : "/store"} className="store-link">
-                                {storeAvatar && <img src={normalizeImageUrl(storeAvatar)} className="avatar-store" />}  {storeName}
-                            </Link>
                         </div>
                     </div>
 
@@ -247,10 +156,9 @@ export default function ProductDetail() {
                             <span style={{ display: "flex", alignItems: "center" }}>
                                 {Array.from({ length: 5 }).map((_, i) => (
                                     <span key={i} style={{ color: i < Math.round(product.avgRating) ? '#ffc107' : '#e4e5e9', fontSize: 22, paddingRight: 2 }}>
-                                        <Icon name="start" size={12} />
+                                        <Icon name="star" size={12} />
                                     </span>
                                 ))}
-                                <span style={{ fontSize: 18, color: '#888', marginLeft: 4 }}>{product.avgRating ? product.avgRating.toFixed(1) : 'Chưa có đánh giá'}</span>
                             </span>
                         </div>
                         <div className="product-detail-prices">
@@ -262,12 +170,17 @@ export default function ProductDetail() {
                             ) : (
                                 <span className="price-neww">{(product.price ?? 0).toLocaleString()} VND</span>
                             )}
+                            <div>
+                                {discountValue > 0 && (
+                                    <span className="product-detail-badge">{discountValue}% off</span>
+                                )}
+                            </div>
                         </div>
 
                         {product.description && (
                             <div className="product-detail-desc">
                                 <h3>Mô tả sản phẩm</h3>
-                                <p>{product.description}</p>
+                                <p style={{ whiteSpace: "pre-line" }}>{product.description}</p>
                             </div>
                         )}
 
@@ -288,10 +201,18 @@ export default function ProductDetail() {
                         )}
                         {product.policy && (
                             <div className="product-detail-meta">
-                                <strong>Chính sách bảo hành:</strong> {product.policy}
+                                <strong>Chính sách bảo hành:</strong>
+                                <ul>
+                                    {product.policy
+                                        .split("\n")
+                                        .filter((line: string) => line.trim())
+                                        .map((line: string, idx: number) => (
+                                            <li key={idx}>{line}</li>
+                                        ))}
+                                </ul>
                             </div>
                         )}
-                        <Link to={`/admin/store/product/${product?.storeId || ""}`} className="product-detail-back">← Quay lại danh sách sản phẩm</Link>
+                        <Link to={`/admin/store/product/${storeIdForBack}`} className="product-detail-back">← Quay lại danh sách sản phẩm</Link>
                     </div>
                 </div>
                 <hr className="hr"></hr>

@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { productStoreService } from '../../services/product-store.service';
 import { Link } from 'react-router-dom';
 import '../../assets/styles/ProductStore.css';
@@ -6,6 +8,7 @@ import Icon from "../../components/common/icons/Icon";
 import Button from "../../components/common/buttons/Button";
 
 export default function StoreProducts() {
+    const location = useLocation();
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -33,7 +36,12 @@ export default function StoreProducts() {
                 setError('Không tải được sản phẩm của cửa hàng');
             })
             .finally(() => setLoading(false));
-    }, []);
+
+        // Show toast if redirected after adding product
+        if (location.state && location.state.productAdded) {
+            toast.success('Sản phẩm đã được thêm thành công!');
+        }
+    }, [location.state]);
 
     const filteredProducts = products.filter((p) => {
         const name = (p.productName || p.name || "").toLowerCase();
@@ -74,9 +82,6 @@ export default function StoreProducts() {
                     <div className="store-status store-status-empty">
                         <Icon name="box" size={20} /> Không có sản phẩm nào.
                         <br />
-                        <Link to="/store/products/new" className="store-empty-link">
-                            Thêm sản phẩm đầu tiên
-                        </Link>
                     </div>
                 ) : (
                     <table className="products-table">

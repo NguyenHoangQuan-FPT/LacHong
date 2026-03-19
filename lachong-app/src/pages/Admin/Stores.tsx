@@ -32,11 +32,14 @@ export default function Stores() {
     }, []);
 
     const filteredStores = stores.filter(store => {
-        const s = search.toLowerCase();
+        const s = String(search || "").toLowerCase();
+        const name = String((store as any)?.storeName || "").toLowerCase();
+        const email = String((store as any)?.emailStore || "").toLowerCase();
+        const phone = String((store as any)?.phone || "").toLowerCase();
         return (
-            store.storeName.toLowerCase().includes(s) ||
-            (store.emailStore && store.emailStore.toLowerCase().includes(s)) ||
-            (store.phone && store.phone.toLowerCase().includes(s))
+            name.includes(s) ||
+            email.includes(s) ||
+            phone.includes(s)
         );
     });
 

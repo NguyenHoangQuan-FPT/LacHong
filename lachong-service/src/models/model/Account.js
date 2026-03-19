@@ -6,9 +6,9 @@ const accountSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now },
     roleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Role' },
     status: { type: Boolean, default: true },
-    isActive: { type: Boolean, default: false },
     activationToken: { type: String },
-    activationTokenExpires: { type: Date }
+    activationTokenExpires: { type: Date },
+    refreshToken: { type: String }
 }, {
     timestamps: true
 });

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { productService } from "../../services/product.service";
 import ProductCard, { type ProductItem } from "./ProductCard";
 import "../../assets/styles/ProductRelated.css";
+import { useTranslation } from "react-i18next";
 
 interface ProductRelatedProps {
     product: ProductItem | null;
@@ -9,6 +10,7 @@ interface ProductRelatedProps {
 }
 
 export default function ProductRelated({ product, currentCategoryId }: ProductRelatedProps) {
+    const { t } = useTranslation();
     const [relatedProducts, setRelatedProducts] = useState<ProductItem[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -65,12 +67,12 @@ export default function ProductRelated({ product, currentCategoryId }: ProductRe
     return (
         <div className="product-related">
             <div className="related-header">
-                <h2>Sản phẩm liên quan</h2>
+                <h2>{t('productRelated.title')}</h2>
             </div>
             {loading ? (
-                <div className="related-status">Đang tải sản phẩm liên quan...</div>
+                <div className="related-status">{t('productRelated.loading')}</div>
             ) : relatedProducts.length === 0 ? (
-                <div className="related-status">Chưa có gợi ý phù hợp.</div>
+                <div className="related-status">{t('productRelated.empty')}</div>
             ) : (
                 <div className="related-grid">
                     {relatedProducts.map((p) => (

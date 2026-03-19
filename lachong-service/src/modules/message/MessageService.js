@@ -20,7 +20,6 @@ exports.getMessages = async (req, res) => {
     }
 }
 
-
 exports.sendMessage = async (req, res) => {
     try {
         const accountId = req.user?.id;
@@ -30,7 +29,6 @@ exports.sendMessage = async (req, res) => {
         if (!accountId) {
             return res.status(401).json({ error: 'Unauthorized' });
         }
-
 
         let { content, roomId, storeId } = req.body;
 
@@ -107,6 +105,7 @@ exports.sendMessage = async (req, res) => {
             images: imageUrls,
         });
 
+        // Broadcast the saved message to room subscribers for real-time updates
         io?.to(chatRoom._id.toString()).emit('receiveMessage', message);
 
         return res.status(200).json({

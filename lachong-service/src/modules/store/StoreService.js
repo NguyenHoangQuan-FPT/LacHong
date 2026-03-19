@@ -6,12 +6,32 @@ const Product = require('../../models/model/Product');
 const ProductDTO = require('../../models/DTOs/ProductDTO');
 const Order = require('../../models/model/Order');
 const mongoose = require('mongoose');
+const Account = require('../../models/model/Account');
+const Notification = require('../../models/model/Notification');
+
+const isNonEmptyString = (v) => typeof v === 'string' && v.trim().length > 0;
+
+function isStoreRegistrationComplete(body) {
+    return (
+        isNonEmptyString(body?.storeName) &&
+        isNonEmptyString(body?.emailStore) &&
+        isNonEmptyString(body?.address) &&
+        isNonEmptyString(body?.policy) &&
+        isNonEmptyString(body?.description) &&
+        isNonEmptyString(body?.typeStoreId)
+    );
+}
 
 exports.getProfileStore = async (req, res) => {
     try {
         const store = await Store.findOne({ ownerId: req.user.id });
         if (!store) {
-            return res.status(404).json({ message: "Store not found." });
+            // Store profile is created only after completing StoreRegistration.
+            // Return an empty store object to allow the registration UI to load.
+            return res.status(200).json({
+                message: "Store profile not created yet.",
+                store: {}
+            });
         }
 
         res.status(200).json({
@@ -75,9 +95,18 @@ exports.updateProfileStore = async (req, res) => {
             return res.status(400).json({ message: error.details[0].message });
         }
 
-        const store = await Store.findOne({ ownerId: req.user.id });
+        let store = await Store.findOne({ ownerId: req.user.id });
+
+        // If there is no Store document yet, only create it when the
+        // registration step is completed (do not create drafts).
         if (!store) {
-            return res.status(404).json({ message: "Store not found." });
+            if (!isStoreRegistrationComplete(value)) {
+                return res.status(400).json({
+                    message: "Please complete store registration before creating store profile."
+                });
+            }
+
+            store = new Store({ ownerId: req.user.id });
         }
 
         const allowedFields = ["storeName", "emailStore", "address", "phone", "policy", 'description', "typeStoreId"];
@@ -95,7 +124,30 @@ exports.updateProfileStore = async (req, res) => {
             store.avatar = req.file.path;
         }
 
+        const isNewStore = store.isNew;
         await store.save();
+
+        // Notify admins only when the store profile is created for the first time.
+        if (isNewStore) {
+            try {
+                const admins = await Account.find({ status: true }).populate('roleId');
+                for (const admin of admins) {
+                    if (admin.roleId && admin.roleId.name === 'admin') {
+                        const adminNoti = new Notification({
+                            receiver: admin._id,
+                            store: store._id,
+                            title: 'Yêu cầu duyệt cửa hàng mới',
+                            message: `Cửa hàng mới vừa hoàn tất đăng ký và chờ duyệt.`,
+                            type: 'SYSTEM'
+                        });
+                        await adminNoti.save();
+                    }
+                }
+            } catch (notiErr) {
+                // Do not fail profile creation if notifications fail
+                console.error('Admin notification error:', notiErr);
+            }
+        }
 
         res.status(200).json({
             message: "Store profile updated successfully.",

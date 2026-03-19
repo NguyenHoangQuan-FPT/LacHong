@@ -11,6 +11,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@payos/node": "^2.0.4",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^1.37.2",
@@ -30,6 +31,7 @@
     "qs": "^6.14.1",
     "resend": "^6.7.0",
     "serverless-http": "^4.0.0",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.3",
+    "stripe": "^18.5.0"
   }
 }

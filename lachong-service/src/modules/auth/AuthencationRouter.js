@@ -8,5 +8,6 @@ router.post('/register', AuthenticationService.registerUser);
 router.post('/register-store', AuthenticationService.registerStore);
 router.post('/logout', AuthenticationService.logout);
 router.post('/activate-account/:token', AuthenticationService.activeAccount);
+router.post('/refresh-token', AuthenticationService.refreshToken);
 
 module.exports = router;

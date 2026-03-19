@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { storeService } from "../../services/store.service";
 import React from "react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { postService } from "../../services/post.service";
 import customerService from "../../services/customer.service";
@@ -13,6 +13,7 @@ import Icon from "../../components/common/icons/Icon";
 import PostCommentsModal from "../../components/post/PostCommentsModal";
 import PostFormModal from "../../components/post/PostForm";
 import Button from "../../components/common/buttons/Button";
+import { useTranslation } from "react-i18next";
 
 type PostItem = {
     _id?: string;
@@ -66,6 +67,7 @@ type LikeCommentItem = {
 };
 
 function SharePopup({ postUrl, onClose }: { postUrl: string; onClose: () => void }) {
+    const { t } = useTranslation();
     const shareFacebook = () => {
         window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`, '_blank');
         onClose();
@@ -77,19 +79,19 @@ function SharePopup({ postUrl, onClose }: { postUrl: string; onClose: () => void
     const copyLink = async () => {
         try {
             await navigator.clipboard.writeText(postUrl);
-            alert('Đã copy link!');
+            alert(t('post.share.copySuccess'));
         } catch {
-            alert('Không copy được link!');
+            alert(t('post.share.copyFail'));
         }
         onClose();
     };
     return (
         <div className="share-popup-overlay" onClick={onClose}>
             <div className="share-popup" onClick={e => e.stopPropagation()}>
-                <button onClick={shareFacebook}>Chia sẻ Facebook</button>
-                <button onClick={shareZalo}>Chia sẻ Zalo</button>
-                <button onClick={copyLink}>Copy link</button>
-                <button onClick={onClose}>Đóng</button>
+                <button onClick={shareFacebook}>{t('post.share.shareFacebook')}</button>
+                <button onClick={shareZalo}>{t('post.share.shareZalo')}</button>
+                <button onClick={copyLink}>{t('post.share.copyLink')}</button>
+                <button onClick={onClose}>{t('post.share.close')}</button>
             </div>
         </div>
     );
@@ -139,7 +141,9 @@ function normalizeImageUrl(url?: string | null): string | null {
 }
 
 export default function Post() {
+    const { t, i18n } = useTranslation();
     const [viewImage, setViewImage] = useState<string | null>(null);
+    const [expandedPostIds, setExpandedPostIds] = useState<Record<string, boolean>>({});
     const [sharePostId, setSharePostId] = useState<string | null>(null);
     const [posts, setPosts] = useState<PostItem[]>([]);
     const [loading, setLoading] = useState(false);
@@ -162,7 +166,7 @@ export default function Post() {
     const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
     const [replyToCommentName, setReplyToCommentName] = useState<string | null>(null);
     const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
-    const [form, setForm] = useState<{ title: string; content: string; images: File[] }>({
+    const [form, setForm] = useState<{ title: string; content: string; images: (File | string)[] }>({
         title: "",
         content: "",
         images: [],
@@ -173,7 +177,9 @@ export default function Post() {
         return posts.find((p) => String(p._id || p.id || "") === String(openCommentsPostId)) || null;
     }, [posts, openCommentsPostId]);
 
-    const canSubmit = useMemo(() => form.title.trim().length > 0 && form.content.trim().length > 0, [form]);
+    const canSubmit = useMemo(() => form.content.trim().length > 0, [form]);
+
+    const CONTENT_PREVIEW_LIMIT = 220;
 
     const currentUser = useMemo(() => {
         const raw = localStorage.getItem("user");
@@ -221,7 +227,7 @@ export default function Post() {
             setPosts(list);
         } catch (err: any) {
             console.error("[Post] fetch error", err);
-            toast.error(err?.response?.data?.message || "Không tải được bài viết");
+            toast.error(err?.response?.data?.message || t('post.toast.cannotLoadPosts'));
         } finally {
             setLoading(false);
         }
@@ -274,12 +280,14 @@ export default function Post() {
             const res = await likeCommentService.getLikeCommentsByCommentId(commentId);
             const likeComments: LikeCommentItem[] = Array.isArray(res?.data?.likeComments) ? res.data.likeComments : [];
             const liked = !!(
-                viewerCustomerId || viewerStoreId &&
-                likeComments.some((lc) => {
+                (viewerCustomerId && likeComments.some((lc) => {
                     const cid = extractId(lc.customer);
+                    return cid && String(cid) === String(viewerCustomerId);
+                })) ||
+                (viewerStoreId && likeComments.some((lc) => {
                     const sid = extractId(lc.store);
-                    return (cid && String(cid) === String(viewerCustomerId)) || (sid && String(sid) === String(viewerStoreId));
-                })
+                    return sid && String(sid) === String(viewerStoreId);
+                }))
             );
             setCommentLikesById((m) => ({ ...m, [commentId]: { count: likeComments.length, liked } }));
         } catch {
@@ -301,7 +309,7 @@ export default function Post() {
     const toggleLikeComment = async (commentId: string) => {
         const token = localStorage.getItem("access_token");
         if (!token) {
-            toast.error("Vui lòng đăng nhập để thích bình luận");
+            toast.error(t('post.toast.pleaseLoginToLikeComment'));
             return;
         }
 
@@ -314,7 +322,7 @@ export default function Post() {
             }
             await fetchLikeCommentsForComment(commentId);
         } catch (err: any) {
-            toast.error(err?.response?.data?.message || "Không thể thích bình luận");
+            toast.error(err?.response?.data?.message || t('post.toast.cannotLikeComment'));
         }
     };
 
@@ -340,7 +348,7 @@ export default function Post() {
             }
             await fetchEngagementForPost(postId);
         } catch (err: any) {
-            toast.error(err?.response?.data?.message || "Không thể thực hiện like");
+            toast.error(err?.response?.data?.message || t('post.toast.cannotLike'));
         }
     };
 
@@ -350,7 +358,7 @@ export default function Post() {
 
         const token = localStorage.getItem("access_token");
         if (!token) {
-            toast.error("Vui lòng đăng nhập để bình luận");
+            toast.error(t('post.toast.pleaseLoginToComment'));
             return;
         }
 
@@ -358,10 +366,10 @@ export default function Post() {
         try {
             if (editingCommentId) {
                 await commentService.updateComment(editingCommentId, { content });
-                toast.success("Đã cập nhật bình luận");
+                toast.success(t('post.toast.commentUpdated'));
             } else {
                 await commentService.addComment({ postId, content, parentCommentId: replyToCommentId });
-                toast.success("Đã gửi bình luận");
+                toast.success(t('post.toast.commentSent'));
             }
 
             setCommentDraftByPost((m) => ({ ...m, [postId]: "" }));
@@ -370,9 +378,9 @@ export default function Post() {
             setReplyToCommentName(null);
             await fetchEngagementForPost(postId);
         } catch (err: any) {
-            const msg = err?.response?.data?.message || "Không thể bình luận";
+            const msg = err?.response?.data?.message || t('post.toast.cannotComment');
             if (/customer not found/i.test(String(msg))) {
-                toast.error("Chỉ tài khoản khách hàng mới bình luận được");
+                toast.error(t('post.toast.onlyCustomerCanComment'));
             } else {
                 toast.error(msg);
             }
@@ -425,20 +433,23 @@ export default function Post() {
         if (!canSubmit) return;
         setSubmitting(true);
         try {
+            const safeTitle = form.title.trim();
+            const safeContent = form.content.trim();
+
             if (editingId) {
                 await postService.updatePost(editingId, {
-                    title: form.title.trim(),
-                    content: form.content.trim(),
+                    title: safeTitle,
+                    content: safeContent,
                     images: form.images,
                 });
-                toast.success("Đã cập nhật bài viết");
+                toast.success(t('post.toast.postUpdated'));
             } else {
                 await postService.createPost({
-                    title: form.title.trim(),
-                    content: form.content.trim(),
+                    title: safeTitle,
+                    content: safeContent,
                     images: form.images,
                 });
-                toast.success("Đã tạo bài viết");
+                toast.success(t('post.toast.postCreated'));
             }
             setShowModal(false);
             setForm({ title: "", content: "", images: [] });
@@ -446,7 +457,7 @@ export default function Post() {
             await fetchPosts();
         } catch (err: any) {
             console.error("[Post] submit error", err);
-            toast.error(err?.response?.data?.message || "Không thể lưu bài viết");
+            toast.error(err?.response?.data?.message || t('post.toast.cannotSavePost'));
         } finally {
             setSubmitting(false);
         }
@@ -455,14 +466,14 @@ export default function Post() {
     const handleDelete = async (postId?: string) => {
         if (!postId) return;
         setOpenActionsPostId(null);
-        if (!window.confirm("Xóa bài viết này?")) return;
+        if (!window.confirm(t('post.confirmDeletePost'))) return;
         try {
             await postService.deletePost(postId);
-            toast.success("Đã xóa bài viết");
+            toast.success(t('post.toast.postDeleted'));
             await fetchPosts();
         } catch (err: any) {
             console.error("[Post] delete error", err);
-            toast.error(err?.response?.data?.message || "Không thể xóa bài viết");
+            toast.error(err?.response?.data?.message || t('post.toast.cannotDeletePost'));
         }
     };
 
@@ -470,7 +481,8 @@ export default function Post() {
         if (!value) return "";
         const d = new Date(value);
         if (Number.isNaN(d.getTime())) return value;
-        return d.toLocaleString();
+        const locale = i18n.language === 'en' ? 'en-US' : 'vi-VN';
+        return d.toLocaleString(locale);
     };
 
     return (
@@ -484,14 +496,14 @@ export default function Post() {
                             variant="submit"
                             onClick={openCreate}
                         >
-                            + Thêm bài viết
+                            {t('post.addPost')}
                         </Button>
                     )}
                 </div>
                 {loading ? (
-                    <div className="post-status">Đang tải bài viết...</div>
+                    <div className="post-status">{t('post.loadingPosts')}</div>
                 ) : posts.length === 0 ? (
-                    <div className="post-status">Chưa có bài viết nào.</div>
+                    <div className="post-status">{t('post.emptyPosts')}</div>
                 ) : (
                     <div className="post-list">
                         {posts
@@ -499,7 +511,7 @@ export default function Post() {
                             .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
                             .map((p) => {
                                 const id = p._id || p.id;
-                                let authorName = "Ẩn danh";
+                                let authorName = t('post.anonymous');
                                 if (typeof p.store === "object" && p.store?.storeName) {
                                     authorName = p.store.storeName;
                                 } else if (typeof p.customer === "object" && p.customer?.fullName) {
@@ -511,6 +523,8 @@ export default function Post() {
                                 } else if (typeof p.customer === "object" && p.customer?.avatar) {
                                     avatar = normalizeImageUrl(p.customer.avatar);
                                 }
+                                const postId = String(id);
+
                                 const postCustomerId = extractId(p.customer);
                                 const postStoreId = extractId(p.store);
                                 const isOwner = !!(
@@ -526,7 +540,12 @@ export default function Post() {
                                 }
                                 const isSingleImage = imageList.length === 1;
 
-                                const postId = String(id);
+                                const contentText = p.content || "";
+                                const isExpanded = !!expandedPostIds[postId];
+                                const shouldClamp = contentText.length > CONTENT_PREVIEW_LIMIT;
+                                const displayContent = isExpanded || !shouldClamp
+                                    ? contentText
+                                    : `${contentText.slice(0, CONTENT_PREVIEW_LIMIT)}...`;
                                 const likeState = likesByPost[postId] || { count: 0, liked: false };
                                 const comments = commentsByPost[postId] || [];
                                 const isEngagementLoading = !!loadingEngagement[postId];
@@ -541,13 +560,13 @@ export default function Post() {
                                                         src={
                                                             avatar || "https://www.gravatar.com/avatar/?d=mp&f=y&s=48"
                                                         }
-                                                        alt={authorName || "Avatar"}
+                                                        alt={authorName || t('post.avatarAlt')}
                                                         onError={(e) => {
                                                             (e.currentTarget as HTMLImageElement).src =
                                                                 "https://www.gravatar.com/avatar/?d=mp&f=y&s=48";
                                                         }}
                                                     />
-                                                    <span className="cus-name">{authorName || "Ẩn danh"}</span>
+                                                    <span className="cus-name">{authorName || t('post.anonymous')}</span>
                                                     <span className="dot">•</span>
                                                     <span>{formatDate(p.createdAt)}</span>
                                                 </div>
@@ -562,7 +581,7 @@ export default function Post() {
                                                                 setOpenActionsPostId((cur) => (cur === postId ? null : postId))
                                                             }
                                                             disabled={submitting}
-                                                            aria-label="Tùy chọn"
+                                                            aria-label={t('post.optionsAria')}
                                                         >
                                                             <Icon name="options" />
                                                         </button>
@@ -575,7 +594,7 @@ export default function Post() {
                                                                     onClick={() => openEdit(p)}
                                                                     disabled={submitting}
                                                                 >
-                                                                    <Icon name="pencil" /> Sửa
+                                                                    <Icon name="pencil" /> {t('post.edit')}
                                                                 </button>
                                                                 <button
                                                                     type="button"
@@ -583,7 +602,7 @@ export default function Post() {
                                                                     onClick={() => handleDelete(String(id))}
                                                                     disabled={submitting}
                                                                 >
-                                                                    <Icon name="trash" /> Xóa
+                                                                    <Icon name="trash" /> {t('post.delete')}
                                                                 </button>
                                                             </div>
                                                         )}
@@ -591,10 +610,28 @@ export default function Post() {
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="post-item-title">{p.title}</div>
-                                        <div className="post-content">{p.content}</div>
+                                        {Boolean((p.title || "").trim()) && (
+                                            <div className="post-item-title">{p.title}</div>
+                                        )}
+                                        <div className="post-content">{displayContent}</div>
+                                        {shouldClamp && (
+                                            <button
+                                                type="button"
+                                                className="post-read-more"
+                                                onClick={() =>
+                                                    setExpandedPostIds((m) => ({
+                                                        ...m,
+                                                        [postId]: !isExpanded,
+                                                    }))
+                                                }
+                                                aria-label={isExpanded ? 'Thu gọn nội dung' : 'Xem thêm nội dung'}
+                                            >
+                                                <span>{isExpanded ? 'Thu gọn' : 'Xem thêm'}</span>
+                                                <span style={{ fontSize: '12px', color: '#4b5563' }}>
+                                                </span>
+                                            </button>
+                                        )}
 
-                                        {/* Hiển thị tất cả ảnh trong mảng images */}
                                         {imageList.length > 0 && (
                                             <div className={isSingleImage ? "post-images-single" : "post-images-list"}>
                                                 {imageList.map((img, idx) => (
@@ -602,7 +639,7 @@ export default function Post() {
                                                         key={idx}
                                                         className={isSingleImage ? "post-image-large" : "post-image-small"}
                                                         src={img}
-                                                        alt={p.title || "post"}
+                                                        alt={p.title || t('post.postImageAlt')}
                                                         style={{ cursor: 'pointer' }}
                                                         onClick={() => setViewImage(img)}
                                                     />
@@ -613,9 +650,9 @@ export default function Post() {
 
                                         <div className="post-engagement">
                                             <div className="post-counts">
-                                                <span>{likeState.count} lượt thích</span>
+                                                <span>{t('post.likesCount', { count: likeState.count })}</span>
                                                 <span className="dot">•</span>
-                                                <span>{comments.length} bình luận</span>
+                                                <span>{t('post.commentsCount', { count: comments.length })}</span>
                                             </div>
 
                                             <div className="post-action-row">
@@ -648,7 +685,6 @@ export default function Post() {
                                                 {sharePostId && (() => {
                                                     const post = posts.find(p => String(p._id || p.id) === String(sharePostId));
                                                     if (!post) return null;
-                                                    // Giả sử đường dẫn bài post là /post/:id
                                                     const postUrl = window.location.origin + "/post/" + (post._id || post.id);
                                                     return <SharePopup postUrl={postUrl} onClose={() => setSharePostId(null)} />;
                                                 })()}
@@ -675,7 +711,7 @@ export default function Post() {
                         onReply={(commentId, customerName) => {
                             setEditingCommentId(null);
                             setReplyToCommentId(commentId);
-                            setReplyToCommentName(customerName || "Ẩn danh");
+                            setReplyToCommentName(customerName || t('post.anonymous'));
                             setTimeout(() => {
                                 const el = document.getElementById("comment-input-popup");
                                 (el as HTMLInputElement | null)?.focus();
@@ -703,10 +739,10 @@ export default function Post() {
                         onDelete={async (commentId) => {
                             const token = localStorage.getItem("access_token");
                             if (!token) {
-                                toast.error("Vui lòng đăng nhập để xóa bình luận");
+                                toast.error(t('post.toast.pleaseLoginToDeleteComment'));
                                 return;
                             }
-                            if (!window.confirm("Bạn có chắc muốn xóa bình luận này?")) return;
+                            if (!window.confirm(t('post.confirmDeleteComment'))) return;
                             try {
                                 await commentService.deleteComment(commentId);
                                 if (editingCommentId === commentId) setEditingCommentId(null);
@@ -715,9 +751,9 @@ export default function Post() {
                                     setReplyToCommentName(null);
                                 }
                                 await fetchEngagementForPost(openCommentsPostId);
-                                toast.success("Đã xóa bình luận");
+                                toast.success(t('post.toast.commentDeleted'));
                             } catch (err: any) {
-                                toast.error(err?.response?.data?.message || "Không thể xóa bình luận");
+                                toast.error(err?.response?.data?.message || t('post.toast.cannotDeleteComment'));
                             }
                         }}
                         draft={commentDraftByPost[openCommentsPostId] || ""}
@@ -744,8 +780,8 @@ export default function Post() {
                         title={form.title}
                         content={form.content}
                         canSubmit={canSubmit}
-                        headerTitle={editingId ? "Cập nhật bài viết" : "Thêm bài viết"}
-                        submitLabel={editingId ? "Cập nhật" : "Tạo"}
+                        headerTitle={editingId ? t('post.form.headerUpdate') : t('post.form.headerCreate')}
+                        submitLabel={editingId ? t('post.form.submitUpdate') : t('post.form.submitCreate')}
                         onClose={() => setShowModal(false)}
                         onSubmit={handleSubmit}
                         onTitleChange={(value) => setForm((f) => ({ ...f, title: value }))}

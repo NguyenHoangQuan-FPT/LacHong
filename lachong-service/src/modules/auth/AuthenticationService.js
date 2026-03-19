@@ -1,32 +1,34 @@
 const Account = require('../../models/model/Account');
 const Customer = require('../../models/model/Customer');
+const Store = require('../../models/model/Store');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const role = require('../../models/model/Role');
-const Store = require('../../models/model/Store');
 const AccountDTO = require('../../models/DTOs/AccountDTO');
-const StoreDTO = require('../../models/DTOs/StoreDTO');
-const Notification = require('../../models/model/Notification');
 const { sendEmail } = require('../../services/sendEmail');
 const fs = require("fs");
 const path = require("path");
 
-const pickFrontendOrigin = () => {
-    const candidates = [
-        process.env.FRONTEND_URL || 'http://localhost:5173'
-    ].filter(Boolean);
 
-    for (const raw of candidates) {
-        const first = String(raw).split(',')[0].trim();
-        if (first) return first.replace(/\/$/, '');
-    }
-    return 'http://localhost:5173';
-};
+const DEFAULT_AVATAR = process.env.DEFAULT_AVATAR_URL || "https://ui-avatars.com/api/?name=A&background=2563eb&color=fff&bold=true&size=200";
+const generateInitialAvatar = () => DEFAULT_AVATAR;
+
+// const pickFrontendOrigin = () => {
+//     const candidates = [
+//         'http://localhost:5173'
+//     ].filter(Boolean);
+
+//     for (const raw of candidates) {
+//         const first = String(raw).split(',')[0].trim();
+//         if (first) return first.replace(/\/$/, '');
+//     }
+//     return 'http://localhost:5173';
+// };
 
 exports.registerUser = async (req, res) => {
-    let htmlTemplate = fs.readFileSync(
-        path.join(__dirname, '../../template/sendEmail.html'), 'utf-8');
+    // let htmlTemplate = fs.readFileSync(
+    //     path.join(__dirname, '../../template/sendEmail.html'), 'utf-8');
 
 
     const { error, value } = AccountDTO.validate(req.body);
@@ -43,37 +45,40 @@ exports.registerUser = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const activeAccount = crypto.randomBytes(20).toString('hex');
+        // const activeAccount = crypto.randomBytes(20).toString('hex');
+
 
         const user = new Account({
             email,
             password: hashedPassword,
             roleId: customerRole._id,
-            activationToken: activeAccount,
-            activationTokenExpires: Date.now() + 24 * 60 * 60 * 1000
+            // activationToken: activeAccount,
+            // activationTokenExpires: Date.now() + 24 * 60 * 60 * 1000
         });
 
-        const activationLink = `${pickFrontendOrigin()}/active-account/${activeAccount}`;
+        // const activationLink = `${pickFrontendOrigin()}/active-account/${activeAccount}`;
 
-        htmlTemplate = htmlTemplate.replace(/{{ACTIVE_LINK}}/g, activationLink);
+        // htmlTemplate = htmlTemplate.replace(/{{ACTIVE_LINK}}/g, activationLink);
 
-        console.log('🔄 Attempting to send activation email to:', email);
-        try {
-            await sendEmail(
-                email,
-                'Activate Your Account',
-                htmlTemplate
-            );
-            console.log('✅ Activation email sent successfully');
-        } catch (emailError) {
-            console.error('❌ Failed to send activation email:', emailError);
-        }
+        // console.log('🔄 Attempting to send activation email to:', email);
+        // try {
+        //     await sendEmail(
+        //         email,
+        //         'Activate Your Account',
+        //         htmlTemplate
+        //     );
+        //     console.log('✅ Activation email sent successfully');
+        // } catch (emailError) {
+        //     console.error('❌ Failed to send activation email:', emailError);
+        //     return res.status(500).json({ message: 'Gửi email kích hoạt thất bại, vui lòng thử lại sau.' });
+        // }
 
         await user.save();
 
         const newCustomer = new Customer({
             email: email,
-            accountId: user._id
+            accountId: user._id,
+            avatar: generateInitialAvatar(email)
         });
         await newCustomer.save();
 
@@ -86,23 +91,12 @@ exports.registerUser = async (req, res) => {
 
 exports.registerStore = async (req, res) => {
     try {
-
         const { error: errorAccount, value: accountValue } = AccountDTO.validate({
             email: req.body.email,
             password: req.body.password
         });
         if (errorAccount) return res.status(400).json({ message: errorAccount.details[0].message });
-
-        const { error: errorStore, value: storeValue } = StoreDTO.validate({
-            storeName: req.body.storeName,
-            emailStore: req.body.emailStore
-        });
-        if (errorStore) return res.status(400).json({ message: errorStore.details[0].message });
-
-        const value = { ...accountValue, ...storeValue };
-        const { email, password, storeName, emailStore } = value;
-
-
+        const { email, password } = accountValue;
 
         const existingUser = await Account.findOne({ email });
         if (existingUser) return res.status(400).json({ message: 'User already exists.' });
@@ -116,34 +110,26 @@ exports.registerStore = async (req, res) => {
         await user.save();
 
         const store = new Store({
-            storeName: storeName,
-            emailStore: emailStore,
+            email: email,
             ownerId: user._id,
             status: 'PENDING'
         });
         await store.save();
 
-        const admins = await Account.find({ status: true }).populate('roleId');
-        for (const admin of admins) {
-            if (admin.roleId && admin.roleId.name === 'admin') {
-                const adminNoti = new Notification({
-                    receiver: admin._id,
-                    store: store._id,
-                    title: 'Yêu cầu duyệt cửa hàng mới',
-                    message: `Cửa hàng "${storeName}" vừa đăng ký mới và chờ duyệt.`,
-                    type: 'SYSTEM'
-                });
-                await adminNoti.save();
-            }
-        }
-
-        res.status(201).json({ message: 'Store registered successfully' });
+        res.status(201).json({ message: 'Store account registered successfully' });
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: 'Internal server error.' });
     }
 }
 
+
+// Generate access and refresh tokens
+function generateTokens(user) {
+    const accessToken = jwt.sign({ id: user._id, email: user.email, role: user.roleId.name }, process.env.JWT_SECRET, { expiresIn: '15m' });
+    const refreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_SECRET_KEY, { expiresIn: '7d' });
+    return { accessToken, refreshToken };
+}
 
 exports.login = async (req, res) => {
     const { email, password } = req.body;
@@ -153,12 +139,38 @@ exports.login = async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: 'Invalid username or password.' });
 
-        // if (!user.isActive) return res.status(403).json({ message: 'Account is not activated.' });
+        // const roleName = user?.roleId?.name;
+        // if (roleName === 'customer' && !user.isActive) {
+        //     return res.status(403).json({ message: 'Account is not activated.' });
+        // }
 
-        const token = jwt.sign({ id: user._id, email: user.email, role: user.roleId.name }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.json({ user, token });
+        // Generate tokens
+        const { accessToken, refreshToken } = generateTokens(user);
+
+        // Save refresh token to user (for demo, production should use DB or Redis)
+        user.refreshToken = refreshToken;
+        await user.save();
+
+        res.json({ user, accessToken, refreshToken });
     } catch (error) {
         res.status(500).json({ message: 'Internal server error.' });
+    }
+}
+// Endpoint to refresh access token
+exports.refreshToken = async (req, res) => {
+    const { refreshToken } = req.body;
+    if (!refreshToken) return res.status(401).json({ message: 'No refresh token provided.' });
+    try {
+        // Find user by refresh token
+        const user = await Account.findOne({ refreshToken });
+        if (!user) return res.status(403).json({ message: 'Invalid refresh token.' });
+        // Verify refresh token
+        const payload = jwt.verify(refreshToken, process.env.REFRESH_SECRET_KEY);
+        // Generate new access token
+        const accessToken = jwt.sign({ id: user._id, email: user.email, role: user.roleId.name }, process.env.JWT_SECRET, { expiresIn: '15m' });
+        res.json({ accessToken });
+    } catch (err) {
+        res.status(403).json({ message: 'Invalid or expired refresh token.' });
     }
 }
 

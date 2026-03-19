@@ -1,0 +1,35 @@
+.policy-page {
+    max-width: 100%;
+    color: #0f172a;
+    background: #ffffff;
+    margin: 12px;
+    padding: 10px;
+}
+
+.policy-title {
+    margin: 0 0 18px;
+    font-size: 1.6rem;
+    font-weight: 800;
+}
+
+.policy-section {
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 14px;
+}
+
+.policy-section-title {
+    margin: 0 0 10px;
+    font-size: 1.12rem;
+    font-weight: 800;
+}
+
+.policy-text {
+    margin: 0 0 10px;
+    line-height: 1.7;
+    color: #111827;
+}
+
+.policy-text:last-child {
+    margin-bottom: 0;
+}

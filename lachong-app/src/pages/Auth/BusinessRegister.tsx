@@ -7,9 +7,9 @@ export default function BusinessRegister() {
     const [form, setForm] = useState({
         email: "",
         password: "",
-        storeName: "",
-        emailStore: "",
+        confirmPassword: "",
         showPassword: false,
+        showConfirmPassword: false,
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -23,30 +23,34 @@ export default function BusinessRegister() {
         setForm((prev) => ({ ...prev, showPassword: !prev.showPassword }));
     };
 
+    const toggleShowConfirmPassword = () => {
+        setForm((prev) => ({ ...prev, showConfirmPassword: !prev.showConfirmPassword }));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        if (!form.email || !form.password || !form.storeName || !form.emailStore) {
+        if (!form.email || !form.password || !form.confirmPassword) {
             setError("Vui lòng điền đầy đủ thông tin");
+            return;
+        }
+        if (form.password !== form.confirmPassword) {
+            setError("Xác nhận mật khẩu không khớp");
             return;
         }
         setLoading(true);
         try {
-            const storeData = {
-                storeName: form.storeName,
-                description: "",
-                policy: "",
-                phone: "",
-                address: ""
-            };
-            await authService.registerStore(
-                form.email,
-                form.password,
-                form.storeName,
-                form.emailStore
-            );
-            localStorage.setItem("storeInfo", JSON.stringify(storeData));
-            navigate("/store/verification");
+            await authService.registerStore(form.email, form.password);
+
+            const res = await authService.login(form.email, form.password);
+            const data = (res as any)?.data ?? res;
+            const token = data?.access_token ?? data?.token ?? data?.data?.access_token ?? null;
+            if (token) localStorage.setItem("access_token", token);
+            const user = data?.user ?? data?.data ?? data ?? null;
+            if (user) localStorage.setItem("user", JSON.stringify(user));
+            if (data?.store) localStorage.setItem("store", JSON.stringify(data.store));
+
+            navigate("/store/registration");
         } catch (err: any) {
             console.error("Register store error", err);
             const msg =
@@ -117,33 +121,39 @@ export default function BusinessRegister() {
                                         )}
                                     </button>
                                 </div>
+
+                                <label className="br-label">Xác nhận mật khẩu</label>
+                                <div className="br-input-wrap">
+                                    <input
+                                        className="br-input"
+                                        type={form.showConfirmPassword ? "text" : "password"}
+                                        name="confirmPassword"
+                                        value={form.confirmPassword}
+                                        onChange={handleChange}
+                                        required
+                                        autoComplete="new-password"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="br-eye-btn"
+                                        onClick={toggleShowConfirmPassword}
+                                        aria-label={form.showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                                    >
+                                        {form.showConfirmPassword ? (
+                                            <i className="bi bi-eye-slash" />
+                                        ) : (
+                                            <i className="bi bi-eye" />
+                                        )}
+                                    </button>
+                                </div>
                             </div>
 
-                            <div className="br-col">
-                                <h3 className="br-section">
-                                    <span className="br-section-bar" /> Thông tin doanh nghiệp
-                                </h3>
-
-                                <label className="br-label">Tên cửa hàng</label>
-                                <input
-                                    className="br-input"
-                                    type="text"
-                                    name="storeName"
-                                    value={form.storeName}
-                                    onChange={handleChange}
-                                    required
-                                    autoComplete="off"
-                                />
-
-                                <label className="br-label">Email cửa hàng</label>
-                                <input
-                                    className="br-input"
-                                    type="email"
-                                    name="emailStore"
-                                    value={form.emailStore}
-                                    onChange={handleChange}
-                                    required
-                                    autoComplete="off"
+                            <div className="br-col br-col-illustration">
+                                <img
+                                    src="/images/About/About3.jpg"
+                                    alt="Register mascot"
+                                    className="br-illustration"
+                                    loading="lazy"
                                 />
                             </div>
                         </div>
@@ -161,6 +171,12 @@ export default function BusinessRegister() {
                             <Link to="/login" className="br-foot-link">
                                 Đăng nhập ngay
                             </Link>
+                        </div>
+                        <div className="ur-terms">
+                            Bằng việc đăng ký, bạn đã đồng ý với Lạc Hồng về
+                            <Link to="/policy" className="ur-terms-link"> Điều khoản dịch vụ</Link>
+                            <span> &amp; </span>
+                            <Link to="/policy" className="ur-terms-link">Chính sách bảo mật</Link>
                         </div>
                     </form>
                 </div>

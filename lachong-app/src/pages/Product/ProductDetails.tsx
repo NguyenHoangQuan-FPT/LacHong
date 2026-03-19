@@ -10,6 +10,7 @@ import ProductReview from "../../components/product/ProductReview";
 import Icon from "../../components/common/icons/Icon";
 import { toast } from "react-toastify";
 import Toast from "../../components/common/toast/Toast";
+import { useTranslation } from "react-i18next";
 
 const normalizeImageUrl = (url?: string) => {
     if (!url) return "https://via.placeholder.com/400x300?text=No+Image";
@@ -19,6 +20,7 @@ const normalizeImageUrl = (url?: string) => {
 };
 
 export default function ProductDetail() {
+    const { t } = useTranslation();
     const { id: paramId } = useParams<{ id?: string }>();
     const location = useLocation();
     const searchId = new URLSearchParams(location.search).get("id");
@@ -59,7 +61,7 @@ export default function ProductDetail() {
     }, []);
     useEffect(() => {
         if (!id) {
-            setError("ID sản phẩm không hợp lệ");
+            setError(t('productDetails.invalidId'));
             setProduct(null);
             return;
         }
@@ -75,14 +77,13 @@ export default function ProductDetail() {
                 const res = await productService.getProductById(id as string);
                 console.log("[ProductDetail] API response:", res);
 
-                // Backend trả về { message, product }
                 const productData = res?.data?.product ?? null;
                 console.log("[ProductDetail] extracted product:", productData);
 
                 if (!productData) {
                     if (mounted) {
                         setProduct(null);
-                        setError("Không tìm thấy sản phẩm");
+                        setError(t('productDetails.notFound'));
                     }
                 } else {
                     if (mounted) {
@@ -95,7 +96,7 @@ export default function ProductDetail() {
                 }
             } catch (err: any) {
                 console.error("[ProductDetail] fetch error:", err);
-                const msg = err?.response?.data?.message || err?.response?.statusText || err?.message || "Không tải được sản phẩm";
+                const msg = err?.response?.data?.message || err?.response?.statusText || err?.message || t('productDetails.cannotLoad');
                 if (mounted) {
                     setError(msg);
                     setProduct(null);
@@ -129,7 +130,7 @@ export default function ProductDetail() {
     const ensureCustomerProfileComplete = async () => {
         const token = localStorage.getItem("access_token");
         if (!token) {
-            toast.info("Vui lòng đăng nhập để thêm vào giỏ hàng");
+            toast.info(t('productDetails.loginToAddCart'));
             navigate("/login");
             return false;
         }
@@ -144,12 +145,12 @@ export default function ProductDetail() {
 
             if (isProfileComplete(c)) return true;
 
-            toast.error("Vui lòng cập nhật thông tin cá nhân trước khi thêm vào giỏ hàng");
+            toast.error(t('productDetails.updateProfileBeforeCart'));
 
             navigate("/product/detail" + (id ? `?id=${id}` : ""));
             return false;
         } catch (err: any) {
-            toast.error(err?.response?.data?.message || "Không lấy được thông tin tài khoản");
+            toast.error(err?.response?.data?.message || t('productDetails.cannotFetchAccount'));
             navigate("/product/detail" + (id ? `?id=${id}` : ""));
             return false;
         }
@@ -166,7 +167,7 @@ export default function ProductDetail() {
     if (loading) {
         return (
             <div className="product-detail-page">
-                <div className="product-detail-status">Đang tải sản phẩm...</div>
+                <div className="product-detail-status">{t('productDetails.loadingProduct')}</div>
             </div>
         );
     }
@@ -175,7 +176,7 @@ export default function ProductDetail() {
         return (
             <div className="product-detail-page">
                 <div className="product-detail-status error">{error}</div>
-                <Link to="/product" className="product-detail-back">← Quay lại danh sách sản phẩm</Link>
+                <Link to="/product" className="product-detail-back">{t('productDetails.backToProducts')}</Link>
             </div>
         );
     }
@@ -183,8 +184,8 @@ export default function ProductDetail() {
     if (!product) {
         return (
             <div className="product-detail-page">
-                <div className="product-detail-status">Không tìm thấy sản phẩm.</div>
-                <Link to="/product" className="product-detail-back">← Quay lại danh sách sản phẩm</Link>
+                <div className="product-detail-status">{t('productDetails.notFoundDot')}</div>
+                <Link to="/product" className="product-detail-back">{t('productDetails.backToProducts')}</Link>
             </div>
         );
     }
@@ -276,35 +277,35 @@ export default function ProductDetail() {
                             )}
                             <div>
                                 {discountValue > 0 && (
-                                    <span className="product-detail-badge">{discountValue}% off</span>
+                                    <span className="product-detail-badge">{t('productDetails.off', { percent: discountValue })}</span>
                                 )}
                             </div>
                         </div>
                         {product.description && (
                             <div className="product-detail-desc">
-                                <h3>Mô tả sản phẩm</h3>
+                                <h3>{t('productDetails.description')}</h3>
                                 <p style={{ whiteSpace: "pre-line" }}>{product.description}</p>
                             </div>
                         )}
 
                         {product.category && (
                             <div className="product-detail-meta">
-                                <strong>Danh mục:</strong> {product.category.name || product.category}
+                                <strong>{t('productDetails.category')}:</strong> {product.category.name || product.category}
                             </div>
                         )}
                         {product.material && (
                             <div className="product-detail-meta">
-                                <strong>Chất liệu:</strong> {product.material.name || product.material}
+                                <strong>{t('productDetails.material')}:</strong> {product.material.name || product.material}
                             </div>
                         )}
                         {product.stock && (
                             <div className="product-detail-meta">
-                                <strong>Tồn kho:</strong> {product.stock} sản phẩm
+                                <strong>{t('productDetails.stock')}:</strong> {product.stock} {t('productDetails.stockUnit')}
                             </div>
                         )}
                         {product.policy && (
                             <div className="product-detail-meta">
-                                <strong >Chính sách bảo hành:</strong>
+                                <strong >{t('productDetails.warrantyPolicy')}:</strong>
                                 <ul>
                                     {product.policy ? (
                                         product.policy
@@ -314,7 +315,7 @@ export default function ProductDetail() {
                                                 <li key={idx}>{line}</li>
                                             ))
                                     ) : (
-                                        <li>Chưa có mô tả cho sản phẩm này.</li>
+                                        <li>{t('productDetails.noPolicy')}</li>
                                     )}
                                 </ul>
                             </div>
@@ -332,7 +333,7 @@ export default function ProductDetail() {
                                         onClick={async () => {
                                             if (!id || !product) return;
                                             if (quantity > (product.stock ?? 0)) {
-                                                toast.error(`Chỉ còn ${product.stock} sản phẩm trong kho!`);
+                                                toast.error(t('productDetails.onlyLeftInStock', { count: product.stock ?? 0 }));
                                                 return;
                                             }
                                             const ok = await ensureCustomerProfileComplete();
@@ -340,10 +341,10 @@ export default function ProductDetail() {
                                             setAddingToCart(true);
                                             try {
                                                 await cartService.addToCart(id, quantity);
-                                                toast.success("Đã thêm sản phẩm vào giỏ!");
+                                                toast.success(t('productDetails.addedToCart'));
                                                 setQuantity(1);
                                             } catch (err: any) {
-                                                toast.error(err?.response?.data?.message || "Không thể thêm vào giỏ");
+                                                toast.error(err?.response?.data?.message || t('productDetails.cannotAddToCart'));
                                             } finally {
                                                 setAddingToCart(false);
                                             }
@@ -351,7 +352,7 @@ export default function ProductDetail() {
                                         disabled={addingToCart}
                                         className="product-detail-add-to-cart"
                                     >
-                                        {addingToCart ? "Đang thêm..." : "Thêm vào giỏ hàng"}
+                                        {addingToCart ? t('productDetails.adding') : t('productDetails.addToCart')}
                                     </button>
                                     <button
                                         onClick={async () => {
@@ -361,9 +362,16 @@ export default function ProductDetail() {
                                             setAddingToWishList(true);
                                             try {
                                                 await wishListService.addToWishList(id);
-                                                toast.success("Đã thêm vào danh sách yêu thích!");
+                                                toast.success(t('productDetails.addedToWishlist'));
                                             } catch (err: any) {
-                                                toast.error(err?.response?.data?.message || "Không thể thêm vào danh sách yêu thích");
+                                                const serverMsg = err?.response?.data?.message || "";
+                                                const alreadyInWishList = serverMsg.toLowerCase().includes("already in wish list");
+
+                                                if (alreadyInWishList) {
+                                                    toast.error(t('productDetails.alreadyInWishlist'));
+                                                } else {
+                                                    toast.error(serverMsg || t('productDetails.cannotAddToWishlist'));
+                                                }
                                             } finally {
                                                 setAddingToWishList(false);
                                             }
@@ -379,7 +387,7 @@ export default function ProductDetail() {
                     </div>
                 </div>
             </div>
-            <div className="product-detail-tabs" role="tablist" aria-label="Chọn nội dung">
+            <div className="product-detail-tabs" role="tablist" aria-label={t('productDetails.chooseContent')}>
                 <button
                     type="button"
                     role="tab"
@@ -392,7 +400,7 @@ export default function ProductDetail() {
                         }
                     }}
                 >
-                    Sản phẩm liên quan
+                    {t('productDetails.related')}
                 </button>
                 <button
                     type="button"
@@ -406,7 +414,7 @@ export default function ProductDetail() {
                         }
                     }}
                 >
-                    Đánh giá
+                    {t('productDetails.reviews')}
                 </button>
 
             </div>

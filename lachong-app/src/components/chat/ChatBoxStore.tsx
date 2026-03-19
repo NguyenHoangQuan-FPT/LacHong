@@ -24,6 +24,7 @@ export default function ChatBoxStore(props: ChatBoxProps) {
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
     const [modalImg, setModalImg] = useState<string | null>(null);
     const [imageFiles, setImageFiles] = useState<File[]>([]);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -90,7 +91,12 @@ export default function ChatBoxStore(props: ChatBoxProps) {
 
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        const container = messagesContainerRef.current;
+        if (container) {
+            container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+            return;
+        }
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, [messages]);
 
     const handleSend = async () => {
@@ -112,6 +118,7 @@ export default function ChatBoxStore(props: ChatBoxProps) {
                     if (prev.some(m => m._id === createdMessage._id)) return prev;
                     return [...prev, createdMessage];
                 });
+                // Server already broadcasts after save; no client echo
             }
 
             setInput("");
@@ -128,7 +135,7 @@ export default function ChatBoxStore(props: ChatBoxProps) {
 
     return (
         <div className="chatbox-container" >
-            <div className="chatbox-messages" >
+            <div className="chatbox-messages" ref={messagesContainerRef}>
                 {loading ? (
                     <div>Đang tải tin nhắn...</div>
                 ) : (
@@ -189,7 +196,7 @@ export default function ChatBoxStore(props: ChatBoxProps) {
                                 )}
 
                                 <div className="chatbox-message-time" style={{ textAlign: isMine ? 'right' : 'left' }}>
-                                    {new Date(msg.timestamp).toLocaleTimeString()}
+                                    {new Date((msg as any).timestamp || (msg as any).createdAt || Date.now()).toLocaleTimeString()}
                                 </div>
                             </div>
                         );

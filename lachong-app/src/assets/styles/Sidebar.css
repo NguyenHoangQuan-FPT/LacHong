@@ -13,8 +13,6 @@
     z-index: 1200;
 }
 
-
-
 /* Thông tin store trên cùng */
 .lh-store-card {
     display: flex;
@@ -43,13 +41,13 @@
 
 .lh-store-name {
     font-weight: 700;
-    color: #ffffff;
+    color: #000;
     font-size: 0.98rem;
 }
 
 .lh-store-email {
     font-size: 0.85rem;
-    color: #ffffff;
+    color: #000;
 }
 
 /* Navigation */
@@ -66,7 +64,7 @@
     gap: 10px;
     padding: 9px 8px;
     border-radius: 8px;
-    color: #ffffff;
+    color: #000;
     text-decoration: none;
     font-size: 0.9rem;
     transition:
@@ -78,30 +76,42 @@
 
 .lh-nav-item i {
     font-size: 1.1rem;
-    color: #6b7280;
+    color: #000;
     transition: color 0.16s ease, transform 0.12s ease;
 }
 
-/* trạng thái active: nền tím nhạt, chữ tím đậm */
+/* trạng thái active: giống admin */
 .lh-nav-item.active {
-    background: #2563eb;
-    color: #ffffff;
+    background: rgba(228, 228, 228, 0.952);
+    color: #000;
     font-weight: 600;
-    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.18);
+    box-shadow: none;
 }
 
 .lh-nav-item.active i {
-    color: #374151;
+    color: #000;
 }
 
 /* hover nhẹ: nền tím rất nhạt */
 .lh-nav-item:hover {
-    color: #ffffff;
+    color: #000;
     transform: translateY(-1px);
 }
 
 .lh-nav-item:hover i {
-    color: #374151;
+    color: #000;
+}
+
+/* Logout button variant (remove hard-coded inline background) */
+.lh-nav-item.lh-logout {
+    margin-top: auto;
+    color: #000;
+    background: #b4b4b4;
+
+}
+
+.lh-nav-item.lh-logout:hover {
+    background: rgba(228, 228, 228, 0.952);
 }
 
 /* Action buttons ở dưới */

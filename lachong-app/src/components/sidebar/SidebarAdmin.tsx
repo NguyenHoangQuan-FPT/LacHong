@@ -18,14 +18,14 @@ export default function SidebarAdmin() {
     const navigate = useNavigate();
 
     const links = [
-        { to: '/admin', label: 'Overview' },
-        { to: '/admin/stores', label: 'Stores' },
-        { to: '/admin/customers', label: 'Customers' },
-        { to: '/admin/categories', label: 'Categories' },
-        { to: '/admin/materials', label: 'Materials' },
-        { to: '/admin/typeStores', label: 'Type Stores' },
-        { to: '/admin/notifications', label: 'Notifications', badge: unreadCount },
-        { to: '/', label: 'View Website' },
+        { to: '/admin', label: 'Overview', icon: 'bi-layout-text-window-reverse' },
+        { to: '/admin/stores', label: 'Stores', icon: 'bi-shop' },
+        { to: '/admin/customers', label: 'Customers', icon: 'bi-people' },
+        { to: '/admin/categories', label: 'Categories', icon: 'bi-tags' },
+        { to: '/admin/materials', label: 'Materials', icon: 'bi-box-seam' },
+        { to: '/admin/typeStores', label: 'Type Stores', icon: 'bi-diagram-3' },
+        { to: '/admin/notifications', label: 'Notifications', icon: 'bi-bell', badge: unreadCount },
+        { to: '/', label: 'View Website', icon: 'bi-house' },
     ];
 
     const isActive = (path: string) => {
@@ -62,6 +62,7 @@ export default function SidebarAdmin() {
                         to={l.to}
                         className={`admin-nav-item ${isActive(l.to) ? 'active' : ''}`}
                     >
+                        <i className={`bi ${l.icon}`} />
                         <span>{l.label}
                             {typeof l.badge === 'number' && Number(l.badge) > 0 ? (
                                 <span className="badge-noti">{l.badge}</span>

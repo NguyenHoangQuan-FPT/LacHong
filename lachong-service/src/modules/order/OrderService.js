@@ -8,7 +8,28 @@ const Customer = require('../../models/model/Customer');
 const Notification = require('../../models/model/Notification');
 
 const Store = require('../../models/model/Store');
-const { deductProductStock } = require('./productStockHelper');
+const { deductProductStock, restoreProductStock } = require('./productStockHelper');
+const { getPayOSClient } = require('../payos/payosClient');
+
+
+const isBankingPaymentMethod = (paymentMethodDoc) => {
+    const name = String(paymentMethodDoc?.name || '').toLowerCase();
+    return (
+        name.includes('bank') ||
+        name.includes('chuyển khoản') ||
+        name.includes('chuyen khoan') ||
+        name.includes('online') ||
+        name.includes('payos')
+    );
+};
+
+const generatePayOSOrderCode = () => {
+    // Keep within JS safe integer range; PayOS expects a number.
+    // Use epoch seconds + 3 random digits => 13 digits max.
+    const epochSeconds = Math.floor(Date.now() / 1000);
+    const random3 = Math.floor(100 + Math.random() * 900);
+    return Number(`${epochSeconds}${random3}`);
+};
 
 
 exports.createOrder = async (req, res) => {
@@ -38,6 +59,8 @@ exports.createOrder = async (req, res) => {
         if (!paymentMethodDoc) {
             return res.status(400).json({ message: 'Invalid paymentMethod' });
         }
+
+        const shouldCreatePayOSPayment = isBankingPaymentMethod(paymentMethodDoc);
         if (!mongoose.isValidObjectId(addressId)) {
             return res.status(400).json({ message: 'Invalid addressId' });
         }
@@ -72,7 +95,6 @@ exports.createOrder = async (req, res) => {
             });
         }
 
-        // Group items by storeId
         const itemsByStore = cartItems.reduce((acc, item) => {
             const key = String(item.storeId);
             if (!acc[key]) acc[key] = [];
@@ -82,72 +104,153 @@ exports.createOrder = async (req, res) => {
 
         const createdOrders = [];
         const usedCartIds = [];
+        const createdOrderIds = [];
+        const createdOrderItemIds = [];
+
+        const ordersToCreate = [];
+        const productsToDeduct = [];
 
         for (const [storeId, items] of Object.entries(itemsByStore)) {
-
             let totalAmount = 0;
-            const products = items.map(it => {
+            const products = items.map((it) => {
                 const priceAtTime = it.priceAtTime || 0;
                 const discountPercent = it.discountPercentAtTime || 0;
                 const discountedUnitPrice = discountPercent > 0
                     ? Math.round(priceAtTime * (1 - discountPercent / 100))
                     : priceAtTime;
-                totalAmount += discountedUnitPrice * (it.quantity || 0);
+                const quantity = it.quantity || 0;
+                totalAmount += discountedUnitPrice * quantity;
                 usedCartIds.push(it._id);
+
+                productsToDeduct.push({ productId: it.productId, quantity });
                 return {
                     productId: it.productId,
-                    quantity: it.quantity,
+                    quantity,
                     price: discountedUnitPrice
                 };
             });
 
-            // Trừ stock sản phẩm
-            await deductProductStock(products);
+            ordersToCreate.push({ storeId, totalAmount, products });
+        }
 
-            const orderItemDoc = new OrderItem({ products });
-            await orderItemDoc.save();
+        await deductProductStock(productsToDeduct);
 
-            const renderCode = `LH${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`;
+        try {
+            for (const payload of ordersToCreate) {
+                const orderItemDoc = new OrderItem({ products: payload.products });
+                await orderItemDoc.save();
+                createdOrderItemIds.push(orderItemDoc._id);
 
-            // Tạo Order cho từng store
-            const orderDoc = new Order({
-                code: renderCode,
-                customer: customer._id,
-                store: storeId,
-                orderItems: [orderItemDoc._id],
-                totalAmount,
-                paymentMethod,
-                address: addressDoc.address,
-                status: 'Pending'
-            });
-            const savedOrder = await orderDoc.save();
+                const orderId = new mongoose.Types.ObjectId();
 
-            const populatedOrder = await Order.findById(savedOrder._id)
-                .populate({
-                    path: 'orderItems',
-                    populate: {
-                        path: 'products.productId',
-                        select: 'productName imageUrl images'
+                const orderDoc = new Order({
+                    _id: orderId,
+                    code: orderId.toString(),
+                    customer: customer._id,
+                    store: payload.storeId,
+                    orderItems: [orderItemDoc._id],
+                    totalAmount: payload.totalAmount,
+                    paymentMethod,
+                    paymentStatus: 'Unpaid',
+                    paymentProvider: shouldCreatePayOSPayment ? 'PAYOS' : 'COD',
+                    address: addressDoc.address,
+                    status: 'Pending'
+                });
+                const savedOrder = await orderDoc.save();
+                createdOrderIds.push(savedOrder._id);
+
+                const populatedOrder = await Order.findById(savedOrder._id)
+                    .populate({
+                        path: 'orderItems',
+                        populate: {
+                            path: 'products.productId',
+                            select: 'productName imageUrl images'
+                        }
+                    })
+                    .populate('paymentMethod')
+                    .populate('customer')
+                    .lean();
+
+                createdOrders.push(populatedOrder);
+
+                if (payload.storeId) {
+                    const storeDoc = await Store.findById(payload.storeId).lean();
+                    if (storeDoc && storeDoc.ownerId) {
+                        const storeNotification = new Notification({
+                            receiver: storeDoc.ownerId,
+                            order: populatedOrder._id,
+                            title: 'New Order Received',
+                            message: `You have received a new order with code ${createdOrders.length > 0 ? createdOrders[0].code : ''}.`,
+                            type: 'ORDER'
+                        });
+                        await storeNotification.save();
                     }
-                })
-                .populate('paymentMethod')
-                .populate('customer')
-                .lean();
-
-            createdOrders.push(populatedOrder);
-
-            if (storeId) {
-                const storeDoc = await Store.findById(storeId).lean();
-                if (storeDoc && storeDoc.ownerId) {
-                    const storeNotification = new Notification({
-                        receiver: storeDoc.ownerId,
-                        order: populatedOrder._id,
-                        title: 'New Order Received',
-                        message: `You have received a new order with code ${createdOrders.length > 0 ? createdOrders[0].code : ''}.`,
-                        type: 'ORDER'
-                    });
-                    await storeNotification.save();
                 }
+            }
+        } catch (innerError) {
+            // nếu lỗi khi tạo order/orderItem, rollback stock + dọn dữ liệu đã tạo
+            await restoreProductStock(productsToDeduct);
+            if (createdOrderIds.length > 0) {
+                await Order.deleteMany({ _id: { $in: createdOrderIds } });
+            }
+            if (createdOrderItemIds.length > 0) {
+                await OrderItem.deleteMany({ _id: { $in: createdOrderItemIds } });
+            }
+            throw innerError;
+        }
+
+        let payment = null;
+
+        if (shouldCreatePayOSPayment) {
+            try {
+                const payos = getPayOSClient();
+                const payosOrderCode = generatePayOSOrderCode();
+                const totalAmount = (ordersToCreate || []).reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+
+                const appUrl = process.env.VITE_APP_URL || process.env.APP_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
+                const cancelUrl = process.env.PAYOS_CANCEL_URL || `${String(appUrl).replace(/\/$/, '')}/checkout`;
+                const returnUrl = process.env.PAYOS_RETURN_URL || `${String(appUrl).replace(/\/$/, '')}/`;
+
+                const description = `Thanh toan don hang`;
+
+                const payosRes = await payos.paymentRequests.create({
+                    orderCode: payosOrderCode,
+                    amount: totalAmount,
+                    description,
+                    cancelUrl,
+                    returnUrl,
+                });
+
+                await Order.updateMany(
+                    { _id: { $in: createdOrderIds } },
+                    {
+                        $set: {
+                            payosOrderCode: payosOrderCode,
+                            payosPaymentLinkId: payosRes.paymentLinkId,
+                            paymentProvider: 'PAYOS',
+                            paymentStatus: 'Unpaid',
+                        },
+                    }
+                );
+
+                payment = {
+                    provider: 'PAYOS',
+                    orderCode: payosOrderCode,
+                    paymentLinkId: payosRes.paymentLinkId,
+                    checkoutUrl: payosRes.checkoutUrl,
+                    qrCode: payosRes.qrCode,
+                };
+            } catch (payError) {
+                console.error('create PayOS payment error:', payError);
+                // rollback orders + stock if payment link cannot be created
+                await restoreProductStock(productsToDeduct);
+                if (createdOrderIds.length > 0) {
+                    await Order.deleteMany({ _id: { $in: createdOrderIds } });
+                }
+                if (createdOrderItemIds.length > 0) {
+                    await OrderItem.deleteMany({ _id: { $in: createdOrderItemIds } });
+                }
+                return res.status(500).json({ message: 'Không tạo được thanh toán PayOS' });
             }
         }
 
@@ -165,9 +268,16 @@ exports.createOrder = async (req, res) => {
         return res.status(201).json({
             message: 'Order(s) created from selected cart items successfully',
             orders: createdOrders,
+            payment,
         });
     } catch (error) {
         console.error('createOrder error:', error);
+        if (error?.name === 'OutOfStockError' || error?.code === 'OUT_OF_STOCK') {
+            return res.status(error.status || 409).json({
+                message: error.message || 'Out of stock',
+                details: error.details
+            });
+        }
         return res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 }

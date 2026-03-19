@@ -65,11 +65,6 @@ export default function Sidebar() {
         return location.pathname === path || location.pathname.startsWith(path + '/');
     };
 
-    const avatarChar =
-        (store?.storeName || store?.emailStore || 'S').charAt(0).toUpperCase();
-
-    const avatarUrl = store?.avatar;
-
     const handleLogout = async () => {
         await authService.logout();
         navigate('/login');
@@ -78,13 +73,6 @@ export default function Sidebar() {
     return (
         <aside className="lh-sidebar">
             <div className="lh-store-card">
-                <div className="lh-store-avatar">
-                    {avatarUrl ? (
-                        <img src={avatarUrl} alt="store avatar" />
-                    ) : (
-                        avatarChar
-                    )}
-                </div>
                 <div className="lh-store-meta">
                     <div className="lh-store-name">
                         {store?.storeName || 'Store của bạn'}
@@ -116,8 +104,8 @@ export default function Sidebar() {
 
                 <button
                     type="button"
-                    className='lh-nav-item'
-                    style={{ background: "#0f172a", color: "white", border: "none", width: "100%" }}
+                    className="lh-nav-item lh-logout"
+                    style={{ border: 'none', width: '100%' }}
                     onClick={handleLogout}
                 >
                     <Icon name="logout" size={18} />

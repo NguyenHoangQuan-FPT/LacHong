@@ -64,7 +64,7 @@ export default function WishList() {
             </div>
             {
                 products.length === 0 ? (
-                    <div>Chưa có sản phẩm yêu thích nào.</div>
+                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>Chưa có sản phẩm yêu thích nào.</div>
                 ) : (
                     <div className="wishlist-grid">
                         {products.map((p) => (

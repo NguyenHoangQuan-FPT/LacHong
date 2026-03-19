@@ -3,8 +3,10 @@ import ProductCard from "../../components/product/ProductCard";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { ProductItem } from "../../components/product/ProductCard";
+import { useTranslation } from "react-i18next";
 
 export default function TopProduct() {
+    const { t } = useTranslation();
 
     const [newProducts, setNewProducts] = useState<ProductItem[]>([]);
     const [discountedProducts, setDiscountedProducts] = useState<ProductItem[]>([]);
@@ -54,9 +56,9 @@ export default function TopProduct() {
     return (
         <div className="home-sections">
             <section className="home-section">
-                <h2 className="home-section-title">NEW ARRIVALS</h2>
+                <h2 className="home-section-title">{t('topProduct.newArrivals')}</h2>
                 {loadingSections ? (
-                    <div className="home-section-status">Đang tải...</div>
+                    <div className="home-section-status">{t('home.loading')}</div>
                 ) : (
                     <div className="home-products-grid">
                         {newTop4.map((p) => (
@@ -65,14 +67,14 @@ export default function TopProduct() {
                     </div>
                 )}
                 <div className="home-viewall-wrap">
-                    <Link to="/product" className="home-viewall-btn">View All</Link>
+                    <Link to="/product" className="home-viewall-btn">{t('topProduct.viewAll')}</Link>
                 </div>
             </section>
 
             <section className="home-section">
-                <h2 className="home-section-title">TOP DISCOUNT</h2>
+                <h2 className="home-section-title">{t('topProduct.topDiscount')}</h2>
                 {loadingSections ? (
-                    <div className="home-section-status">Đang tải...</div>
+                    <div className="home-section-status">{t('home.loading')}</div>
                 ) : (
                     <div className="home-products-grid">
                         {discountedTop4.map((p) => (
@@ -81,14 +83,14 @@ export default function TopProduct() {
                     </div>
                 )}
                 <div className="home-viewall-wrap">
-                    <Link to="/product" className="home-viewall-btn">View All</Link>
+                    <Link to="/product" className="home-viewall-btn">{t('topProduct.viewAll')}</Link>
                 </div>
             </section>
 
             <section className="home-section">
-                <h2 className="home-section-title">TOP SELLING</h2>
+                <h2 className="home-section-title">{t('topProduct.topSelling')}</h2>
                 {loadingSections ? (
-                    <div className="home-section-status">Đang tải...</div>
+                    <div className="home-section-status">{t('home.loading')}</div>
                 ) : (
                     <div className="home-products-grid">
                         {bestTop4.map((p) => (
@@ -97,7 +99,7 @@ export default function TopProduct() {
                     </div>
                 )}
                 <div className="home-viewall-wrap">
-                    <Link to="/product" className="home-viewall-btn">View All</Link>
+                    <Link to="/product" className="home-viewall-btn">{t('topProduct.viewAll')}</Link>
                 </div>
             </section>
         </div>

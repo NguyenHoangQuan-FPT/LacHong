@@ -16,7 +16,6 @@
 
 /* Page container */
 .address-page {
-    padding: 32px 24px;
     background: linear-gradient(180deg, var(--bg-1) 0%, #eef3fb 100%);
     border-radius: 12px;
 }
@@ -177,9 +176,7 @@
 .address-page .empty-state {
     text-align: center;
     padding: 60px 20px;
-    background: rgba(255, 255, 255, 0.6);
     border-radius: var(--radius);
-    border: 1px solid var(--surface-border);
     max-width: 600px;
     margin: 0 auto;
 }
@@ -279,6 +276,21 @@
     color: #9ca3af;
 }
 
+.add-address-btn {
+    appearance: none;
+    border: none;
+    padding: 10px 16px;
+    font-weight: 600;
+    font-size: 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    display: inline-flex;
+    align-items: center;
+    background-color: #afafaf;
+    gap: 8px;
+}
+
 /* Form actions */
 .address-page .form-actions {
     display: flex;
@@ -352,7 +364,9 @@
 .address-modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(65, 63, 63, 0.45);
+    background: rgba(20, 24, 33, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     display: flex;
     justify-content: center;
     align-items: center;

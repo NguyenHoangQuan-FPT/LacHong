@@ -70,8 +70,15 @@ export default function Checkout() {
 
                 const pm = payRes?.data?.paymentMethods ?? payRes?.data ?? [];
                 setPaymentMethods(Array.isArray(pm) ? pm : []);
-                const firstPm = (pm || [])[0];
-                if (firstPm?._id) setSelectedPaymentId(firstPm._id);
+                const list = Array.isArray(pm) ? pm : [];
+                const cod = list.find((x: any) => String(x?.name || '').toLowerCase().includes('cod'))
+                    || list.find((x: any) => String(x?.name || '').toLowerCase().includes('cash'));
+                const bank = list.find((x: any) => {
+                    const n = String(x?.name || '').toLowerCase();
+                    return n.includes('bank') || n.includes('chuyển khoản') || n.includes('chuyen khoan') || n.includes('payos') || n.includes('online');
+                });
+                if (cod?._id) setSelectedPaymentId(cod._id);
+                else if (bank?._id) setSelectedPaymentId(bank._id);
             } catch (e: any) {
                 setError(e?.response?.data?.message || "Không tải được dữ liệu thanh toán");
             } finally {
@@ -111,29 +118,29 @@ export default function Checkout() {
         setPlacing(true);
         try {
             const selectedPayment = paymentMethods.find(pm => pm._id === selectedPaymentId);
-            if (selectedPayment && (selectedPayment.code === 'BANK' || selectedPayment.name?.toLowerCase().includes('bank'))) {
-                // Gọi API tạo thanh toán VNPay
-                const vnpayRes = await paymentService.createVNPayPayment({
-                    amount: grandTotal,
-                    orderInfo: `Thanh toán đơn hàng qua VNPay`,
-                    orderType: 'other',
-                });
-                if (vnpayRes?.data?.paymentUrl) {
-                    window.location.href = vnpayRes.data.paymentUrl;
-                    return;
-                } else {
-                    toast.error("Không tạo được link thanh toán VNPay");
-                }
-                setPlacing(false);
-                return;
-            }
-            // Nếu không phải banking thì đặt hàng như cũ
+
+            const isBanking = (() => {
+                const n = String(selectedPayment?.name || '').toLowerCase();
+                return n.includes('bank') || n.includes('chuyển khoản') || n.includes('chuyen khoan') || n.includes('payos') || n.includes('online');
+            })();
+
             const payload = {
                 cartIds: cartItems.map((it) => it._id),
                 paymentMethod: selectedPaymentId,
                 addressId: selectedAddressId,
             };
             const res = await orderService.createOrder(payload);
+
+            if (isBanking) {
+                const checkoutUrl = res?.data?.payment?.checkoutUrl;
+                if (checkoutUrl) {
+                    window.location.href = checkoutUrl;
+                    return;
+                }
+                toast.error("Không tạo được link thanh toán PayOS");
+                return;
+            }
+
             toast.success("Đặt hàng thành công");
             setTimeout(() => navigate("/"), 3000);
         } catch (e: any) {
@@ -244,17 +251,23 @@ export default function Checkout() {
                             <div className="status">Chưa có phương thức thanh toán khả dụng.</div>
                         ) : (
                             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                {paymentMethods.map((pm) => (
-                                    <label key={pm._id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                        <input
-                                            type="radio"
-                                            name="payment"
-                                            checked={selectedPaymentId === pm._id}
-                                            onChange={() => setSelectedPaymentId(pm._id)}
-                                        />
-                                        <span>{pm.name || pm.methodName || "Thanh toán"}</span>
-                                    </label>
-                                ))}
+                                {paymentMethods
+                                    .filter((pm) => {
+                                        const n = String(pm?.name || '').toLowerCase();
+                                        return n.includes('cod') || n.includes('cash') || n.includes('bank') || n.includes('chuyển khoản') || n.includes('chuyen khoan') || n.includes('payos') || n.includes('online');
+                                    })
+                                    .slice(0, 2)
+                                    .map((pm) => (
+                                        <label key={pm._id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                            <input
+                                                type="radio"
+                                                name="payment"
+                                                checked={selectedPaymentId === pm._id}
+                                                onChange={() => setSelectedPaymentId(pm._id)}
+                                            />
+                                            <span>{pm.name || pm.methodName || "Thanh toán"}</span>
+                                        </label>
+                                    ))}
                             </div>
                         )}
 

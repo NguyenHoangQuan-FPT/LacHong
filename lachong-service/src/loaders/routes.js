@@ -10,7 +10,7 @@ const CategoryRouter = require('../modules/categories/CategoryRouter');
 const MaterialRouter = require('../modules/material/MaterialRouter');
 const AddressRouter = require('../modules/address/AddressRouter');
 const PaymentRouter = require('../modules/payment/PaymentRouter');
-const VNPayRouter = require('../modules/vnpay/vnpayRouter');
+const PayOSRouter = require('../modules/payos/payosRouter');
 const ReviewRouter = require('../modules/review/ReviewRouter');
 const PostRouter = require('../modules/post/PostRouter');
 const CommentRouter = require('../modules/comment/CommentRouter');
@@ -34,7 +34,7 @@ const initRoute = (app) => {
     app.use('/api/v1/', MaterialRouter);
     app.use('/api/v1/', AddressRouter);
     app.use('/api/v1/', PaymentRouter);
-    app.use('/api/v1/', VNPayRouter);
+    app.use('/api/v1/', PayOSRouter);
     app.use('/api/v1/', ReviewRouter);
     app.use('/api/v1/', PostRouter);
     app.use('/api/v1/', CommentRouter);

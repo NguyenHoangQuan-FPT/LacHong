@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Icon from "../../components/common/icons/Icon";
 import "../../assets/styles/PostCommentModal.css";
+import { useTranslation } from "react-i18next";
 
 type CommentItem = {
     _id?: string;
@@ -55,7 +56,7 @@ function normalizeImageUrl(url?: string | null): string | null {
 export default function PostCommentsModal({
     isOpen,
     submitting,
-    postTitle,
+    postTitle: _postTitle,
     comments,
     commentLikesById,
     onToggleLikeComment,
@@ -76,8 +77,12 @@ export default function PostCommentsModal({
 }: PostCommentsModalProps) {
     if (!isOpen) return null;
 
+    const { t } = useTranslation();
+
     const [openCommentActionsId, setOpenCommentActionsId] = useState<string | null>(null);
     const [expandedRepliesByParentId, setExpandedRepliesByParentId] = useState<Record<string, boolean>>({});
+    const commentsWrapRef = useRef<HTMLDivElement | null>(null);
+    const prevCommentsCountRef = useRef<number>(comments?.length || 0);
 
     useEffect(() => {
         const body = document.body;
@@ -102,6 +107,18 @@ export default function PostCommentsModal({
         document.addEventListener("click", handleDocClick);
         return () => document.removeEventListener("click", handleDocClick);
     }, [openCommentActionsId]);
+
+    useEffect(() => {
+        const el = commentsWrapRef.current;
+        if (!el) return;
+        const prev = prevCommentsCountRef.current;
+        const next = comments?.length || 0;
+        prevCommentsCountRef.current = next;
+        if (next <= prev) return;
+        requestAnimationFrame(() => {
+            el.scrollTop = el.scrollHeight;
+        });
+    }, [comments?.length]);
 
     const commentIdOf = (c: CommentItem, index: number) => {
         const raw = c._id || c.id;
@@ -138,7 +155,7 @@ export default function PostCommentsModal({
                 ? c.customer.fullName
                 : typeof c.store === "object" && c.store?.storeName
                     ? c.store.storeName
-                    : "Ẩn danh";
+                    : t('post.anonymous');
         const avatar =
             typeof c.customer === "object" ? normalizeImageUrl((c.customer as any)?.avatar) :
                 typeof c.store === "object" ? normalizeImageUrl((c.store as any)?.avatar) :
@@ -173,7 +190,7 @@ export default function PostCommentsModal({
                     {!!avatar && (
                         <img
                             src={avatar}
-                            alt={name || "avatar"}
+                            alt={name || t('post.avatarAlt')}
                             onError={(e) => {
                                 (e.currentTarget as HTMLImageElement).style.display = "none";
                             }}
@@ -182,7 +199,7 @@ export default function PostCommentsModal({
                 </div>
                 <div className="post-comment-body">
                     <div className="post-comment-bubble">
-                        <div className="post-comment-author">{name || "Ẩn danh"}</div>
+                        <div className="post-comment-author">{name || t('post.anonymous')}</div>
                         <div className="post-comment-text">
                             {repliedName && (
                                 <span className="post-comment-reply-to"><strong>{repliedName}</strong> </span>
@@ -205,7 +222,7 @@ export default function PostCommentsModal({
                                     onClick={() => onReply(getRootCommentId(c), name)}
                                     disabled={submitting}
                                 >
-                                    Trả lời
+                                    {t('postComments.reply')}
                                 </button>
                                 {isMine && (
                                     <div className="post-actions-menu-wrap post-comment-actions-menu-wrap" onClick={(e) => e.stopPropagation()}>
@@ -217,7 +234,7 @@ export default function PostCommentsModal({
                                                 setOpenCommentActionsId((cur) => (cur === cid ? null : cid));
                                             }}
                                             disabled={submitting}
-                                            aria-label="Tùy chọn bình luận"
+                                            aria-label={t('postComments.commentOptionsAria')}
                                         >
                                             <Icon name="options" />
                                         </button>
@@ -233,7 +250,7 @@ export default function PostCommentsModal({
                                                     }}
                                                     disabled={submitting}
                                                 >
-                                                    <Icon name="pencil" /> Sửa
+                                                    <Icon name="pencil" /> {t('post.edit')}
                                                 </button>
                                                 <button
                                                     type="button"
@@ -244,7 +261,7 @@ export default function PostCommentsModal({
                                                     }}
                                                     disabled={submitting}
                                                 >
-                                                    <Icon name="trash" /> Xóa
+                                                    <Icon name="trash" /> {t('post.delete')}
                                                 </button>
                                             </div>
                                         )}
@@ -264,7 +281,7 @@ export default function PostCommentsModal({
                                     onClick={() => setExpandedRepliesByParentId((m) => ({ ...m, [cid]: true }))}
                                     disabled={submitting}
                                 >
-                                    Xem thêm {hiddenCount} trả lời
+                                    {t('postComments.viewMoreReplies', { count: hiddenCount })}
                                 </button>
                             )}
 
@@ -275,7 +292,7 @@ export default function PostCommentsModal({
                                     onClick={() => setExpandedRepliesByParentId((m) => ({ ...m, [cid]: false }))}
                                     disabled={submitting}
                                 >
-                                    Thu gọn
+                                    {t('postComments.collapse')}
                                 </button>
                             )}
                         </div>
@@ -289,17 +306,20 @@ export default function PostCommentsModal({
         <div className="post-modal-backdrop" onClick={() => !submitting && onClose()}>
             <div className="post-modals" onClick={(e) => e.stopPropagation()}>
                 <div className="post-modal-header">
-                    <h3>Bình luận</h3>
+                    <h3>{t('postComments.title')}</h3>
                     <button
                         type="button"
                         className="post-modal-close"
                         onClick={() => !submitting && onClose()}
-                        aria-label="Đóng"
+                        aria-label={t('postComments.closeAria')}
                     >
                         ×
                     </button>
                 </div>
-                <div className="post-comments">
+                <div className="post-comments" ref={commentsWrapRef}>
+                    {roots.length === 0 && (
+                        <div className="post-comments-empty">{t('postComments.empty')}</div>
+                    )}
                     {roots.map((c, i) => renderComment(c, i, 0))}
 
                     <div className="post-comment-form">
@@ -307,7 +327,7 @@ export default function PostCommentsModal({
                             {!!editingCommentId && (
                                 <div className="post-replying-banner">
                                     <span>
-                                        Đang sửa bình luận
+                                        {t('postComments.editing')}
                                     </span>
                                     <button
                                         type="button"
@@ -315,14 +335,14 @@ export default function PostCommentsModal({
                                         onClick={onCancelEdit}
                                         disabled={submitting}
                                     >
-                                        Hủy sửa
+                                        {t('postComments.cancelEdit')}
                                     </button>
                                 </div>
                             )}
                             {!!replyToCommentId && (
                                 <div className="post-replying-banner">
                                     <span>
-                                        Đang trả lời <strong>{replyToCommentName || ""}</strong>
+                                        {t('postComments.replyingTo')} <strong>{replyToCommentName || ""}</strong>
                                     </span>
                                     <button
                                         type="button"
@@ -330,7 +350,7 @@ export default function PostCommentsModal({
                                         onClick={onCancelReply}
                                         disabled={submitting}
                                     >
-                                        Hủy
+                                        {t('postComments.cancel')}
                                     </button>
                                 </div>
                             )}
@@ -339,10 +359,10 @@ export default function PostCommentsModal({
                                     id="comment-input-popup"
                                     className="post-comment-input"
                                     placeholder={editingCommentId
-                                        ? "Sửa bình luận..."
+                                        ? t('postComments.placeholderEdit')
                                         : replyToCommentId && replyToCommentName
-                                            ? `Trả lời ${replyToCommentName}...`
-                                            : "Viết bình luận..."}
+                                            ? t('postComments.placeholderReply', { name: replyToCommentName })
+                                            : t('postComments.placeholderWrite')}
                                     value={draft}
                                     onChange={(e) => onDraftChange(e.target.value)}
                                     onKeyDown={(e) => {
@@ -358,7 +378,7 @@ export default function PostCommentsModal({
                                     className="post-send-btn"
                                     onClick={onSubmit}
                                     disabled={submitting || !draft.trim()}
-                                    aria-label="Gửi bình luận"
+                                    aria-label={t('postComments.sendAria')}
                                 >
                                     ➤
                                 </button>

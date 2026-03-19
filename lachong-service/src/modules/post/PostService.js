@@ -25,9 +25,6 @@ exports.createPost = async (req, res) => {
 
         const { title, content } = req.body;
 
-        if (!title || title.trim() === "") {
-            return res.status(400).json({ message: "Title cannot be empty." });
-        }
         if (!content || content.trim() === "") {
             return res.status(400).json({ message: "Content cannot be empty." });
         }

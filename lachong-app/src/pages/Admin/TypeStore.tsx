@@ -138,6 +138,7 @@ export default function TypeStore() {
                                     <label>Mô tả</label>
                                     <textarea
                                         value={newDescription}
+                                        className="description-textarea"
                                         onChange={e => setNewDescription(e.target.value)}
                                         style={{ width: '100%', padding: 8, marginBottom: 8 }}
                                     />
@@ -205,6 +206,7 @@ export default function TypeStore() {
                                             <div>
                                                 <label>Mô tả</label>
                                                 <textarea
+                                                    className="description-textarea"
                                                     value={editDescription}
                                                     onChange={e => setEditDescription(e.target.value)}
                                                     style={{ width: '100%', padding: 8, marginBottom: 8 }}
@@ -212,7 +214,9 @@ export default function TypeStore() {
                                             </div>
                                             <div>
                                                 <label>Trạng thái</label>
-                                                <select value={editStatus ? 'active' : 'locked'} onChange={e => setEditStatus(e.target.value === 'active')} style={{ width: '100%', padding: 8, marginBottom: 8 }}>
+                                                <select
+                                                    className="status-select"
+                                                    value={editStatus ? 'active' : 'locked'} onChange={e => setEditStatus(e.target.value === 'active')} style={{ width: '100%', padding: 8, marginBottom: 8 }}>
                                                     <option value="active">Hoạt động</option>
                                                     <option value="locked">Khoá</option>
                                                 </select>

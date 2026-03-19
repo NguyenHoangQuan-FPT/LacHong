@@ -11,7 +11,6 @@
     gap: 20px;
 }
 
-/* === Sidebar bên trái === */
 .sidebar-customer-left {
     background: #ffffff;
     border-radius: 18px;
@@ -21,6 +20,7 @@
     flex-direction: column;
     gap: 16px;
     max-height: auto;
+    min-height: 500px;
 }
 
 .sidebar-customer-title {
@@ -61,20 +61,25 @@
     transform: translateY(-1px);
 }
 
-/* === Nội dung bên phải === */
 .sidebar-customer-right {
     background: #ffffff;
     border-radius: 18px;
     padding: 20px 22px;
     box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
     max-height: fit-content;
+    min-height: 500px;
 }
 
 /* Normalize tab contents so switching tabs doesn't shift layout */
+.sidebar-customer-panel {
+    padding: 0;
+}
+
 .sidebar-customer-panel .profile-customer-page,
 .sidebar-customer-panel .address-page {
-    padding: 0;
-    background: transparent;
+    padding: 0 !important;
+    margin: 0;
+    background: transparent !important;
     border-radius: 0;
     min-height: 0;
     height: auto;
@@ -194,11 +199,7 @@
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .sidebar-store-left {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-    }
+
 
     .sidebar-store-menu {
         flex-direction: row;
@@ -213,11 +214,6 @@
 @media (max-width: 640px) {
     .sidebar-store-page {
         padding: 20px 10px 30px;
-    }
-
-    .sidebar-store-left {
-        flex-direction: column;
-        align-items: flex-start;
     }
 
     .sidebar-store-menu {

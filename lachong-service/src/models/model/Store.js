@@ -1,11 +1,13 @@
 const mongoose = require('mongoose');
 
 const storeSchema = new mongoose.Schema({
-    storeName: { type: String, required: true, unique: true },
+    storeName: {
+        type: String, unique: true, sparse: true,
+    },
     phone: { type: String },
     address: { type: String },
     avatar: { type: String },
-    emailStore: { type: String, required: true, unique: true },
+    emailStore: { type: String, unique: true, sparse: true },
     socialMedia: {
         facebook: { type: String },
         instagram: { type: String },

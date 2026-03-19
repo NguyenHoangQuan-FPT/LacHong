@@ -315,7 +315,6 @@ export default function Order() {
                             <div className="order-empty">
                                 <h3>Không có đơn hàng nào</h3>
                                 <p>Hãy quay lại mua sắm để tạo đơn hàng mới.</p>
-                                <Link to="/product" className="order-btn order-btn-primary">Quay lại mua sắm</Link>
                             </div>
                         ) : (
                             <div className="order-list">

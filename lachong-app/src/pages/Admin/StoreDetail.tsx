@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { storeService } from "../../services/store.service";
+import { typeStoreService } from "../../services/typeStore.service";
 import "../../assets/styles/StoreDetail.css";
 import Icon from "../../components/common/icons/Icon";
 import Button from "../../components/common/buttons/Button";
@@ -14,9 +15,16 @@ interface Store {
     [key: string]: any;
 }
 
+type TypeStore = {
+    _id: string;
+    typeName?: string;
+    name?: string;
+};
+
 export default function StoreDetail() {
     const { id } = useParams<{ id: string }>();
     const [store, setStore] = useState<Store | null>(null);
+    const [typeStoreName, setTypeStoreName] = useState<string>("");
     const [loading, setLoading] = useState(false);
     const [updating, setUpdating] = useState(false);
 
@@ -29,6 +37,40 @@ export default function StoreDetail() {
             })
             .finally(() => setLoading(false));
     }, [id]);
+
+    useEffect(() => {
+        const run = async () => {
+            if (!store) return;
+
+            // If backend already populated typeStoreId, use it directly.
+            const populatedName =
+                typeof store.typeStoreId === "object"
+                    ? String(store.typeStoreId?.typeName || store.typeStoreId?.name || "")
+                    : "";
+            if (populatedName) {
+                setTypeStoreName(populatedName);
+                return;
+            }
+
+            const typeStoreId =
+                typeof store.typeStoreId === "object" ? String(store.typeStoreId?._id || "") : String(store.typeStoreId || "");
+            if (!typeStoreId) {
+                setTypeStoreName("");
+                return;
+            }
+
+            try {
+                const res: any = await typeStoreService.getAllTypeStores();
+                const list: TypeStore[] = res?.data?.typeStores || res?.data?.data || res?.data || [];
+                const found = Array.isArray(list) ? list.find(t => String(t._id) === typeStoreId) : undefined;
+                setTypeStoreName(String(found?.typeName || found?.name || ""));
+            } catch {
+                setTypeStoreName("");
+            }
+        };
+
+        run();
+    }, [store]);
 
     const handleStatusChange = async (status: 'PENDING' | 'ACTIVE' | 'INACTIVE') => {
         if (!store) return;
@@ -77,7 +119,7 @@ export default function StoreDetail() {
                     <Detail label="Điện thoại" value={store.phone} />
                     <Detail label="Mô tả" value={store.description} />
                     <Detail label="Chính sách" value={store.policy} />
-                    <Detail label="Loại cửa hàng" value={store.typeStoreId} />
+                    <Detail label="Loại cửa hàng" value={typeStoreName || (typeof store.typeStoreId === 'object' ? store.typeStoreId?._id : store.typeStoreId)} />
                     <Detail
                         label="Ngày tạo"
                         value={store.createdAt && new Date(store.createdAt).toLocaleString()}

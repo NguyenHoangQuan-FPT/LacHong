@@ -102,7 +102,6 @@ export default function AddProduct() {
 
         if (!validFiles.length) return;
 
-        // Cộng thêm vào danh sách cũ
         const mergedFiles = [...imageFiles, ...validFiles];
         setImageFiles(mergedFiles);
         setError(null);
@@ -138,7 +137,8 @@ export default function AddProduct() {
             !material ||
             imageFiles.length === 0
         ) {
-            setError('Vui lòng điền đầy đủ thông tin và chọn ít nhất 1 ảnh');
+            const errMsg = 'Vui lòng điền đầy đủ thông tin và chọn ít nhất 1 ảnh';
+            setError(errMsg);
             return;
         }
 
@@ -167,9 +167,7 @@ export default function AddProduct() {
             setLoading(true);
             await productStoreService.addProduct(formData);
             setSuccess(true);
-            setTimeout(() => {
-                navigate('/store/products');
-            }, 1500);
+            navigate('/store/products');
         } catch (err: any) {
             console.error('Add product error', err);
             const msg = err?.response?.data?.message || 'Thêm sản phẩm thất bại';
@@ -182,7 +180,6 @@ export default function AddProduct() {
     return (
         <div className="add-product-overlay">
             <div className="add-product-modal">
-                {/* Header */}
                 <div className="modal-header">
                     <div>
                         <h2 className="modal-title">Thêm sản phẩm mới</h2>

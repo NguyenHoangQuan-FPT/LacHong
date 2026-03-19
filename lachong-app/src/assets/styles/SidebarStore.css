@@ -1,8 +1,7 @@
 .sidebar-store-page {
-    min-height: 100vh;
     display: flex;
     justify-content: center;
-    padding: 32px 16px 40px;
+    width: 100%;
 }
 
 .sidebar-store-container {
@@ -11,6 +10,8 @@
     display: grid;
     grid-template-columns: 260px minmax(0, 1fr);
     gap: 20px;
+    margin-bottom: 30px;
+    align-items: stretch;
 }
 
 /* === Sidebar bên trái === */
@@ -22,6 +23,7 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    height: 100%;
 }
 
 .sidebar-store-title {
@@ -53,21 +55,26 @@
 
 .sidebar-store-tab:hover {
     background: #afafaf;
-
+    color: #000000;
 }
 
 .sidebar-store-tab.active {
     background: #afafaf;
-    color: #ffffff;
+    color: #000000;
     transform: translateY(-1px);
 }
 
 /* === Nội dung bên phải === */
 .sidebar-store-right {
     border-radius: 18px;
-    padding: 20px 22px;
-    min-height: 320px;
-    height: fit-content;
+    height: 100%;
+}
+
+.sidebar-store-panel {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px 18px;
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
 }
 
 .sidebar-store-panel h3 {
@@ -80,7 +87,6 @@
 .sidebar-store-panel>p {
     font-size: 14px;
     color: #6b7280;
-    margin-bottom: 18px;
 }
 
 .sidebar-error {
@@ -117,6 +123,19 @@
     font-size: 14px;
     outline: none;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.store-map-frame {
+    margin-top: 12px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.store-map-frame iframe {
+    width: 100%;
+    min-height: 260px;
+    border: 0;
 }
 
 .sidebar-store-section input:focus {

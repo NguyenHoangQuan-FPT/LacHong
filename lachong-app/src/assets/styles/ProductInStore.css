@@ -1,0 +1,27 @@
+.admin-product-in-store {
+    padding: 24px;
+}
+
+.admin-product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 24px;
+    justify-items: start;
+    align-items: start;
+}
+
+/* Prevent a single card from stretching full width */
+.admin-product-grid .product-card {
+    width: 100%;
+    max-width: 280px;
+}
+
+@media (max-width: 640px) {
+    .admin-product-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-product-grid .product-card {
+        max-width: 100%;
+    }
+}

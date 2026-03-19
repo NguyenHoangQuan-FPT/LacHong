@@ -30,6 +30,10 @@ export default function ChatList() {
 
 
 
+    if (loading) {
+        return <div style={{ padding: 24 }}>Đang tải danh sách chat...</div>;
+    }
+
     return (
         <div className="chat-list-page">
             <div className="chat-list-sidebar">
@@ -67,15 +71,17 @@ export default function ChatList() {
                 {rooms.length === 0 ? (
                     <div className="chat-list-empty">Bạn chưa có cuộc trò chuyện nào.</div>
                 ) : selectedRoom && currentUserId ? (
-                    <ChatBoxCustomer
-                        key={selectedRoom._id}
-                        roomId={selectedRoom._id}
-                        currentUserId={currentUserId}
-                        store={selectedRoom.store}
-                    />
+                    <>
+                        <ChatBoxCustomer
+                            key={selectedRoom._id}
+                            roomId={selectedRoom._id}
+                            currentUserId={currentUserId}
+                            store={selectedRoom.store}
+                        />
+                    </>
                 ) : (
                     <div className="chat-list-placeholder">
-
+                        Chọn cuộc trò chuyện ở danh sách bên trái
                     </div>
                 )}
             </div>

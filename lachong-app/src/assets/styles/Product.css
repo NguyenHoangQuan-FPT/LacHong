@@ -315,21 +315,7 @@
     display: grid;
     grid-template-columns: repeat(4, minmax(220px, 1fr));
     gap: 10px;
-}
-
-/* Card */
-.product-card {
-    position: relative;
-    background: var(--glass);
-    border-radius: 12px;
-    padding: 12px;
-    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.04);
-    border: 1px solid rgba(99, 102, 241, 0.06);
-    display: flex;
-    flex-direction: column;
-    min-height: 320px;
-    transition: transform .12s ease, box-shadow .12s ease;
-    cursor: pointer;
+    justify-items: start;
 }
 
 
@@ -378,6 +364,9 @@
     text-decoration: none;
     margin-bottom: 8px;
     font-size: 0.98rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .product-prices {
@@ -399,7 +388,8 @@
 
 /* Store / seller */
 .product-store {
-    margin-top: 8px;
+    margin-top: auto;
+    padding-top: 8px;
     color: var(--muted);
     font-weight: 600;
     font-size: 0.85rem;

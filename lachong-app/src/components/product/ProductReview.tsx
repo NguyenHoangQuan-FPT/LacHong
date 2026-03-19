@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import "../../assets/styles/ProductReview.css";
 import Icon from "../../components/common/icons/Icon";
 import Button from "../common/buttons/Button";
+import { useTranslation } from "react-i18next";
 
 type ReviewItem = {
     _id?: string;
@@ -41,6 +42,7 @@ function toPublicImageUrl(value?: string): string {
 }
 
 export default function ProductReview({ productId }: ProductReviewProps) {
+    const { t, i18n } = useTranslation();
     const [reviews, setReviews] = useState<ReviewItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -244,11 +246,11 @@ export default function ProductReview({ productId }: ProductReviewProps) {
         const valid: File[] = [];
         for (const f of files) {
             if (!f.type?.startsWith("image/")) {
-                toast.info("Chỉ hỗ trợ file ảnh");
+                toast.info(t('productReview.toastOnlyImages'));
                 continue;
             }
             if (f.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
-                toast.info(`Ảnh quá lớn (tối đa ${MAX_IMAGE_SIZE_MB}MB/ảnh)`);
+                toast.info(t('productReview.toastImageTooLarge', { max: MAX_IMAGE_SIZE_MB }));
                 continue;
             }
             valid.push(f);
@@ -273,7 +275,7 @@ export default function ProductReview({ productId }: ProductReviewProps) {
             }
 
             if (keptImages.length + curr.length + valid.length > MAX_IMAGES) {
-                toast.info(`Tối đa ${MAX_IMAGES} ảnh cho mỗi đánh giá`);
+                toast.info(t('productReview.toastMaxImages', { max: MAX_IMAGES }));
             }
             return next;
         });
@@ -305,7 +307,7 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                 selectedImages.forEach((it) => payload.append("images", it.file));
 
                 await reviewService.updateReview(editingId, payload);
-                toast.success("Đã cập nhật đánh giá");
+                toast.success(t('productReview.toastUpdated'));
             } else {
                 const payload = new FormData();
                 payload.append("product", productId);
@@ -314,14 +316,14 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                 selectedImages.forEach((it) => payload.append("images", it.file));
 
                 await reviewService.addReview(payload);
-                toast.success("Đã thêm đánh giá");
+                toast.success(t('productReview.toastAdded'));
             }
             await fetchReviews();
             resetForm();
             setShowModal(false);
         } catch (err: any) {
             console.error("[ProductReview] submit error", err);
-            const msg = err?.response?.data?.message || err?.message || "Không thể lưu đánh giá";
+            const msg = err?.response?.data?.message || err?.message || t('productReview.toastCannotSave');
             toast.error(String(msg));
         } finally {
             setSubmitting(false);
@@ -332,11 +334,11 @@ export default function ProductReview({ productId }: ProductReviewProps) {
         if (!reviewId) return;
         try {
             await reviewService.deleteReview(reviewId);
-            toast.success("Đã xóa đánh giá");
+            toast.success(t('productReview.toastDeleted'));
             await fetchReviews();
         } catch (err: any) {
             console.error("[ProductReview] delete error", err);
-            toast.error(err?.response?.data?.message || "Không thể xóa");
+            toast.error(err?.response?.data?.message || t('productReview.toastCannotDelete'));
         }
     };
 
@@ -349,7 +351,9 @@ export default function ProductReview({ productId }: ProductReviewProps) {
     const fomattedDate = (dateStr?: string) => {
         if (!dateStr) return "";
         const date = new Date(dateStr);
-        return date.toLocaleDateString("vi-VN", {
+        const lang = String(i18n.resolvedLanguage || i18n.language || '').toLowerCase();
+        const locale = lang.startsWith('en') ? 'en-US' : 'vi-VN';
+        return date.toLocaleDateString(locale, {
             year: "numeric",
             month: "long",
             day: "numeric",
@@ -364,8 +368,8 @@ export default function ProductReview({ productId }: ProductReviewProps) {
         <div className="product-review">
             <div className="review-header">
                 <div>
-                    <h2>Đánh giá sản phẩm</h2>
-                    <p>Chia sẻ cảm nhận và xem nhận xét từ người khác.</p>
+                    <h2>{t('productReview.title')}</h2>
+                    <p>{t('productReview.subtitle')}</p>
                 </div>
                 <div className="review-actions-top">
                     {reviews.length > 0 && (
@@ -373,25 +377,25 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                             <div className="average-stars">{renderStars(averageRating)}</div>
                             <div className="average-text">
                                 <span className="average-number">{averageRating.toFixed(1)}</span>
-                                <span className="average-label">/ 5</span>
+                                <span className="average-label">{t('productReview.outOfFive')}</span>
                             </div>
                         </div>
                     )}
-                    <div className="review-count">{reviews.length} đánh giá</div>
+                    <div className="review-count">{t('productReview.count', { count: reviews.length })}</div>
                     {!isAdmin && (
                         <Button
                             variant="secondary"
                             type="button"
                             onClick={() => {
                                 if (!viewerCustomerId) {
-                                    toast.info("Vui lòng đăng nhập để đánh giá sản phẩm");
+                                    toast.info(t('productReview.loginToReview'));
                                     return;
                                 }
                                 resetForm();
                                 setShowModal(true);
                             }}
                         >
-                            + Đánh giá
+                            {t('productReview.addReview')}
                         </Button>
                     )}
                 </div>
@@ -399,9 +403,9 @@ export default function ProductReview({ productId }: ProductReviewProps) {
 
             <div className="review-list">
                 {loading ? (
-                    <div className="review-status">Đang tải đánh giá...</div>
+                    <div className="review-status">{t('productReview.loading')}</div>
                 ) : reviews.length === 0 ? (
-                    <div className="review-status">Chưa có đánh giá nào.</div>
+                    <div className="review-status">{t('productReview.empty')}</div>
                 ) : (
                     pagedReviews.map((rev) => {
                         const id = rev._id || rev.id;
@@ -416,7 +420,7 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                         return (
                             <div className="review-item" key={id}>
                                 <div className="review-meta">
-                                    <div className="review-user">{rev.customer?.fullName || "Ẩn danh"}</div>
+                                    <div className="review-user">{rev.customer?.fullName || t('productReview.anonymous')}</div>
                                 </div>
                                 <div className="review-date">{fomattedDate(rev.createdAt)}</div>
                                 <div className="review-content">
@@ -425,12 +429,12 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                                 </div>
                                 {
                                     Array.isArray(rev.images) && rev.images.length > 0 && (
-                                        <div className="review-images" aria-label="Ảnh đánh giá">
+                                        <div className="review-images" aria-label={t('productReview.imagesAria')}>
                                             {rev.images.filter(Boolean).map((url, idx) => (
                                                 <button
                                                     key={`${reviewId}-img-${idx}`}
                                                     className="review-image-link"
-                                                    aria-label={`Ảnh ${idx + 1}`}
+                                                    aria-label={t('productReview.imageAria', { index: idx + 1 })}
                                                     type="button"
                                                     onClick={() => setImageViewerUrl(toPublicImageUrl(url))}
                                                 >
@@ -446,7 +450,7 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                                             <button
                                                 type="button"
                                                 className="link review-options-button"
-                                                aria-label="Tùy chọn"
+                                                aria-label={t('productReview.optionsAria')}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     if (!reviewId) return;
@@ -475,7 +479,7 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                                                             setShowModal(true);
                                                         }}
                                                     >
-                                                        Sửa
+                                                        {t('productReview.edit')}
                                                     </button>
                                                     <button
                                                         type="button"
@@ -485,7 +489,7 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                                                             handleDelete(reviewId);
                                                         }}
                                                     >
-                                                        Xóa
+                                                        {t('productReview.delete')}
                                                     </button>
                                                 </div>
                                             )}
@@ -507,16 +511,16 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                             onClick={() => setPage((p) => Math.max(1, p - 1))}
                             disabled={page <= 1}
                         >
-                            Trước
+                            {t('productReview.prev')}
                         </button>
-                        <div className="review-page-indicator">Trang {page} / {totalPages}</div>
+                        <div className="review-page-indicator">{t('productReview.pageIndicator', { page, total: totalPages })}</div>
                         <button
                             type="button"
                             className="btn ghost"
                             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                             disabled={page >= totalPages}
                         >
-                            Sau
+                            {t('productReview.next')}
                         </button>
                     </div>
                 )
@@ -527,13 +531,13 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                     <div className="review-modal-backdrop" onClick={closeModal}>
                         <div className="review-modal" onClick={(e) => e.stopPropagation()}>
                             <div className="modal-review-header">
-                                <h3>{editingId ? "Cập nhật đánh giá" : "Thêm đánh giá"}</h3>
-                                <button className="close" onClick={closeModal}>×</button>
+                                <h3>{editingId ? t('productReview.modalEditTitle') : t('productReview.modalAddTitle')}</h3>
+                                <button className="close" onClick={closeModal} aria-label={t('productReview.close')} title={t('productReview.close')}>×</button>
                             </div>
                             <form onSubmit={handleSubmit} className="modal-form">
                                 <div className="form-row">
-                                    <label>Đánh giá</label>
-                                    <div className="rating-picker" role="radiogroup" aria-label="Đánh giá">
+                                    <label>{t('productReview.ratingLabel')}</label>
+                                    <div className="rating-picker" role="radiogroup" aria-label={t('productReview.ratingAria')}>
                                         {[1, 2, 3, 4, 5].map((n) => {
                                             const active = (hoverRating ?? form.rating) >= n;
                                             return (
@@ -547,7 +551,7 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                                                     onBlur={() => setHoverRating(null)}
                                                     onClick={() => setForm((f) => ({ ...f, rating: n }))}
                                                     disabled={submitting}
-                                                    aria-label={`${n} sao`}
+                                                    aria-label={t('productReview.starAria', { count: n })}
                                                     aria-pressed={form.rating === n}
                                                 >
                                                     <Icon name="star" />
@@ -556,25 +560,25 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                                         })}
                                         <span className="rating-text">{form.rating}/5</span>
                                     </div>
-                                    <div className="rating-hint">Chỉ có thể đánh giá khi đã mua sản phẩm.</div>
+                                    <div className="rating-hint">* {t('productReview.ratingHint')}</div>
                                 </div>
 
                                 <div className="form-row">
-                                    <label>Nhận xét</label>
+                                    <label>{t('productReview.commentLabel')}</label>
                                     <textarea
                                         className="text-review"
                                         value={form.comment}
                                         onChange={(e) => setForm((f) => ({ ...f, comment: e.target.value }))}
-                                        placeholder="Chia sẻ trải nghiệm của bạn..."
+                                        placeholder={t('productReview.commentPlaceholder')}
                                         rows={3}
                                     />
                                 </div>
 
                                 <div className="form-row">
-                                    <label>Ảnh đánh giá (tối đa {MAX_IMAGES})</label>
+                                    <label>{t('productReview.imagesLabel', { max: MAX_IMAGES })}</label>
 
                                     {(keptImages.length > 0 || selectedImages.length > 0) && (
-                                        <div className="review-image-previews" aria-label="Ảnh đã chọn">
+                                        <div className="review-image-previews" aria-label={t('productReview.selectedImagesAria')}>
                                             {keptImages.map((url) => (
                                                 <div key={`kept-${url}`} className="review-image-preview">
                                                     <img className="review-image-preview-img" src={toPublicImageUrl(url)} alt="review" />
@@ -583,7 +587,7 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                                                         className="review-image-remove"
                                                         onClick={() => removeKeptImage(url)}
                                                         disabled={submitting}
-                                                        aria-label="Xóa ảnh"
+                                                        aria-label={t('productReview.removeImage')}
                                                     >
                                                         ×
                                                     </button>
@@ -598,7 +602,7 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                                                         className="review-image-remove"
                                                         onClick={() => removeSelectedImage(it.key)}
                                                         disabled={submitting}
-                                                        aria-label="Xóa ảnh"
+                                                        aria-label={t('productReview.removeImage')}
                                                     >
                                                         ×
                                                     </button>
@@ -607,7 +611,7 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                                         </div>
                                     )}
                                     <label className="upload-image-btn">
-                                        Chọn ảnh
+                                        {t('productReview.pickImages')}
                                         <input
                                             className="review-image-input"
                                             type="file"
@@ -622,9 +626,9 @@ export default function ProductReview({ productId }: ProductReviewProps) {
                                 </div>
 
                                 <div className="form-actions">
-                                    <button type="button" className="btn ghost" onClick={closeModal}>Hủy</button>
+                                    <button type="button" className="btn ghost" onClick={closeModal}>{t('productReview.cancel')}</button>
                                     <Button type="submit" variant="submit" disabled={!canSubmit || submitting}>
-                                        {submitting ? "Đang lưu..." : editingId ? "Cập nhật" : "Gửi đánh giá"}
+                                        {submitting ? t('productReview.saving') : editingId ? t('productReview.update') : t('productReview.submit')}
                                     </Button>
                                 </div>
 
@@ -637,8 +641,8 @@ export default function ProductReview({ productId }: ProductReviewProps) {
 
             {imageViewerUrl && (
                 <div className="image-viewer-backdrop" onClick={() => setImageViewerUrl(null)}>
-                    <div className="image-viewer" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Xem ảnh">
-                        <button className="image-viewer-close" type="button" onClick={() => setImageViewerUrl(null)} aria-label="Đóng">
+                    <div className="image-viewer" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={t('productReview.viewerAria')}>
+                        <button className="image-viewer-close" type="button" onClick={() => setImageViewerUrl(null)} aria-label={t('productReview.close')} title={t('productReview.close')}>
                             ×
                         </button>
                         <img className="image-viewer-img" src={imageViewerUrl} alt="review" />

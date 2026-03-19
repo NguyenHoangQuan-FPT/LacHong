@@ -231,9 +231,10 @@ export default function Materials() {
                                 <div>
                                     <label>Trạng thái</label>
                                     <select
+                                        style={{ width: "100%" }}
                                         value={editStatus ? 'active' : 'locked'}
                                         onChange={e => setEditStatus(e.target.value === 'active')}
-                                        className="description-textarea"
+                                        className="status-select"
                                     >
                                         <option value="active">Hoạt động</option>
                                         <option value="locked">Ngưng hoạt động</option>

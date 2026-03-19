@@ -2,10 +2,14 @@ const LikeComment = require('../../models/model/LikeCommennt');
 const Comment = require('../../models/model/Comment');
 const Customer = require('../../models/model/Customer');
 const Store = require('../../models/model/Store');
+const mongoose = require('mongoose');
 
 exports.addLikeComment = async (req, res) => {
     try {
         const { commentId } = req.params;
+        if (!mongoose.isValidObjectId(commentId)) {
+            return res.status(400).json({ message: 'Invalid commentId.' });
+        }
         const accountId = req.user?.id;
         if (!accountId) {
             return res.status(401).json({ message: "Unauthorized." });
@@ -32,7 +36,10 @@ exports.addLikeComment = async (req, res) => {
         if (!comment) {
             return res.status(404).json({ message: "Comment not found." });
         }
-        const existingLikeComment = await LikeComment.findOne({ comment: commentId, customer: customer?._id, store: store ? store._id : null });
+        const existingQuery = { comment: commentId };
+        if (customer) existingQuery.customer = customer._id;
+        if (store) existingQuery.store = store._id;
+        const existingLikeComment = await LikeComment.findOne(existingQuery);
         if (existingLikeComment) {
             return res.status(400).json({ message: "You have already liked this comment." });
         }
@@ -54,6 +61,9 @@ exports.addLikeComment = async (req, res) => {
 exports.removeLikeComment = async (req, res) => {
     try {
         const { commentId } = req.params;
+        if (!mongoose.isValidObjectId(commentId)) {
+            return res.status(400).json({ message: 'Invalid commentId.' });
+        }
         const accountId = req.user?.id;
         if (!accountId) {
             return res.status(401).json({ message: "Unauthorized." });
@@ -81,7 +91,15 @@ exports.removeLikeComment = async (req, res) => {
             return res.status(404).json({ message: "Comment not found." });
         }
 
-        await LikeComment.deleteOne({ _id: commentId, customer: customer?._id, store: store ? store._id : null });
+        const deleteQuery = { comment: commentId };
+        if (customer) deleteQuery.customer = customer._id;
+        if (store) deleteQuery.store = store._id;
+
+        const result = await LikeComment.deleteMany(deleteQuery);
+        if (!result?.deletedCount) {
+            return res.status(400).json({ message: "You haven't liked this comment." });
+        }
+
         res.status(200).json({ message: "Like on comment removed successfully." });
     } catch (error) {
         res.status(500).json({ message: "An error occurred while removing like on comment.", error: error.message });
@@ -91,6 +109,9 @@ exports.removeLikeComment = async (req, res) => {
 exports.getLikeCommentsByCommentId = async (req, res) => {
     try {
         const { commentId } = req.params;
+        if (!mongoose.isValidObjectId(commentId)) {
+            return res.status(400).json({ message: 'Invalid commentId.' });
+        }
         const likeComments = await LikeComment.find({ comment: commentId });
         res.status(200).json({ likeComments });
     } catch (error) {

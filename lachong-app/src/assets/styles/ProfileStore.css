@@ -119,8 +119,9 @@
     font-family: inherit;
     resize: vertical;
     background: #f9fafb;
-    height: 200px;
-
+    min-height: 300px;
+    height: auto;
+    overflow-y: auto;
 }
 
 

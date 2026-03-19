@@ -23,11 +23,26 @@ export default function ProductStore() {
     const [search, setSearch] = useState("");
     const [selectedCategory, setSelectedCategory] = useState<string>("");
     const [selectedMaterial, setSelectedMaterial] = useState<string>("");
-    const [maxPrice, setMaxPrice] = useState<number>(0);
-    const [priceFilter, setPriceFilter] = useState<number>(0);
+    const [minPrice, setMinPrice] = useState<number>(0);
+    const [priceSort, setPriceSort] = useState<"" | "asc" | "desc">("");
 
     // Store info
     const [storeName, setStoreName] = useState<string>("");
+
+    const toNumber = (value: unknown) => {
+        if (value == null) return 0;
+        if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+        const cleaned = String(value).replace(/[^0-9.-]/g, "");
+        const n = Number(cleaned);
+        return Number.isFinite(n) ? n : 0;
+    };
+
+    const getDiscountedPrice = (p: ProductItem) => {
+        const base = toNumber(p.price);
+        const discount = toNumber((p as any).discount ?? (p as any).discountPercent ?? 0);
+        const percent = Math.max(0, Math.min(100, discount));
+        return percent > 0 ? Math.round(base * (1 - percent / 100)) : base;
+    };
 
     useEffect(() => {
         let mounted = true;
@@ -72,9 +87,7 @@ export default function ProductStore() {
                 setCategories(cats);
                 setMaterials(mats);
 
-                const max = list.length > 0 ? Math.max(...list.map((x: any) => Number(x.price || 0))) : 0;
-                setMaxPrice(max);
-                setPriceFilter(max);
+                // no-op for price range; keep list as-is
             } catch (err: any) {
                 console.error("Error fetching store products:", err);
                 const msg = err?.response?.data?.message || err?.message || "Lỗi tải sản phẩm";
@@ -95,20 +108,33 @@ export default function ProductStore() {
 
     // Filter products
     const filteredProducts = useMemo(() => {
+        const term = search.trim().toLowerCase();
         return products.filter((p: any) => {
-            const name = (p.productName || p.name || "").toLowerCase();
-            const price = Number(p.price || 0);
-            const categoryId = p.category?._id || p.category?.id || p.category;
-            const materialId = p.material?._id || p.material?.id || p.material;
+            const name = String(p.productName || p.name || "").toLowerCase();
+            const categoryId = String(p.category?._id || p.category?.id || p.category || "");
+            const materialId = String(p.material?._id || p.material?.id || p.material || "");
 
-            const matchSearch = name.includes(search.toLowerCase());
-            const matchCategory = !selectedCategory || categoryId === selectedCategory;
-            const matchMaterial = !selectedMaterial || materialId === selectedMaterial;
-            const matchPrice = price <= priceFilter;
-
-            return matchSearch && matchCategory && matchMaterial && matchPrice;
+            const matchSearch = !term || name.includes(term);
+            const matchCategory = !selectedCategory || categoryId === String(selectedCategory);
+            const matchMaterial = !selectedMaterial || materialId === String(selectedMaterial);
+            return matchSearch && matchCategory && matchMaterial;
         });
-    }, [products, search, selectedCategory, selectedMaterial, priceFilter]);
+    }, [products, search, selectedCategory, selectedMaterial]);
+
+    const sortedProducts = useMemo(() => {
+        if (!priceSort) return filteredProducts;
+        const next = filteredProducts.slice();
+        next.sort((a, b) => {
+            const pa = getDiscountedPrice(a);
+            const pb = getDiscountedPrice(b);
+            const diff = priceSort === "asc" ? pa - pb : pb - pa;
+            if (diff !== 0) return diff;
+            return String(a.productName || (a as any).name || "").localeCompare(
+                String(b.productName || (b as any).name || "")
+            );
+        });
+        return next;
+    }, [filteredProducts, priceSort]);
 
     if (loading) {
         return (
@@ -185,47 +211,26 @@ export default function ProductStore() {
                         </div>
                     )}
 
-                    {/* Price Filter */}
-                    {maxPrice > 0 && (
-                        <div className="filter-section">
-                            <label htmlFor="price" className="filter-label">Giá tối đa</label>
-                            <div className="price-filter">
-                                <input
-                                    id="price"
-                                    type="range"
-                                    min="0"
-                                    max={maxPrice}
-                                    value={priceFilter}
-                                    onChange={(e) => setPriceFilter(Number(e.target.value))}
-                                    className="price-slider"
-                                />
-                                <div className="price-display">
-                                    <span>0 VND</span>
-                                    <span className="price-value">{priceFilter.toLocaleString()} VND</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Reset Filters */}
-                    <button
-                        className="filter-reset"
-                        onClick={() => {
-                            setSearch("");
-                            setSelectedCategory("");
-                            setSelectedMaterial("");
-                            setPriceFilter(maxPrice);
-                        }}
-                    >
-                        Xóa bộ lọc
-                    </button>
+                    {/* Price Sort (same as product page) */}
+                    <div className="filter-section">
+                        <label className="filter-label">Sắp xếp theo giá</label>
+                        <select
+                            value={priceSort}
+                            onChange={(e) => setPriceSort(e.target.value as "" | "asc" | "desc")}
+                            className="filter-select"
+                        >
+                            <option value="">Mặc định</option>
+                            <option value="asc">Giá tăng dần</option>
+                            <option value="desc">Giá giảm dần</option>
+                        </select>
+                    </div>
                 </aside>
 
                 {/* Right - Products */}
                 <main className="product-store-main">
-                    {filteredProducts.length > 0 ? (
+                    {sortedProducts.length > 0 ? (
                         <div className="product-store-grid">
-                            {filteredProducts.map((product) => (
+                            {sortedProducts.map((product) => (
                                 <ProductCard
                                     key={product._id || product.id}
                                     product={product}

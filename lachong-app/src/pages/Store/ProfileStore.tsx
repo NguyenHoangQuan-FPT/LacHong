@@ -19,15 +19,14 @@ export default function ProfileStore() {
     const [storeName, setStoreName] = useState('');
     const [emailStore, setEmailStore] = useState('');
     const [phone, setPhone] = useState('');
+    const [rawAddress, setRawAddress] = useState('');
+    const [addressDetail, setAddressDetail] = useState('');
     const [provinces, setProvinces] = useState<any[]>([]);
-    const [districts, setDistricts] = useState<any[]>([]);
     const [wards, setWards] = useState<any[]>([]);
 
     const [selectedProvince, setSelectedProvince] = useState<any | null>(null);
-    const [selectedDistrict, setSelectedDistrict] = useState<any | null>(null);
     const [selectedWard, setSelectedWard] = useState<any | null>(null);
-
-    const [addressDetail, setAddressDetail] = useState('');
+    const [pendingWardName, setPendingWardName] = useState<string | null>(null);
     const [policy, setPolicy] = useState('');
     const [description, setDescription] = useState('');
     const [facebook, setFacebook] = useState('');
@@ -128,6 +127,50 @@ export default function ProfileStore() {
         setCompletedCrop(undefined);
     };
 
+    const PROVINCE_API_BASE = "https://provinces.open-api.vn/api/v2";
+
+    const extractArray = (data: any): any[] => {
+        if (!data) return [];
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data?.data)) return data.data;
+        if (Array.isArray(data?.results)) return data.results;
+        if (Array.isArray(data?.data?.results)) return data.data.results;
+        return [];
+    };
+
+    const findFirstArray = (obj: any, depth = 0): any[] => {
+        if (!obj || depth > 3) return [];
+        if (Array.isArray(obj)) return obj;
+        if (typeof obj !== "object") return [];
+        for (const val of Object.values(obj)) {
+            const found = findFirstArray(val, depth + 1);
+            if (found.length) return found;
+        }
+        return [];
+    };
+
+    const getCode = (item: any): string => {
+        if (!item) return "";
+        return String(
+            item.code ??
+            item.province_code ??
+            item.district_code ??
+            item.ward_code ??
+            ""
+        );
+    };
+
+    const getName = (item: any): string => {
+        if (!item) return "";
+        return (
+            item.name ??
+            item.full_name ??
+            item.name_en ??
+            item.name_with_type ??
+            ""
+        );
+    };
+
     useEffect(() => {
         typeStoreService.getTypeStoreTrue().then((res: any) => {
             const arr = res?.data || [];
@@ -137,15 +180,17 @@ export default function ProfileStore() {
     }, []);
 
     useEffect(() => {
-        fetch('https://provinces.open-api.vn/api/p/')
+        fetch(`${PROVINCE_API_BASE}/p/`)
             .then(res => res.json())
             .then((data) => {
-                setProvinces(data || []);
+                const list = extractArray(data) || findFirstArray(data);
+                setProvinces(list || []);
             })
             .catch(err => {
                 console.error('Load provinces error', err);
             });
     }, []);
+
 
     const load = () => {
         setLoading(true);
@@ -157,13 +202,13 @@ export default function ProfileStore() {
                 setStoreName(s?.storeName || '');
                 setEmailStore(s?.emailStore || s?.email || '');
                 setPhone(s?.phone || '');
+                setRawAddress(s?.address || '');
                 setAddressDetail(s?.address || '');
                 setSelectedProvince(null);
-                setSelectedDistrict(null);
                 setSelectedWard(null);
-                setDescription(s?.description || '');
-                setDistricts([]);
+                setPendingWardName(null);
                 setWards([]);
+                setDescription(s?.description || '');
                 setPolicy(s?.policy || '');
                 setFacebook(s?.socialMedia?.facebook || '');
                 setInstagram(s?.socialMedia?.instagram || '');
@@ -178,47 +223,34 @@ export default function ProfileStore() {
             .finally(() => setLoading(false));
     };
 
-    const handleProvinceChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    useEffect(() => {
+        if (!rawAddress || provinces.length === 0) return;
+        const parts = rawAddress.split(',').map((p: string) => p.trim()).filter(Boolean);
+        if (parts.length < 2) return;
+
+        const provinceName = parts[parts.length - 1];
+        const wardName = parts[parts.length - 2];
+        const detail = parts.slice(0, Math.max(0, parts.length - 2)).join(', ');
+
+        setAddressDetail(detail || parts[0] || '');
+
+        const prov = provinces.find((p) => getName(p) === provinceName || getName(p) === provinceName?.trim()) || null;
+        setSelectedProvince(prov);
+        setPendingWardName(wardName || null);
+    }, [rawAddress, provinces]);
+
+    const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const code = e.target.value;
-        const p = provinces.find(x => String(x.code) === code) || null;
+        const p = provinces.find(x => String(getCode(x)) === code) || null;
         setSelectedProvince(p);
-        setSelectedDistrict(null);
-        setSelectedWard(null);
-        setDistricts([]);
-        setWards([]);
-
-        if (!code) return;
-
-        try {
-            const res = await fetch(`https://provinces.open-api.vn/api/p/${code}?depth=2`);
-            const data = await res.json();
-            setDistricts(data?.districts || []);
-        } catch (err) {
-            console.error('Load districts error', err);
-        }
-    };
-
-    const handleDistrictChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const code = e.target.value;
-        const d = districts.find(x => String(x.code) === code) || null;
-        setSelectedDistrict(d);
         setSelectedWard(null);
         setWards([]);
-
-        if (!code) return;
-
-        try {
-            const res = await fetch(`https://provinces.open-api.vn/api/d/${code}?depth=2`);
-            const data = await res.json();
-            setWards(data?.wards || []);
-        } catch (err) {
-            console.error('Load wards error', err);
-        }
+        setPendingWardName(null);
     };
 
     const handleWardChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const code = e.target.value;
-        const w = wards.find(x => String(x.code) === code) || null;
+        const w = wards.find(x => String(getCode(x)) === code) || null;
         setSelectedWard(w);
     };
 
@@ -228,8 +260,70 @@ export default function ProfileStore() {
         setPendingAvatarFile(f);
     };
 
+    useEffect(() => {
+        const code = getCode(selectedProvince);
+        if (!code) {
+            setWards([]);
+            setSelectedWard(null);
+            return;
+        }
+
+        const matchesProvince = (w: any, provinceCode: string) => {
+            const wardProvince = getCode({ code: w?.province_code ?? w?.provinceCode ?? w?.p ?? w?.p_code ?? "" });
+            return wardProvince === provinceCode;
+        };
+
+        const tryLoad = async () => {
+            try {
+                const res = await fetch(`${PROVINCE_API_BASE}/p/${code}?depth=2`);
+                const data = await res.json();
+                const districts =
+                    extractArray(data?.districts) ||
+                    extractArray(data?.data?.districts) ||
+                    [];
+
+                let flattenedWards = Array.isArray(districts)
+                    ? districts.flatMap((d: any) => extractArray(d?.wards) || [])
+                    : [];
+
+                if (!flattenedWards.length) {
+                    try {
+                        const resWard = await fetch(`${PROVINCE_API_BASE}/w/?p=${code}`);
+                        const wardData = await resWard.json();
+                        flattenedWards = extractArray(wardData) || findFirstArray(wardData);
+
+                        if (!flattenedWards.length) {
+                            const resWardAlt = await fetch(`${PROVINCE_API_BASE}/w/?province_code=${code}`);
+                            const wardDataAlt = await resWardAlt.json();
+                            flattenedWards = extractArray(wardDataAlt) || findFirstArray(wardDataAlt);
+                        }
+                    } catch (innerErr) {
+                        console.error("Fallback wards fetch error", innerErr);
+                    }
+                }
+
+                const scopedWards = flattenedWards.filter((w: any) => matchesProvince(w, code));
+
+                setWards(scopedWards);
+                setSelectedWard(null);
+            } catch (err) {
+                console.error("Load wards error", err);
+                setWards([]);
+                setSelectedWard(null);
+            }
+        };
+
+        tryLoad();
+    }, [selectedProvince]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!addressDetail.trim() || !selectedProvince || !selectedWard) {
+            alert('Vui lòng điền đủ địa chỉ chi tiết, tỉnh và phường/xã');
+            return;
+        }
+
         setSaving(true);
         const form = new FormData();
         form.append('storeName', storeName);
@@ -237,17 +331,20 @@ export default function ProfileStore() {
         form.append('phone', phone);
         const parts = [
             addressDetail?.trim(),
-            selectedWard?.name,
-            selectedDistrict?.name,
-            selectedProvince?.name
+            getName(selectedWard),
+            getName(selectedProvince)
         ].filter(Boolean);
         const fullAddress = parts.join(', ');
         form.append('address', fullAddress);
         form.append('description', description);
         form.append('policy', policy);
-        form.append('facebook', facebook);
-        form.append('instagram', instagram);
-        form.append('twitter', twitter);
+
+        const fb = facebook.trim();
+        const ig = instagram.trim();
+        const tw = twitter.trim();
+        if (fb) form.append('facebook', fb);
+        if (ig) form.append('instagram', ig);
+        if (tw) form.append('twitter', tw);
         if (selectedTypeStore) form.append('typeStoreId', selectedTypeStore);
         if (avatarFile) form.append('avatar', avatarFile);
 
@@ -265,6 +362,14 @@ export default function ProfileStore() {
             setSaving(false);
         }
     };
+
+    useEffect(() => {
+        if (!pendingWardName || wards.length === 0) return;
+        const target = pendingWardName.trim().toLowerCase();
+        const wrd = wards.find((w: any) => getName(w).trim().toLowerCase() === target);
+        setSelectedWard(wrd || null);
+        setPendingWardName(null);
+    }, [wards, pendingWardName]);
 
     if (loading) return <div style={{ padding: 24 }}>Đang tải...</div>;
     if (error) return <div style={{ padding: 24, color: 'red' }}>{error}</div>;
@@ -351,30 +456,13 @@ export default function ProfileStore() {
                                 <label className="form-label">Tỉnh / Thành phố</label>
                                 <select
                                     className="form-input"
-                                    value={selectedProvince?.code || ''}
+                                    value={getCode(selectedProvince)}
                                     onChange={handleProvinceChange}
                                 >
                                     <option value="">-- Chọn tỉnh / thành phố --</option>
                                     {provinces.map((p) => (
-                                        <option key={p.code} value={p.code}>
-                                            {p.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div style={{ flex: 1 }}>
-                                <label className="form-label">Quận / Huyện</label>
-                                <select
-                                    className="form-input"
-                                    value={selectedDistrict?.code || ''}
-                                    onChange={handleDistrictChange}
-                                    disabled={!selectedProvince}
-                                >
-                                    <option value="">-- Chọn quận / huyện --</option>
-                                    {districts.map((d) => (
-                                        <option key={d.code} value={d.code}>
-                                            {d.name}
+                                        <option key={getCode(p)} value={getCode(p)}>
+                                            {getName(p)}
                                         </option>
                                     ))}
                                 </select>
@@ -384,14 +472,14 @@ export default function ProfileStore() {
                                 <label className="form-label">Phường / Xã</label>
                                 <select
                                     className="form-input"
-                                    value={selectedWard?.code || ''}
+                                    value={getCode(selectedWard)}
                                     onChange={handleWardChange}
-                                    disabled={!selectedDistrict}
+                                    disabled={!selectedProvince}
                                 >
                                     <option value="">-- Chọn phường / xã --</option>
                                     {wards.map((w) => (
-                                        <option key={w.code} value={w.code}>
-                                            {w.name}
+                                        <option key={getCode(w)} value={getCode(w)}>
+                                            {getName(w)}
                                         </option>
                                     ))}
                                 </select>

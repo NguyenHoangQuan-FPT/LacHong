@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import "../../assets/styles/PostForm.css";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { useTranslation } from "react-i18next";
 
 type PostFormModalProps = {
     isOpen: boolean;
@@ -50,6 +51,8 @@ export default function PostFormModal({
 }: PostFormModalProps) {
     if (!isOpen) return null;
 
+    const { t } = useTranslation();
+
     const [selectedImages, setSelectedImages] = useState<(File | string)[]>(images);
     const initialContent = useMemo(() => htmlToPlainText(content), [content]);
 
@@ -95,7 +98,7 @@ export default function PostFormModal({
                         type="button"
                         className="post-modal-close"
                         onClick={() => !submitting && onClose()}
-                        aria-label="Đóng"
+                        aria-label={t('postForm.closeAria')}
                     >
                         ×
                     </button>
@@ -103,15 +106,14 @@ export default function PostFormModal({
 
                 <form className="post-form" onSubmit={onSubmit}>
                     <div className="post-form-row">
-                        <label>Tiêu đề</label>
-                        <input value={title} onChange={(e) => onTitleChange(e.target.value)} placeholder="Nhập tiêu đề" />
+                        <label>{t('postForm.titleLabel')}</label>
+                        <input value={title} onChange={(e) => onTitleChange(e.target.value)} placeholder={t('postForm.titlePlaceholder')} />
                     </div>
 
                     <div className="post-form-row">
-                        <label>Nội dung</label>
+                        <label>{t('postForm.contentLabel')}</label>
                         <div className="post-editor-wrap">
-                            <div className="post-editor-toolbar" aria-label="Định dạng nội dung">
-                                {/* Đã loại bỏ các nút B, I, U */}
+                            <div className="post-editor-toolbar" aria-label={t('postForm.contentFormatAria')}>
 
 
                             </div>
@@ -123,7 +125,7 @@ export default function PostFormModal({
                     </div>
 
                     <div className="post-form-row">
-                        <label className="upload-image-btn">Ảnh
+                        <label className="upload-image-btn">{t('postForm.imagesLabel')}
                             <input
                                 type="file"
                                 accept="image/*"
@@ -155,7 +157,7 @@ export default function PostFormModal({
                                             <button
                                                 type="button"
                                                 className="delete-image"
-                                                aria-label="Xóa ảnh"
+                                                aria-label={t('postForm.deleteImageAria')}
                                                 onClick={() => {
                                                     setSelectedImages(prev => {
                                                         const next = prev.filter((_, i) => i !== idx);
@@ -175,10 +177,10 @@ export default function PostFormModal({
 
                     <div className="post-form-actions">
                         <button type="button" className="post-btn ghost" onClick={() => !submitting && onClose()}>
-                            Hủy
+                            {t('postForm.cancel')}
                         </button>
                         <button type="submit" className="post-btn primary" disabled={!canSubmit || submitting}>
-                            {submitting ? "Đang lưu..." : submitLabel}
+                            {submitting ? t('postForm.saving') : submitLabel}
                         </button>
                     </div>
                 </form>

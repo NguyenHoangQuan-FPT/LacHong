@@ -21,9 +21,12 @@ export default function ChatModal({ storeId, open, onClose }: ChatModalProps) {
     const [fileInputKey, setFileInputKey] = useState(0);
     const [msgLoading, setMsgLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
     const [modalImg, setModalImg] = useState<string | null>(null);
 
     useEffect(() => {
+        if (!open) return;
+
         const body = document.body;
         const prevOverflow = body.style.overflow;
         const prevPaddingRight = body.style.paddingRight;
@@ -38,7 +41,7 @@ export default function ChatModal({ storeId, open, onClose }: ChatModalProps) {
             body.style.overflow = prevOverflow;
             body.style.paddingRight = prevPaddingRight;
         };
-    }, []);
+    }, [open]);
 
     useEffect(() => {
         if (!open) return;
@@ -93,7 +96,12 @@ export default function ChatModal({ storeId, open, onClose }: ChatModalProps) {
     }, [room?._id]);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+        const container = messagesContainerRef.current;
+        if (container) {
+            container.scrollTo({ top: container.scrollHeight, behavior: 'auto' });
+            return;
+        }
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'nearest' });
     }, [messages]);
 
     const handleSend = async () => {
@@ -157,7 +165,7 @@ export default function ChatModal({ storeId, open, onClose }: ChatModalProps) {
                             <h3>Chat với cửa hàng</h3>
                         </div>
                         <div className="chat-modal-messages-block">
-                            <div className="chat-modal-messages" >
+                            <div className="chat-modal-messages" ref={messagesContainerRef}>
                                 {msgLoading ? (
                                     <div>Đang tải tin nhắn...</div>
                                 ) : (

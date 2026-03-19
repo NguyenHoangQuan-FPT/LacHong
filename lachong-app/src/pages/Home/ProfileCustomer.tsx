@@ -10,7 +10,6 @@ import "react-image-crop/dist/ReactCrop.css";
 import customerService from "../../services/customer.service";
 import "../../assets/styles/ProfileCustomer.css";
 import Button from "../../components/common/buttons/Button";
-import Address from "./Address";
 import { toast } from "react-toastify";
 
 function normalizeImageUrl(url?: string | null): string | null {
@@ -28,6 +27,11 @@ function toDateInputValue(value?: string | Date | null): string {
     // Convert to local date (yyyy-mm-dd) without timezone shifting
     const tzOffsetMs = d.getTimezoneOffset() * 60_000;
     return new Date(d.getTime() - tzOffsetMs).toISOString().slice(0, 10);
+}
+
+function firstInitial(value?: string | null): string {
+    const trimmed = String(value || "").trim();
+    return trimmed ? trimmed.charAt(0).toUpperCase() : "?";
 }
 
 export default function ProfileCustomer() {
@@ -50,7 +54,6 @@ export default function ProfileCustomer() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
-    const [address, setAddress] = useState("");
     const [dob, setDob] = useState("");
 
     useEffect(() => {
@@ -65,7 +68,6 @@ export default function ProfileCustomer() {
                 setName(c?.name || c?.fullName || "");
                 setEmail(c?.email || "");
                 setPhone(c?.phone || c?.phoneNumber || "");
-                setAddress(c?.address || "");
                 setDob(toDateInputValue(c?.dob));
             })
             .catch((err: any) => {
@@ -103,6 +105,11 @@ export default function ProfileCustomer() {
     const shouldShowCropper = useMemo(() => {
         return Boolean(pendingAvatarUrl);
     }, [pendingAvatarUrl]);
+
+    const avatarInitial = useMemo(() => {
+        const displayName = name || profile?.name || profile?.fullName || profile?.email || "";
+        return firstInitial(displayName);
+    }, [name, profile]);
 
     const onCropImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
         const image = e.currentTarget;
@@ -190,13 +197,11 @@ export default function ProfileCustomer() {
             const payload = {
                 fullName: name,
                 phone,
-                address: address?.trim() || "",
             };
 
             const formData = new FormData();
             formData.append("fullName", payload.fullName || "");
             formData.append("phone", payload.phone || "");
-            formData.append("address", payload.address || "");
             formData.append("dob", dob || "");
             if (avatarFile) {
                 formData.append("avatar", avatarFile);
@@ -210,7 +215,6 @@ export default function ProfileCustomer() {
             setName(c?.name || c?.fullName || name);
             setEmail(c?.email || email);
             setPhone(c?.phone || c?.phoneNumber || phone);
-            setAddress(c?.address || payload.address || address);
             setDob(c?.dob ? toDateInputValue(c.dob) : dob);
 
             if (avatarFile) {
@@ -218,7 +222,9 @@ export default function ProfileCustomer() {
                 setAvatarPreviewUrl(null);
             }
         } catch (err: any) {
-            setError(err?.response?.data?.message || "Lưu thay đổi thất bại");
+            const msg = err?.response?.data?.message || "Lưu thay đổi thất bại";
+            setError(msg);
+            toast.error(msg);
         } finally {
             setSaving(false);
         }
@@ -254,7 +260,9 @@ export default function ProfileCustomer() {
                                 onError={() => setAvatarLoadError(true)}
                             />
                         ) : (
-                            <div className="avatar-fallback" />
+                            <div className="avatar-fallback" aria-label="Avatar placeholder">
+                                {avatarInitial}
+                            </div>
                         )}
                     </div>
 
@@ -360,14 +368,12 @@ export default function ProfileCustomer() {
                         />
                     </div>
                 </div>
-                <div className="submit-profile">
-                    <Button variant="submit" onClick={handleSave} disabled={saving}>
-                        {saving ? "Đang lưu..." : "Lưu thay đổi"}
-                    </Button>
-                </div>
             </div>
-            <h3>Địa chỉ</h3>
-            <Address />
-        </div >
+            <div className="submit-profile">
+                <Button variant="submit" onClick={handleSave} disabled={saving}>
+                    {saving ? "Đang lưu..." : "Lưu thay đổi"}
+                </Button>
+            </div>
+        </div>
     );
 }

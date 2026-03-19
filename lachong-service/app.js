@@ -65,11 +65,6 @@ app.use(cors({
 
 app.options(/.*/, cors());
 
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-
 app.get('/', (req, res) => {
     res.status(200).json({
         message: 'Lac Hong API is running.',
@@ -83,7 +78,7 @@ app.get('/api', (req, res) => {
     res.status(200).json({ message: 'Lac Hong Service is running.' });
 });
 
-
+// Ensure DB is available before handling API routes (including Stripe webhook)
 app.use(async (req, res, next) => {
     if (req.path === '/' || req.path === '/api') return next();
 
@@ -97,6 +92,10 @@ app.use(async (req, res, next) => {
         });
     }
 });
+
+// Stripe webhook must use raw body for signature verification
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // App routes
 initRoute(app);

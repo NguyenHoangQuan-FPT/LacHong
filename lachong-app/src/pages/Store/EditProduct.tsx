@@ -291,6 +291,29 @@ export default function EditProduct() {
                         </div>
                     </div>
 
+                    {/* Discount */}
+                    <div className="form-group">
+                        <label className="form-label">Khuyến mãi (%)</label>
+                        <input
+                            type="number"
+                            placeholder="0"
+                            value={discountPercent}
+                            onChange={e => {
+                                const v = e.target.value;
+                                if (v === '') {
+                                    setDiscountPercent('');
+                                    return;
+                                }
+                                const n = Number(v);
+                                if (Number.isNaN(n)) return;
+                                setDiscountPercent(Math.max(0, Math.min(100, n)));
+                            }}
+                            className="form-input"
+                            min={0}
+                            max={100}
+                        />
+                    </div>
+
                     <div className="form-group">
                         <label className="form-label">Danh mục</label>
                         <select className="form-input" value={category} onChange={e => setCategory(e.target.value)}>

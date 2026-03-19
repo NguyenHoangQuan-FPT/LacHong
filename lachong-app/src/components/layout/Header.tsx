@@ -4,8 +4,28 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import Icon from "../../components/common/icons/Icon";
 import NotificationModal from "../notification/NotificationModal";
 import notificationService from "../../services/notification.service";
-import ChatList from "../chat/ChatList";
+import { useTranslation } from "react-i18next";
+import { normalizeLanguage } from "../../i18n";
+import { productService } from "../../services/product.service";
+
+const normalizeImageUrl = (url?: string) => {
+    if (!url) return "https://via.placeholder.com/60x60?text=No+Image";
+    if (/^https?:\/\//i.test(url)) return url;
+    const base = (import.meta.env.VITE_API_BASE_URL as string) || "";
+    return base ? base.replace(/\/$/, "") + "/" + url.replace(/^\//, "") : url;
+};
+
+const normalizeForSearch = (value: unknown) => {
+    const str = String(value ?? "")
+        .toLowerCase()
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "d");
+    // remove diacritics
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+};
+
 export default function Header() {
+    const { t, i18n } = useTranslation();
     const location = useLocation();
     const navigate = useNavigate();
     const [user, setUser] = useState<any>(null);
@@ -13,8 +33,26 @@ export default function Header() {
     const userMenuRef = useRef<HTMLDivElement | null>(null);
     const [showNotificationPopup, setShowNotificationPopup] = useState(false);
     const [unread, setUnread] = useState<Notification[]>([]);
-    const [showChatList, setShowChatList] = useState(false);
     const [search, setSearch] = useState("");
+    const [suggestOpen, setSuggestOpen] = useState(false);
+    const [suggestions, setSuggestions] = useState<any[]>([]);
+    const [suggestLoading, setSuggestLoading] = useState(false);
+    const searchWrapRef = useRef<HTMLDivElement | null>(null);
+    const allProductsRef = useRef<any[] | null>(null);
+    const [storeStatus, setStoreStatus] = useState<string>("");
+    const [language, setLanguage] = useState<'vi' | 'en'>(() => normalizeLanguage(i18n.language));
+    const [isLanguageOpen, setIsLanguageOpen] = useState(false);
+    const languageMenuRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        const handleLanguageChanged = (lng: string) => {
+            setLanguage(normalizeLanguage(lng));
+        };
+        i18n.on('languageChanged', handleLanguageChanged);
+        return () => {
+            i18n.off('languageChanged', handleLanguageChanged);
+        };
+    }, [i18n]);
 
     useEffect(() => {
         if (!location.pathname.startsWith("/product")) return;
@@ -25,6 +63,7 @@ export default function Header() {
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const term = search.trim();
+        setSuggestOpen(false);
 
         const current = new URLSearchParams(location.search);
         const category = current.get("category");
@@ -36,6 +75,65 @@ export default function Header() {
         const qs = params.toString();
         navigate(qs ? `/product?${qs}` : "/product");
     };
+
+    useEffect(() => {
+        if (!suggestOpen) return;
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Node | null;
+            if (!target) return;
+            if (searchWrapRef.current && !searchWrapRef.current.contains(target)) {
+                setSuggestOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [suggestOpen]);
+
+    useEffect(() => {
+        // close suggestions on route changes
+        setSuggestOpen(false);
+    }, [location.pathname, location.search]);
+
+    useEffect(() => {
+        const term = search.trim();
+        if (!suggestOpen) {
+            setSuggestions([]);
+            return;
+        }
+        if (term.length < 2) {
+            setSuggestions([]);
+            return;
+        }
+
+        const run = async () => {
+            if (!allProductsRef.current) {
+                setSuggestLoading(true);
+                try {
+                    const res = await productService.getAllProducts();
+                    const pData = res?.data?.products ?? res?.data ?? [];
+                    const list = Array.isArray(pData) ? pData : (pData?.data ?? []);
+                    allProductsRef.current = Array.isArray(list) ? list : [];
+                } catch {
+                    allProductsRef.current = [];
+                } finally {
+                    setSuggestLoading(false);
+                }
+            }
+
+            const lower = normalizeForSearch(term);
+            const list = allProductsRef.current || [];
+            const filtered = list
+                .filter((p: any) => {
+                    const name = normalizeForSearch(p?.productName || p?.name || '');
+                    return name.includes(lower);
+                })
+                .slice(0, 6);
+            setSuggestions(filtered);
+        };
+
+        void run();
+    }, [search, suggestOpen]);
 
     useEffect(() => {
         const savedUser = localStorage.getItem("user");
@@ -53,6 +151,16 @@ export default function Header() {
                 setUser({ ...parsedUser, role });
             } catch (e) {
                 console.error("Lỗi parse user:", e);
+            }
+        }
+
+        const savedStore = localStorage.getItem("store");
+        if (savedStore) {
+            try {
+                const parsedStore = JSON.parse(savedStore);
+                setStoreStatus(String(parsedStore?.status || ""));
+            } catch {
+                // ignore
             }
         }
     }, []);
@@ -85,10 +193,37 @@ export default function Header() {
         };
     }, [isUserMenuOpen]);
 
+    useEffect(() => {
+        if (!isLanguageOpen) return;
+
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Node | null;
+            if (!target) return;
+            if (languageMenuRef.current && !languageMenuRef.current.contains(target)) {
+                setIsLanguageOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isLanguageOpen]);
+
+    const setAppLanguage = (next: 'vi' | 'en') => {
+        localStorage.setItem('app_lang', next);
+        setLanguage(next);
+        void i18n.changeLanguage(next);
+        try {
+            window.dispatchEvent(new CustomEvent('app:languageChanged', { detail: { language: next } }));
+        } catch {
+            // ignore
+        }
+    };
+
 
     const handleLogout = () => {
         localStorage.removeItem("access_token");
         localStorage.removeItem("user");
+        localStorage.removeItem("manager");
         setUser(null);
         navigate("/login");
     };
@@ -115,7 +250,7 @@ export default function Header() {
                             className={`dashboard-tab${location.pathname === "/" ? " active" : ""
                                 }`}
                         >
-                            Home
+                            {t('header.home')}
                         </Link>
 
                         <Link
@@ -125,7 +260,7 @@ export default function Header() {
                                 : ""
                                 }`}
                         >
-                            Shop
+                            {t('header.shop')}
                         </Link>
 
                         <Link
@@ -135,7 +270,7 @@ export default function Header() {
                                 : ""
                                 }`}
                         >
-                            Community
+                            {t('header.community')}
                         </Link>
 
                         <Link
@@ -145,27 +280,58 @@ export default function Header() {
                                 : ""
                                 }`}
                         >
-                            About
+                            {t('header.about')}
                         </Link>
                     </div>
                 </div>
 
                 <div className="header-icons" style={{ position: 'relative' }}>
                     <div>
-                        <form className="header-search" onSubmit={handleSearchSubmit}>
-                            <input
-                                type="text"
-                                placeholder="Tìm kiếm sản phẩm..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                            />
-                            <button type="submit"><Icon name="search" size={18} /></button>
-                        </form>
+                        <div className="header-search-wrap" ref={searchWrapRef}>
+                            <form className="header-search" onSubmit={handleSearchSubmit}>
+                                <input
+                                    type="text"
+                                    placeholder={t('header.searchPlaceholder')}
+                                    value={search}
+                                    onFocus={() => setSuggestOpen(true)}
+                                    onChange={(e) => {
+                                        setSearch(e.target.value);
+                                        if (!suggestOpen) setSuggestOpen(true);
+                                    }}
+                                />
+                                <button type="submit"><Icon name="search" size={18} /></button>
+                            </form>
+
+                            {suggestOpen && !suggestLoading && suggestions.length > 0 && (
+                                <div className="header-search-suggest" role="listbox" aria-label="Gợi ý sản phẩm">
+                                    {suggestions.map((p: any) => (
+                                        <Link
+                                            key={p?._id || p?.id || (p?.productName || p?.name)}
+                                            to={`/product/detail?id=${p?._id}`}
+                                            className="header-search-suggest-item"
+                                            onClick={() => setSuggestOpen(false)}
+                                            role="option"
+                                        >
+                                            <img
+                                                className="header-search-suggest-img"
+                                                src={normalizeImageUrl(p?.imageUrl || p?.image)}
+                                                alt={p?.productName || p?.name || 'product'}
+                                                loading="lazy"
+                                            />
+                                            <span className="header-search-suggest-name">{p?.productName || p?.name}</span>
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                     {user?.role !== "manager" && user?.role !== "admin" && (
                         <>
-                            <span className="icon-header" title="Notifications" style={{ position: 'relative' }}>
-                                <span onClick={() => setShowNotificationPopup(v => !v)} style={{ cursor: 'pointer', position: 'relative', display: 'inline-block' }}>
+                            <span className="icon-header" title={t('header.notifications')} style={{ position: 'relative' }}>
+                                <span
+                                    onClick={() => setShowNotificationPopup(v => !v)}
+                                    style={{ cursor: 'pointer', position: 'relative', display: 'inline-block' }}
+                                >
                                     <Icon name="bell" size={20} />
                                     {unread.length > 0 && (
                                         <span className="notification-count" >{unread.length}</span>
@@ -173,31 +339,62 @@ export default function Header() {
                                 </span>
                                 {showNotificationPopup && <NotificationModal onUpdate={fetchUnread} />}
                             </span>
-                            <span className="icon-header" title="Cart">
-                                <Link to="/cart" className="cart-link">
-                                    <Icon name="cart" size={20} />
-                                </Link>
-                                <span className="wishlist-link" onClick={() => setShowChatList(true)} style={{ cursor: 'pointer' }}>
-                                    <Icon name="chat" size={20} />
-                                </span>
 
-                                {showChatList && (
-                                    <div className="chat-modal-overlay">
-                                        <div style={{ position: 'relative', width: '90vw', maxWidth: 1200, maxHeight: '90vh', overflow: 'auto', borderRadius: 12, background: '#fff' }}>
-                                            <button
-                                                style={{ position: 'absolute', top: 8, right: 12, fontSize: 28, background: 'none', border: 'none', cursor: 'pointer', zIndex: 2 }}
-                                                onClick={() => setShowChatList(false)}
-                                                aria-label="Đóng chat"
-                                            >
-                                                &times;
-                                            </button>
-                                            <ChatList />
-                                        </div>
-                                    </div>
-                                )}
-                            </span>
+                            <Link to="/cart" className="cart-link icon-header" title={t('header.cart')}>
+                                <Icon name="cart" size={20} />
+                            </Link>
                         </>
                     )}
+
+                    <div className="lang-switch" ref={languageMenuRef}>
+                        <button
+                            type="button"
+                            className="lang-btn"
+                            onClick={() => setIsLanguageOpen((v) => !v)}
+                            aria-haspopup="menu"
+                            aria-expanded={isLanguageOpen}
+                            aria-label={`${t('header.language')}: ${language === 'vi' ? 'Tiếng Việt' : 'English'}`}
+                            title={t('header.language')}
+                        >
+                            <img
+                                className="lang-flag-img"
+                                src={language === 'vi' ? 'https://flagcdn.com/vn.svg' : 'https://flagcdn.com/us.svg'}
+                                alt={language === 'vi' ? 'Tiếng Việt' : 'English'}
+                            />
+                        </button>
+
+                        {isLanguageOpen && (
+                            <div className="lang-menu" role="menu">
+                                <button
+                                    type="button"
+                                    className={"lang-item" + (language === 'vi' ? ' active' : '')}
+                                    aria-label="Tiếng Việt"
+                                    title="Tiếng Việt"
+                                    onClick={() => {
+                                        setAppLanguage('vi');
+                                        setIsLanguageOpen(false);
+                                    }}
+                                    role="menuitem"
+                                >
+                                    <img className="lang-flag-img" src="https://flagcdn.com/vn.svg" alt="Tiếng Việt" />
+                                </button>
+                                <button
+                                    type="button"
+                                    className={"lang-item" + (language === 'en' ? ' active' : '')}
+                                    aria-label="English"
+                                    title="English"
+                                    onClick={() => {
+                                        setAppLanguage('en');
+                                        setIsLanguageOpen(false);
+                                    }}
+                                    role="menuitem"
+                                >
+                                    <img className="lang-flag-img" src="https://flagcdn.com/us.svg" alt="English" />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
                     <span className="sign-in">
                         {user ? (
                             <div className="user-menu" ref={userMenuRef}>
@@ -207,7 +404,7 @@ export default function Header() {
                                     aria-haspopup="menu"
                                     aria-expanded={isUserMenuOpen}
                                     onClick={() => setIsUserMenuOpen((v) => !v)}
-                                    title="Options"
+                                    title={t('header.options')}
                                 >
                                     <Icon name="justify" size={18} />
                                 </button>
@@ -216,13 +413,13 @@ export default function Header() {
                                     <div className="user-dropdown" role="menu">
                                         {user?.role === "manager" && (
                                             <Link
-                                                to="/store"
+                                                to={String(storeStatus || "").toUpperCase() === "PENDING" ? "/store/registration" : "/store"}
                                                 className="user-dropdown-item"
                                                 role="menuitem"
                                                 onClick={() => setIsUserMenuOpen(false)}
                                             >
                                                 <Icon name="home" size={16} />
-                                                <span>Dashboard</span>
+                                                <span>{t('header.dashboard')}</span>
                                             </Link>
                                         )}
 
@@ -234,7 +431,7 @@ export default function Header() {
                                                 onClick={() => setIsUserMenuOpen(false)}
                                             >
                                                 <Icon name="home" size={16} />
-                                                <span>Dashboard</span>
+                                                <span>{t('header.dashboard')}</span>
                                             </Link>
                                         )}
 
@@ -247,9 +444,17 @@ export default function Header() {
                                                     onClick={() => setIsUserMenuOpen(false)}
                                                 >
                                                     <Icon name="profile" size={16} />
-                                                    <span>Profile</span>
+                                                    <span>{t('header.profile')}</span>
                                                 </Link>
-
+                                                <Link
+                                                    to="/chat"
+                                                    className="user-dropdown-item"
+                                                    role="menuitem"
+                                                    onClick={() => setIsUserMenuOpen(false)}
+                                                >
+                                                    <Icon name="chat" size={16} />
+                                                    <span>{t('header.chat')}</span>
+                                                </Link>
                                                 <Link
                                                     to="/wishlist"
                                                     className="user-dropdown-item"
@@ -257,7 +462,7 @@ export default function Header() {
                                                     onClick={() => setIsUserMenuOpen(false)}
                                                 >
                                                     <Icon name="heart" size={16} />
-                                                    <span>Wishlist</span>
+                                                    <span>{t('header.wishlist')}</span>
                                                 </Link>
                                             </>
                                         )}
@@ -269,7 +474,7 @@ export default function Header() {
                                             onClick={handleLogout}
                                         >
                                             <Icon name="logout" size={16} />
-                                            <span>Logout</span>
+                                            <span>{t('header.logout')}</span>
                                         </button>
                                     </div>
                                 )}
@@ -277,21 +482,12 @@ export default function Header() {
                         ) : (
                             <Link to="/login" className="sign-in-btn">
                                 <Icon name="profile" size={20} />
-                                Sign in
+                                {t('header.signIn')}
                             </Link>
                         )}
                     </span>
                 </div>
             </div >
-
-            <hr
-                style={{
-                    width: "100%",
-                    margin: "auto",
-                    border: "1px solid #eee",
-                }}
-            />
-
         </header >
     );
 }

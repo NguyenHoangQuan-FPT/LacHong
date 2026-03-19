@@ -59,10 +59,12 @@ export default function UserRegister() {
 
             <div className="ur-root">
                 <div className="ur-card">
-                    <img src="/images/Logo/logo1.png" alt="Logo" className="ur-logo" />
-                    <h2 className="ur-title">
-                        Khám phá vẻ đẹp truyền thống – Đăng ký để đồng hành cùng cộng đồng yêu thủ công mỹ nghệ.
-                    </h2>
+                    <div className="ur-header">
+                        <img src="/images/Logo/logo1.png" alt="Logo" className="ur-logo" />
+                        <h2 className="ur-title">
+                            Khám phá vẻ đẹp truyền thống – Đăng ký để đồng hành cùng cộng đồng yêu thủ công mỹ nghệ.
+                        </h2>
+                    </div>
                     <form onSubmit={handleSubmit} autoComplete="off" className="ur-form">
                         <div className="ur-row" style={{ textAlign: "left", marginBottom: 40 }}>
                             <div className="ur-col">
@@ -143,6 +145,12 @@ export default function UserRegister() {
 
                     <div className="ur-bottom">
                         Đã có tài khoản? <Link to="/login" className="ur-bottom-link">Đăng nhập ngay</Link>
+                    </div>
+                    <div className="ur-terms">
+                        Bằng việc đăng ký, bạn đã đồng ý với Lạc Hồng về
+                        <Link to="/policy" className="ur-terms-link"> Điều khoản dịch vụ</Link>
+                        <span> &amp; </span>
+                        <Link to="/policy" className="ur-terms-link">Chính sách bảo mật</Link>
                     </div>
                 </div>
             </div>

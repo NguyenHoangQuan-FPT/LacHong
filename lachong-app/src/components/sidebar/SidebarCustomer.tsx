@@ -3,15 +3,9 @@ import "../../assets/styles/SidebarCustomer.css";
 import ProfileCustomer from "../../pages/Home/ProfileCustomer";
 import Address from "../../pages/Home/Address";
 import Order from "../../pages/Home/Order";
-import { useNavigate } from "react-router-dom";
 
 export default function SidebarCustomer() {
     const [activeTab, setActiveTab] = useState<"info" | "address" | "orders" | "logout">("info");
-    const [user, setUser] = useState<any>(null);
-    const navigate = useNavigate();
-
-
-
 
     return (
         <div className="sidebar-customer-page">
@@ -28,6 +22,15 @@ export default function SidebarCustomer() {
                             onClick={() => setActiveTab("info")}
                         >
                             Thông tin
+                        </button>
+                        <button
+                            className={
+                                "sidebar-customer-tab" +
+                                (activeTab === "address" ? " active" : "")
+                            }
+                            onClick={() => setActiveTab("address")}
+                        >
+                            Địa chỉ
                         </button>
                         <button
                             className={

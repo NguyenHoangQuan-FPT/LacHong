@@ -14,7 +14,7 @@
 
 .admin-sidebar {
     width: 260px;
-    background: #0f172a;
+    background: #b4b4b4;
     color: #e5e7eb;
     display: flex;
     flex-direction: column;
@@ -40,7 +40,7 @@
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: #2563eb;
+    background: #ffffff;
     color: #fff;
     font-weight: 600;
     display: flex;
@@ -61,6 +61,7 @@
 }
 
 .admin-name {
+    color: #000;
     font-size: 15px;
     font-weight: 600;
 }
@@ -83,13 +84,14 @@
     gap: 12px;
     padding: 10px 14px;
     border-radius: 8px;
-    color: #cbd5f5;
+    color: #000000;
     text-decoration: none;
     background: transparent;
     border: none;
     cursor: pointer;
     font-size: 14px;
     transition: all 0.2s ease;
+
 }
 
 .admin-nav-item i {
@@ -97,23 +99,22 @@
 }
 
 .admin-nav-item:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff;
+    color: #000000;
 }
 
 /* ACTIVE */
 .admin-nav-item.active {
-    background: #2563eb;
-    color: #fff;
+    background: rgba(228, 228, 228, 0.952);
+    color: #000000;
 }
 
 /* LOGOUT */
 .admin-nav-item.logout {
     margin-top: auto;
-    color: #fca5a5;
+    color: #000000;
 }
 
 .admin-nav-item.logout:hover {
-    background: rgba(239, 68, 68, 0.15);
-    color: #fecaca;
+    background: rgba(228, 228, 228, 0.952);
+    color: #000000;
 }

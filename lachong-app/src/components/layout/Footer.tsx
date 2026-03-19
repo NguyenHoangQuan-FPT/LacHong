@@ -61,8 +61,8 @@ const Footer = () => {
                     <div className="footer-col-title">Company</div>
                     <ul className="footer-link-list">
                         <li><a className="footer-link" href="#">About us</a></li>
-                        <li><a className="footer-link" href="#">Privacy Policy</a></li>
-                        <li><a className="footer-link" href="#">Terms &amp; Conditions</a></li>
+                        <li><a className="footer-link" href="/policy">Privacy Policy</a></li>
+                        <li><a className="footer-link" href="/policy">Terms &amp; Conditions</a></li>
                         <li><a className="footer-link" href="#">Contact Us</a></li>
                     </ul>
                 </div>

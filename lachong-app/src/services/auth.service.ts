@@ -7,8 +7,8 @@ export const authService = {
     register: (email: string, password: string) => {
         return axiosClient.post("register", { email, password });
     },
-    registerStore: (email: string, password: string, storeName: string, emailStore: string) => {
-        return axiosClient.post("/register-store", { email, password, storeName, emailStore });
+    registerStore: (email: string, password: string) => {
+        return axiosClient.post("/register-store", { email, password });
     },
     activateAccount: (token: string) => {
         return axiosClient.post(`activate-account/${token}`);

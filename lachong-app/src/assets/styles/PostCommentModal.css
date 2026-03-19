@@ -1,5 +1,5 @@
 /* Giới hạn chiều cao và xử lý overflow cho nội dung comment quá dài */
-.post-comment-text {
+.post-modals .post-comment-text {
     max-height: 6em;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -22,16 +22,19 @@
 }
 
 .post-modals {
-    width: 1000px;
-    max-height: 95vh;
+    width: min(1000px, 96vw);
+    height: 720px;
+    max-height: calc(100vh - 64px);
+    min-height: 420px;
     background: #fff;
     border-radius: 12px;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 /* ===== Header ===== */
-.post-modal-header {
+.post-modals .post-modal-header {
     padding: 14px 18px;
     border-bottom: 1px solid #eee;
     display: flex;
@@ -39,13 +42,13 @@
     align-items: center;
 }
 
-.post-modal-header h3 {
+.post-modals .post-modal-header h3 {
     margin: 0;
     font-size: 18px;
     font-weight: 600;
 }
 
-.post-modal-close {
+.post-modals .post-modal-close {
     border: none;
     background: none;
     font-size: 22px;
@@ -53,7 +56,7 @@
 }
 
 /* ===== Post title ===== */
-.post-comments-modal-posttitle {
+.post-modals .post-comments-modal-posttitle {
     padding: 10px 18px;
     font-weight: 500;
     background: #f7f7f7;
@@ -61,25 +64,38 @@
 }
 
 /* ===== Comments list ===== */
-.post-comments {
+.post-modals .post-comments {
     padding: 16px;
     overflow-y: auto;
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.post-modals .post-comments-empty {
+    text-align: center;
+    color: #6b7280;
+    font-size: 14px;
+    padding: 24px 12px;
+    border: 1px dashed #e5e7eb;
+    border-radius: 10px;
+    background: #fafafa;
 }
 
 /* ===== Comment item ===== */
-.post-comment {
+.post-modals .post-comment {
     display: flex;
     gap: 10px;
     margin-bottom: 14px;
 }
 
-.post-comment-reply {
+.post-modals .post-comment-reply {
     margin-left: 42px;
 }
 
 /* ===== Avatar ===== */
-.post-comment-avatar {
+.post-modals .post-comment-avatar {
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -88,37 +104,37 @@
     flex-shrink: 0;
 }
 
-.post-comment-avatar img {
+.post-modals .post-comment-avatar img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
 /* ===== Comment body ===== */
-.post-comment-body {
+.post-modals .post-comment-body {
     flex: 1;
 }
 
-.post-comment-reply-to {
+.post-modals .post-comment-reply-to {
     font-size: 13px;
     color: #65676b;
     margin-bottom: 4px;
 }
 
 /* ===== Bubble ===== */
-.post-comment-bubble {
+.post-modals .post-comment-bubble {
     background: #f0f2f5;
     border-radius: 12px;
     padding: 8px 12px;
 }
 
-.post-comment-author {
+.post-modals .post-comment-author {
     font-weight: 600;
     font-size: 14px;
     margin-bottom: 2px;
 }
 
-.post-comment-text {
+.post-modals .post-comment-text {
     font-size: 14px;
     color: #050505;
     line-height: 1.4;
@@ -126,7 +142,7 @@
 }
 
 /* ===== Actions ===== */
-.post-comment-actions {
+.post-modals .post-comment-actions {
     display: flex;
     gap: 14px;
     margin-top: 6px;
@@ -135,7 +151,7 @@
     align-items: center;
 }
 
-.post-comment-actions button {
+.post-modals .post-comment-actions button {
     background: none;
     border: none;
     padding: 0;
@@ -144,17 +160,17 @@
     color: #65676b;
 }
 
-.post-comment-like-btn.active {
+.post-modals .post-comment-like-btn.active {
     color: #ec0202;
     font-weight: 500;
 }
 
 /* ===== Options menu ===== */
-.post-comment-actions-menu-wrap {
+.post-modals .post-comment-actions-menu-wrap {
     position: relative;
 }
 
-.post-actions-menu {
+.post-modals .post-actions-menu {
     position: absolute;
     right: 0;
     top: 24px;
@@ -165,7 +181,7 @@
     z-index: 10;
 }
 
-.post-actions-menu-item {
+.post-modals .post-actions-menu-item {
     padding: 8px 12px;
     width: 120px;
     text-align: left;
@@ -175,20 +191,20 @@
     font-size: 14px;
 }
 
-.post-actions-menu-item:hover {
+.post-modals .post-actions-menu-item:hover {
     background: #f0f2f5;
 }
 
-.post-actions-menu-item.danger {
+.post-modals .post-actions-menu-item.danger {
     color: #e41e3f;
 }
 
 /* ===== Replies ===== */
-.post-comment-children {
+.post-modals .post-comment-children {
     margin-top: 8px;
 }
 
-.post-comment-show-more {
+.post-modals .post-comment-show-more {
     background: none;
     border: none;
     color: #575757;
@@ -199,18 +215,24 @@
 }
 
 /* ===== Comment form ===== */
-.post-comment-form {
+.post-modals .post-comment-form {
     display: flex;
     gap: 10px;
-    margin-top: 16px;
+    margin-top: auto;
+    position: sticky;
+    bottom: 0;
+    padding-top: 12px;
+    padding-bottom: 8px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), #fff 60%);
+    border-top: 1px solid #e5e7eb;
 }
 
-.post-comment-input-col {
+.post-modals .post-comment-input-col {
     flex: 1;
 }
 
 /* ===== Reply/Edit banner ===== */
-.post-replying-banner {
+.post-modals .post-replying-banner {
     font-size: 13px;
     background: #e7f3ff;
     color: #1877f2;
@@ -222,7 +244,7 @@
     align-items: center;
 }
 
-.post-reply-cancel {
+.post-modals .post-reply-cancel {
     background: none;
     border: none;
     cursor: pointer;
@@ -231,7 +253,7 @@
 }
 
 /* ===== Input ===== */
-.post-comment-input-wrap {
+.post-modals .post-comment-input-wrap {
     display: flex;
     align-items: center;
     background: #f0f2f5;
@@ -239,7 +261,7 @@
     padding: 6px 10px;
 }
 
-.post-comment-input {
+.post-modals .post-comment-input {
     flex: 1;
     border: none;
     background: none;
@@ -247,7 +269,7 @@
     font-size: 14px;
 }
 
-.post-send-btn {
+.post-modals .post-send-btn {
     border: none;
     background: none;
     font-size: 18px;

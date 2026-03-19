@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../../assets/styles/Login.css";
 import { authService } from "../../services/auth.service";
+import { storeService } from "../../services/store.service";
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -11,65 +12,87 @@ export default function Login() {
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
 
+    const toMessage = (err: any) => {
+        const status = err?.response?.status;
+        const raw = err?.response?.data?.message || err?.message || "";
+        const msg = String(raw || "").trim();
+        const normalized = msg.toLowerCase();
+
+        // Common invalid-credentials patterns
+        if (
+            status === 401 ||
+            normalized.includes("invalid") ||
+            normalized.includes("unauthorized") ||
+            normalized.includes("email") && normalized.includes("password") ||
+            normalized.includes("sai") && (normalized.includes("mật khẩu") || normalized.includes("mat khau"))
+        ) {
+            return "Email hoặc mật khẩu không đúng";
+        }
+
+        return msg || "Đăng nhập thất bại";
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
         setLoading(true);
         try {
-            console.log('🔄 Logging in with:', { email, password: '***' });
-
             const res = await authService.login(email, password);
-
             const data = res?.data ?? res;
-            console.log('📦 Data:', data);
 
-            const token = data?.access_token ?? data?.token ?? data?.data?.access_token ?? null;
-            console.log('🔑 Token found:', token);
-
+            const token = data?.accessToken ?? data?.access_token ?? data?.token ?? data?.data?.accessToken ?? data?.data?.access_token ?? null;
             if (token) {
                 localStorage.setItem("access_token", token);
-                console.log('✅ Token saved to localStorage');
-                const verify = localStorage.getItem('access_token');
-                console.log('✔️ Verify token saved:', verify);
-            } else {
-                console.warn('⚠️ NO TOKEN FOUND - Response structure is:', Object.keys(data));
             }
-
             const user = data?.user ?? data?.data ?? data ?? null;
-            console.log('👤 User:', user);
-
             if (user) {
                 localStorage.setItem("user", JSON.stringify(user));
-                console.log('✅ User saved');
             }
 
             if (data?.store) {
                 localStorage.setItem("store", JSON.stringify(data.store));
-                console.log('✅ Store saved');
             }
 
-            const isAdmin = user?.roleId?.name === 'admin';
+            const roleName = String(user?.roleId?.name || user?.role || "").toLowerCase();
+            const isAdmin = roleName === "admin";
             if (isAdmin) {
-                navigate('/admin/stores');
+                navigate('/admin/');
                 return;
             }
 
-            const isStoreAccount = !!(
-                user?.storeId || user?.roleId?.name === 'manager' || user?.isStore || data?.store || data?.storeId
-            );
+            const isManager = roleName === "manager";
+            if (isManager) {
+                try {
+                    const storeRes = await storeService.getStoreInfo();
+                    const storeData = (storeRes as any)?.data ?? storeRes;
+                    const store = storeData?.store ?? storeData;
 
-            console.log('✅ isStoreAccount:', isStoreAccount);
+                    // Debug log
+                    console.log("Store info:", store);
+                    console.log("Store keys:", Object.keys(store));
+                    console.log("Store JSON:", JSON.stringify(store));
+                    const status = String(store?.status || "").toUpperCase();
+                    console.log("Store status:", status);
 
-            if (isStoreAccount) {
-                navigate('/store');
-            } else {
-                navigate('/');
+                    if (store) {
+                        localStorage.setItem("store", JSON.stringify(store));
+                    }
+
+                    if (status === "PENDING") {
+                        navigate('/store/registration');
+                    } else {
+                        navigate('/store');
+                    }
+                } catch {
+                    // If store profile cannot be loaded, fall back to store dashboard.
+                    navigate('/store');
+                }
+                return;
             }
+
+            navigate('/');
         } catch (err: any) {
-            console.error("❌ Login error:", err);
-            console.error("Response:", err?.response?.data);
-            const msg = err?.response?.data?.message || err?.message || "Đăng nhập thất bại";
-            setError(msg);
+            setError(toMessage(err));
         } finally {
             setLoading(false);
         }
@@ -84,10 +107,12 @@ export default function Login() {
             </div>
 
             <div className="lg-card">
-                <img src="/images/Logo/logo1.png" alt="Logo" className="lg-logo" />
-                <h2 className="lg-title">
-                    Chạm vào di sản, kết nối đam mê – Đăng nhập để mở ra thế giới thủ công mỹ nghệ tinh hoa.
-                </h2>
+                <div className="lg-header">
+                    <img src="/images/Logo/logo1.png" alt="Logo" className="lg-logo" />
+                    <h2 className="lg-title">
+                        Chạm vào di sản, kết nối đam mê – Đăng nhập để mở ra thế giới thủ công mỹ nghệ tinh hoa.
+                    </h2>
+                </div>
                 <form onSubmit={handleSubmit} autoComplete="off" className="lg-form">
                     <div className="lg-row">
                         <div className="lg-col">
@@ -101,7 +126,10 @@ export default function Login() {
                                 type="email"
                                 name="email"
                                 value={email}
-                                onChange={e => setEmail(e.target.value)}
+                                onChange={e => {
+                                    setEmail(e.target.value);
+                                    if (error) setError(null);
+                                }}
                                 required
                                 autoComplete="off"
                             />
@@ -113,7 +141,10 @@ export default function Login() {
                                     type={showPassword ? "text" : "password"}
                                     name="password"
                                     value={password}
-                                    onChange={e => setPassword(e.target.value)}
+                                    onChange={e => {
+                                        setPassword(e.target.value);
+                                        if (error) setError(null);
+                                    }}
                                     required
                                     autoComplete="current-password"
                                 />

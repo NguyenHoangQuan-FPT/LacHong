@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { storeService } from "../../services/store.service";
 import ProductCard from "../../pages/Admin/ProductCard";
+import "../../assets/styles/ProductInStore.css";
 
 export default function ProductInStore() {
     const { id } = useParams<{ id: string }>();
@@ -19,12 +20,12 @@ export default function ProductInStore() {
     if (loading) return <div>Đang tải sản phẩm...</div>;
 
     return (
-        <div style={{ padding: 24 }}>
+        <div className="admin-product-in-store">
             <h2>Sản phẩm của cửa hàng</h2>
             {products.length === 0 ? (
                 <div>Không có sản phẩm nào.</div>
             ) : (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
+                <div className="admin-product-grid">
                     {products.map((p: any) => (
                         <ProductCard key={p._id} product={p} />
                     ))}

@@ -81,14 +81,35 @@ export default function Cart() {
         try {
             const res = await cartService.updateCartItem(cartItemId, newQuantity);
 
-            const updatedItem = res?.data?.cart;
+            const updatedItem = res?.data?.cart ?? res?.data?.item ?? null;
 
             setCartItems(prev =>
-                prev.map(item =>
-                    item._id === cartItemId
-                        ? (updatedItem || { ...item, quantity: newQuantity })
-                        : item
-                )
+                prev.map(item => {
+                    if (item._id !== cartItemId) return item;
+
+                    const mergedProduct =
+                        (updatedItem?.product && typeof updatedItem.product === "object" ? updatedItem.product : null) ||
+                        (updatedItem?.productId && typeof updatedItem.productId === "object" ? updatedItem.productId : null) ||
+                        (item.product && typeof item.product === "object" ? item.product : null) ||
+                        (item.productId && typeof item.productId === "object" ? item.productId : null) ||
+                        null;
+
+                    const mergedProductId = updatedItem?.productId ?? item.productId;
+
+                    if (updatedItem) {
+                        return {
+                            ...item,
+                            ...updatedItem,
+                            product: mergedProduct,
+                            productId: mergedProductId,
+                            productName: updatedItem.productName ?? item.productName ?? item.name,
+                            name: updatedItem.name ?? item.name,
+                            quantity: updatedItem.quantity ?? newQuantity,
+                        };
+                    }
+
+                    return { ...item, quantity: newQuantity };
+                })
             );
 
         } catch (err: any) {
@@ -194,7 +215,10 @@ export default function Cart() {
                             </label>
                         </div>
                         {cartItems.map((item) => {
-                            const product = item.productId || item.product || {};
+                            const product =
+                                (item.productId && typeof item.productId === "object" ? item.productId : null) ||
+                                (item.product && typeof item.product === "object" ? item.product : null) ||
+                                {};
 
                             const price = item.priceAtTime ?? 0;
                             const discountPercent = item.discountPercentAtTime ?? 0;

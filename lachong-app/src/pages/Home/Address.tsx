@@ -19,14 +19,57 @@ export default function Address() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [detail, setDetail] = useState("");
     const [provinces, setProvinces] = useState<any[]>([]);
-    const [districts, setDistricts] = useState<any[]>([]);
     const [wards, setWards] = useState<any[]>([]);
     const [selectedProvince, setSelectedProvince] = useState<any | null>(null);
-    const [selectedDistrict, setSelectedDistrict] = useState<any | null>(null);
     const [selectedWard, setSelectedWard] = useState<any | null>(null);
+    const [pendingWardName, setPendingWardName] = useState<string | null>(null);
 
     const [submitting, setSubmitting] = useState(false);
     const [settingDefaultId, setSettingDefaultId] = useState<string | null>(null);
+
+    const PROVINCE_API_BASE = "https://provinces.open-api.vn/api/v2";
+
+    const extractArray = (data: any): any[] => {
+        if (!data) return [];
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data?.data)) return data.data;
+        if (Array.isArray(data?.results)) return data.results;
+        if (Array.isArray(data?.data?.results)) return data.data.results;
+        return [];
+    };
+
+    const findFirstArray = (obj: any, depth = 0): any[] => {
+        if (!obj || depth > 3) return [];
+        if (Array.isArray(obj)) return obj;
+        if (typeof obj !== "object") return [];
+        for (const val of Object.values(obj)) {
+            const found = findFirstArray(val, depth + 1);
+            if (found.length) return found;
+        }
+        return [];
+    };
+
+    const getCode = (item: any): string => {
+        if (!item) return "";
+        return String(
+            item.code ??
+            item.province_code ??
+            item.district_code ??
+            item.ward_code ??
+            ""
+        );
+    };
+
+    const getName = (item: any): string => {
+        if (!item) return "";
+        return (
+            item.name ??
+            item.full_name ??
+            item.name_en ??
+            item.name_with_type ??
+            ""
+        );
+    };
 
     // Load addresses
     useEffect(() => {
@@ -35,70 +78,85 @@ export default function Address() {
 
     // Load provinces on mount
     useEffect(() => {
-        fetch("https://provinces.open-api.vn/api/p/")
+        fetch(`${PROVINCE_API_BASE}/p/`)
             .then((res) => res.json())
             .then((data) => {
-                setProvinces(Array.isArray(data) ? data : []);
+                const list = extractArray(data) || findFirstArray(data);
+                setProvinces(list);
             })
             .catch((err) => {
                 console.error("Load provinces error", err);
             });
     }, []);
 
-    // When province changes, load districts
+    // Load wards when province changes
     useEffect(() => {
-        const code = selectedProvince?.code;
-        if (!code) {
-            setDistricts([]);
-            setSelectedDistrict(null);
-            return;
-        }
-        fetch(`https://provinces.open-api.vn/api/p/${code}?depth=2`)
-            .then((res) => res.json())
-            .then((data) => {
-                const d = data?.districts || [];
-                setDistricts(Array.isArray(d) ? d : []);
-                setSelectedDistrict(null);
-                setWards([]);
-                setSelectedWard(null);
-            })
-            .catch((err) => {
-                console.error("Load districts error", err);
-            });
-    }, [selectedProvince]);
-
-    useEffect(() => {
-        const code = selectedDistrict?.code;
+        const code = getCode(selectedProvince);
         if (!code) {
             setWards([]);
             setSelectedWard(null);
             return;
         }
-        fetch(`https://provinces.open-api.vn/api/d/${code}?depth=2`)
-            .then((res) => res.json())
-            .then((data) => {
-                const w = data?.wards || [];
-                setWards(Array.isArray(w) ? w : []);
+
+        const matchesProvince = (w: any, provinceCode: string) => {
+            const wardProvince = getCode({ code: w?.province_code ?? w?.p ?? w?.p_code ?? "" });
+            return wardProvince === provinceCode;
+        };
+
+        const tryLoad = async () => {
+            try {
+                const res = await fetch(`${PROVINCE_API_BASE}/p/${code}?depth=2`);
+                const data = await res.json();
+                const districts =
+                    extractArray(data?.districts) ||
+                    extractArray(data?.data?.districts) ||
+                    [];
+
+                let flattenedWards = Array.isArray(districts)
+                    ? districts.flatMap((d: any) => extractArray(d?.wards) || [])
+                    : [];
+
+                // Fallback: direct ward-by-province endpoint if flattening yields nothing
+                if (!flattenedWards.length) {
+                    try {
+                        const resWard = await fetch(`${PROVINCE_API_BASE}/w/?p=${code}`);
+                        const wardData = await resWard.json();
+                        flattenedWards = extractArray(wardData) || findFirstArray(wardData);
+
+                        if (!flattenedWards.length) {
+                            const resWardAlt = await fetch(`${PROVINCE_API_BASE}/w/?province_code=${code}`);
+                            const wardDataAlt = await resWardAlt.json();
+                            flattenedWards = extractArray(wardDataAlt) || findFirstArray(wardDataAlt);
+                        }
+                    } catch (innerErr) {
+                        console.error("Fallback wards fetch error", innerErr);
+                    }
+                }
+
+                const scopedWards = flattenedWards.filter((w: any) => matchesProvince(w, code));
+
+                setWards(scopedWards);
                 setSelectedWard(null);
-            })
-            .catch((err) => {
+            } catch (err) {
                 console.error("Load wards error", err);
-            });
-    }, [selectedDistrict]);
+                setWards([]);
+                setSelectedWard(null);
+            }
+        };
+
+        tryLoad();
+    }, [selectedProvince]);
 
     const loadAddresses = async () => {
         setLoading(true);
         setError(null);
         try {
             const res = await addressService.getAddresses();
-            console.log("Address response:", res);
             const data = res?.data ?? res;
-            console.log("Extracted data:", data);
             const list = data?.addresses ?? data?.data ?? data;
-            console.log("Final list:", list);
             setAddresses(Array.isArray(list) ? list : []);
         } catch (err: any) {
-            console.error("Load addresses error:", err);
+            console.error("Load addresses error", err);
             setError(err?.response?.data?.message || err?.message || "Không tải được danh sách địa chỉ");
         } finally {
             setLoading(false);
@@ -112,47 +170,31 @@ export default function Address() {
     };
 
     const handleEdit = (addr: Address) => {
-        // Parse address string (format: "detail, ward, district, province")
+        // Parse address string (format: "detail, ward, province")
         const parts = addr.address.split(", ");
-        if (parts.length >= 4) {
+        if (parts.length >= 3) {
             setDetail(parts[0]);
-            // Try to find and select province/district/ward from the address string
             const provinceName = parts[parts.length - 1];
-            const districtName = parts[parts.length - 2];
-            const wardName = parts[parts.length - 3];
+            const wardName = parts[parts.length - 2];
 
-            const prov = provinces.find((p) => p.name === provinceName);
+            const prov = provinces.find((p) => getName(p) === provinceName || getName(p) === provinceName?.trim());
             setSelectedProvince(prov || null);
-
-            if (prov) {
-                fetch(`https://provinces.open-api.vn/api/p/${prov.code}?depth=2`)
-                    .then((res) => res.json())
-                    .then((data) => {
-                        const d = data?.districts || [];
-                        setDistricts(Array.isArray(d) ? d : []);
-                        const dist = d.find((x: any) => x.name === districtName);
-                        setSelectedDistrict(dist || null);
-
-                        if (dist) {
-                            fetch(`https://provinces.open-api.vn/api/d/${dist.code}?depth=2`)
-                                .then((res) => res.json())
-                                .then((data) => {
-                                    const w = data?.wards || [];
-                                    setWards(Array.isArray(w) ? w : []);
-                                    const wrd = w.find((x: any) => x.name === wardName);
-                                    setSelectedWard(wrd || null);
-                                });
-                        }
-                    });
-            }
+            setPendingWardName(wardName || null);
         } else {
-            // If can't parse, just set the whole thing as detail
             setDetail(addr.address);
         }
 
         setEditingId(addr.id || addr._id || null);
         setShowForm(true);
     };
+
+    useEffect(() => {
+        if (!pendingWardName || wards.length === 0) return;
+        const target = pendingWardName.trim().toLowerCase();
+        const wrd = wards.find((x: any) => getName(x).trim().toLowerCase() === target);
+        setSelectedWard(wrd || null);
+        setPendingWardName(null);
+    }, [wards, pendingWardName]);
 
     const handleDelete = async (id: string) => {
         if (!window.confirm("Bạn có chắc muốn xóa địa chỉ này?")) return;
@@ -162,24 +204,22 @@ export default function Address() {
             await loadAddresses();
             toast.success("Xóa địa chỉ thành công");
         } catch (err: any) {
-            alert(err?.response?.data?.message || "Xóa địa chỉ thất bại");
+            toast.error(err?.response?.data?.message || "Xóa địa chỉ thất bại");
         }
     };
 
     const handleSubmit = async () => {
-        if (!detail || !selectedProvince || !selectedDistrict || !selectedWard) {
-            alert("Vui lòng điền đầy đủ thông tin địa chỉ");
+        if (!detail || !selectedProvince || !selectedWard) {
+            toast.warn("Vui lòng điền đầy đủ thông tin địa chỉ");
             return;
         }
 
         setSubmitting(true);
         try {
-            // Compose full address string
             const fullAddress = [
                 detail,
-                selectedWard.name,
-                selectedDistrict.name,
-                selectedProvince.name
+                getName(selectedWard),
+                getName(selectedProvince)
             ].filter(Boolean).join(", ");
 
             const payload = {
@@ -188,17 +228,18 @@ export default function Address() {
 
             if (editingId) {
                 await addressService.updateAddress(editingId, payload);
+                toast.success("Cập nhật địa chỉ thành công");
             } else {
                 await addressService.addAddress(payload);
+                toast.success("Thêm địa chỉ thành công");
             }
 
             await loadAddresses();
             setShowForm(false);
             resetForm();
-            toast.success("Lưu địa chỉ thành công");
         } catch (err: any) {
-            console.error("Save address error:", err);
-            alert(err?.response?.data?.message || "Lưu địa chỉ thất bại");
+            console.error("Save address error", err);
+            toast.error(err?.response?.data?.message || "Lưu địa chỉ thất bại");
         } finally {
             setSubmitting(false);
         }
@@ -207,10 +248,9 @@ export default function Address() {
     const resetForm = () => {
         setDetail("");
         setSelectedProvince(null);
-        setSelectedDistrict(null);
         setSelectedWard(null);
-        setDistricts([]);
         setWards([]);
+        setPendingWardName(null);
     };
 
     const handleCancel = () => {
@@ -227,7 +267,7 @@ export default function Address() {
             await loadAddresses();
             toast.success("Cập nhật địa chỉ thành công");
         } catch (err: any) {
-            alert(err?.response?.data?.message || "Cập nhật địa chỉ mặc định thất bại");
+            toast.error(err?.response?.data?.message || "Cập nhật địa chỉ mặc định thất bại");
         } finally {
             setSettingDefaultId(null);
         }
@@ -243,170 +283,150 @@ export default function Address() {
 
     return (
         <div className="address-page">
-            <div style={{ paddingBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '18px', fontWeight: '500', borderRadius: '50%' }}>
-                <Button variant="secondary" onClick={handleAddNew} >
-                    <span style={{ fontWeight: 700, fontSize: 15 }}>+</span>
-                </Button>
+            <div className="address-header">
+                <h3>Địa chỉ của tôi</h3>
+                <button className="add-address-btn" onClick={handleAddNew} >
+                    <span>+ Thêm địa chỉ</span>
+                </button>
             </div>
             {error && <div className="status error">{error}</div>}
-            {!showForm && (
-                <div className="address-list">
-                    {addresses.length === 0 ? (
-                        <div className="empty-state">
-                            <p>Chưa có địa chỉ nào</p>
-                            <button className="btn-primary" onClick={handleAddNew}>
-                                Thêm địa chỉ đầu tiên
-                            </button>
-                        </div>
-                    ) : (
-                        addresses.map((addr) => {
-                            const id = addr.id || addr._id || "";
-                            return (
-                                <div key={id} className="address-card">
-                                    <div className="address-info">
-                                        <div className="address-full">{addr.address}</div>
-                                        {addr.isDefault && <span className="badge-default">Mặc định</span>}
-                                    </div>
-                                    <div className="address-actions">
-                                        {!addr.isDefault && (
-                                            <button
-                                                className="btn-default"
-                                                onClick={() => handleSetDefault(id)}
-                                                disabled={settingDefaultId === id}
-                                            >
-                                                {settingDefaultId === id ? "Đang đặt..." : "Đặt mặc định"}
+            {
+                !showForm && (
+                    <div className="address-list">
+                        {addresses.length === 0 ? (
+                            <div className="empty-state">
+                                <p>Chưa có địa chỉ nào</p>
+                            </div>
+                        ) : (
+                            addresses.map((addr) => {
+                                const id = addr.id || addr._id || "";
+                                return (
+                                    <div key={id} className="address-card">
+                                        <div className="address-info">
+                                            <div className="address-full">{addr.address}</div>
+                                            {addr.isDefault && <span className="badge-default">Mặc định</span>}
+                                        </div>
+                                        <div className="address-actions">
+                                            {!addr.isDefault && (
+                                                <button
+                                                    className="btn-default"
+                                                    onClick={() => handleSetDefault(id)}
+                                                    disabled={settingDefaultId === id}
+                                                >
+                                                    {settingDefaultId === id ? "Đang đặt..." : "Đặt mặc định"}
+                                                </button>
+                                            )}
+                                            <button className="btn-edit" onClick={() => handleEdit(addr)}>
+                                                Sửa
                                             </button>
-                                        )}
-                                        <button className="btn-edit" onClick={() => handleEdit(addr)}>
-                                            Sửa
-                                        </button>
-                                        <button className="btn-delete" onClick={() => handleDelete(id)}>
-                                            Xóa
-                                        </button>
+                                            <button className="btn-delete" onClick={() => handleDelete(id)}>
+                                                Xóa
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                )
+            }
+
+            {
+                showForm && (
+                    <div
+                        className="address-modal-overlay"
+                        onClick={handleCancel}
+                    >
+                        <div
+                            className="address-modal"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="address-form-card">
+                                <div className="address-modal-header">
+                                    <h2>{editingId ? "Cập nhật địa chỉ" : "Thêm địa chỉ mới"}</h2>
+                                    <button
+                                        className="address-modal-close"
+                                        onClick={handleCancel}
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+
+                                <div className="form-grid">
+                                    <div className="form-item">
+                                        <label>Tỉnh/Thành phố</label>
+                                        <select
+                                            value={getCode(selectedProvince)}
+                                            onChange={(e) => {
+                                                const code = e.target.value;
+                                                const p = provinces.find(
+                                                    (x) => getCode(x) === code
+                                                );
+                                                setSelectedProvince(p || null);
+                                            }}
+                                        >
+                                            <option value="">-- Chọn tỉnh/thành --</option>
+                                            {provinces.map((p) => (
+                                                <option key={getCode(p)} value={getCode(p)}>
+                                                    {getName(p)}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="form-item">
+                                        <label>Phường/Xã</label>
+                                        <select
+                                            value={getCode(selectedWard)}
+                                            onChange={(e) => {
+                                                const code = e.target.value;
+                                                const w = wards.find(
+                                                    (x) => getCode(x) === code
+                                                );
+                                                setSelectedWard(w || null);
+                                            }}
+                                            disabled={!selectedProvince}
+                                        >
+                                            <option value="">-- Chọn phường/xã --</option>
+                                            {wards.map((w) => (
+                                                <option key={getCode(w)} value={getCode(w)}>
+                                                    {getName(w)}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="form-item span-2">
+                                        <label>Địa chỉ chi tiết</label>
+                                        <input
+                                            value={detail}
+                                            onChange={(e) => setDetail(e.target.value)}
+                                            placeholder="Số nhà, tên đường"
+                                        />
                                     </div>
                                 </div>
-                            );
-                        })
-                    )}
-                </div>
-            )}
 
-            {showForm && (
-                <div
-                    className="address-modal-overlay"
-                    onClick={handleCancel}
-                >
-                    <div
-                        className="address-modal"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="address-form-card">
-                            <div className="address-modal-header">
-                                <h2>{editingId ? "Cập nhật địa chỉ" : "Thêm địa chỉ mới"}</h2>
-                                <button
-                                    className="address-modal-close"
-                                    onClick={handleCancel}
-                                >
-                                    ×
-                                </button>
-                            </div>
-
-                            <div className="form-grid">
-                                <div className="form-item">
-                                    <label>Tỉnh/Thành phố</label>
-                                    <select
-                                        value={selectedProvince?.code || ""}
-                                        onChange={(e) => {
-                                            const code = e.target.value;
-                                            const p = provinces.find(
-                                                (x) => String(x.code) === String(code)
-                                            );
-                                            setSelectedProvince(p || null);
-                                        }}
+                                <div className="form-actions">
+                                    <button className="btn-cancel" onClick={handleCancel}>
+                                        Hủy
+                                    </button>
+                                    <Button
+                                        onClick={handleSubmit}
+                                        disabled={submitting}
+                                        variant={editingId ? "submit" : "submit"}
                                     >
-                                        <option value="">-- Chọn tỉnh/thành --</option>
-                                        {provinces.map((p) => (
-                                            <option key={p.code} value={p.code}>
-                                                {p.name}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        {submitting
+                                            ? "Đang lưu..."
+                                            : editingId
+                                                ? "Cập nhật"
+                                                : "Thêm mới"}
+                                    </Button>
                                 </div>
-
-                                <div className="form-item">
-                                    <label>Quận/Huyện</label>
-                                    <select
-                                        value={selectedDistrict?.code || ""}
-                                        onChange={(e) => {
-                                            const code = e.target.value;
-                                            const d = districts.find(
-                                                (x) => String(x.code) === String(code)
-                                            );
-                                            setSelectedDistrict(d || null);
-                                        }}
-                                        disabled={!selectedProvince}
-                                    >
-                                        <option value="">-- Chọn quận/huyện --</option>
-                                        {districts.map((d) => (
-                                            <option key={d.code} value={d.code}>
-                                                {d.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="form-item">
-                                    <label>Phường/Xã</label>
-                                    <select
-                                        value={selectedWard?.code || ""}
-                                        onChange={(e) => {
-                                            const code = e.target.value;
-                                            const w = wards.find(
-                                                (x) => String(x.code) === String(code)
-                                            );
-                                            setSelectedWard(w || null);
-                                        }}
-                                        disabled={!selectedDistrict}
-                                    >
-                                        <option value="">-- Chọn phường/xã --</option>
-                                        {wards.map((w) => (
-                                            <option key={w.code} value={w.code}>
-                                                {w.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="form-item span-2">
-                                    <label>Địa chỉ chi tiết</label>
-                                    <input
-                                        value={detail}
-                                        onChange={(e) => setDetail(e.target.value)}
-                                        placeholder="Số nhà, tên đường"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="form-actions">
-                                <button className="btn-cancel" onClick={handleCancel}>
-                                    Hủy
-                                </button>
-                                <Button
-                                    onClick={handleSubmit}
-                                    disabled={submitting}
-                                    variant={editingId ? "submit" : "submit"}
-                                >
-                                    {submitting
-                                        ? "Đang lưu..."
-                                        : editingId
-                                            ? "Cập nhật"
-                                            : "Thêm mới"}
-                                </Button>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }

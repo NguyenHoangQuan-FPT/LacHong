@@ -2,14 +2,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "../../assets/styles/Homepage.css";
-import Header from "../../components/layout/Header";
-import Footer from "../../components/layout/Footer";
 import TopProduct from "../../components/product/TopProduct";
 import categoryService from "../../services/category.service";
+import { useTranslation } from "react-i18next";
 
 type Category = { _id?: string; id?: string; name?: string };
 
 export default function Homepage() {
+    const { t } = useTranslation();
     const [categories, setCategories] = useState<Category[]>([]);
     const [loadingCategories, setLoadingCategories] = useState(false);
     const [activeSlide, setActiveSlide] = useState(0);
@@ -17,19 +17,19 @@ export default function Homepage() {
     const slides = [
         {
             id: "main",
-            kicker: "Lạc Hồng",
-            title: "Ưu đãi đến 10%",
-            subtitle: "Voucher",
+            kicker: t('home.slides.main.kicker'),
+            title: t('home.slides.main.title'),
+            subtitle: t('home.slides.main.subtitle'),
             image: "/images/Banner/Banner.png",
-            cta: { label: "Shop Now", to: "/product" },
+            cta: { label: t('home.shopNow'), to: "/product" },
         },
         {
             id: "login",
-            kicker: "Sản phẩm thủ công",
-            title: "Khám phá",
-            subtitle: "Bộ sưu tập mới",
+            kicker: t('home.slides.login.kicker'),
+            title: t('home.slides.login.title'),
+            subtitle: t('home.slides.login.subtitle'),
             image: "/images/Banner/login_banner.jpg",
-            cta: { label: "Shop Now", to: "/product" },
+            cta: { label: t('home.shopNow'), to: "/product" },
         },
     ];
 
@@ -65,16 +65,16 @@ export default function Homepage() {
     return (
         <div className="home-page">
             <div className="home-hero">
-                <aside className="home-categories" aria-label="Danh mục sản phẩm">
-                    <div className="home-categories__title">Danh mục</div>
+                <aside className="home-categories" aria-label={t('home.categoriesAria')}>
+                    <div className="home-categories__title">{t('home.categoriesTitle')}</div>
 
                     {loadingCategories ? (
-                        <div className="home-categories__status">Đang tải...</div>
+                        <div className="home-categories__status">{t('home.loading')}</div>
                     ) : (
                         <ul className="home-categories__list">
                             {categories.map((c, idx) => {
                                 const id = String(c._id ?? c.id ?? idx);
-                                const name = String(c.name ?? "Danh mục");
+                                const name = String(c.name ?? t('home.categoryFallback'));
                                 return (
                                     <li key={id} className="home-categories__item">
                                         <Link
@@ -92,7 +92,7 @@ export default function Homepage() {
                     )}
                 </aside>
 
-                <section className="home-carousel" aria-label="Banner">
+                <section className="home-carousel" aria-label={t('home.bannerAria')}>
                     <div className="home-carousel__slide">
                         <div className="home-carousel__text">
                             <div className="home-carousel__kicker">{slides[activeSlide].kicker}</div>
@@ -108,19 +108,19 @@ export default function Homepage() {
                         <img
                             className="home-carousel__image"
                             src={slides[activeSlide].image}
-                            alt="Banner"
+                            alt={t('home.bannerAlt')}
                             loading="lazy"
                         />
                     </div>
 
-                    <div className="home-carousel__dots" role="tablist" aria-label="Chọn banner">
+                    <div className="home-carousel__dots" role="tablist" aria-label={t('home.chooseBannerAria')}>
                         {slides.map((s, i) => (
                             <button
                                 key={s.id}
                                 type="button"
                                 className={`home-carousel__dot${i === activeSlide ? " is-active" : ""}`}
                                 onClick={() => setActiveSlide(i)}
-                                aria-label={`Banner ${i + 1}`}
+                                aria-label={t('home.bannerDotAria', { index: i + 1 })}
                                 aria-pressed={i === activeSlide}
                             />
                         ))}

@@ -53,26 +53,36 @@ exports.addReview = async (req, res) => {
             return res.status(409).json({ message: "Bạn đã đánh giá sản phẩm này rồi." });
         }
 
+        // Find completed orders that contain the product
         const completedOrders = await Order.find({ customer: customer._id, status: 'Completed' })
             .select('orderItems')
             .lean();
 
-        const orderItemIds = (completedOrders || [])
-            .flatMap((o) => Array.isArray(o.orderItems) ? o.orderItems : [])
-            .filter(Boolean);
-
-        if (orderItemIds.length === 0) {
-            return res.status(403).json({ message: "Bạn chỉ có thể đánh giá khi đã mua sản phẩm." });
+        let hasPurchased = false;
+        if (completedOrders && completedOrders.length > 0) {
+            for (const order of completedOrders) {
+                if (Array.isArray(order.orderItems)) {
+                    for (const itemId of order.orderItems) {
+                        const orderItem = await OrderItem.findById(itemId).lean();
+                        if (orderItem && Array.isArray(orderItem.products)) {
+                            for (const prod of orderItem.products) {
+                                if (String(prod.productId) === String(product)) {
+                                    hasPurchased = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (hasPurchased) break;
+                    }
+                }
+                if (hasPurchased) break;
+            }
         }
-
-        const hasPurchased = await OrderItem.exists({
-            _id: { $in: orderItemIds },
-            'products.productId': product
-        });
 
         if (!hasPurchased) {
-            return res.status(403).json({ message: "Bạn chỉ có thể đánh giá khi đã mua sản phẩm." });
+            return res.status(403).json({ message: "Bạn chỉ có thể đánh giá khi đã mua sản phẩm và đơn hàng đã hoàn thành." });
         }
+
         const files = req.files || [];
         const imageUrls = files.map(f => f.path);
 

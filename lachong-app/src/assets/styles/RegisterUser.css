@@ -52,6 +52,13 @@
 }
 
 /* Logo + title */
+.ur-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0 0 18px;
+}
+
 .ur-logo {
     height: 54px;
     width: auto;
@@ -60,11 +67,17 @@
 }
 
 .ur-title {
-    margin: 0 0 18px;
+    margin: 0;
     color: #0f172a;
     font-size: 1.06rem;
     line-height: 1.45;
     font-weight: 700;
+}
+
+@media (max-width: 520px) {
+    .ur-header {
+        align-items: flex-start;
+    }
 }
 
 /* Form layout */
@@ -193,6 +206,23 @@
 .ur-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+.ur-terms {
+    margin-top: 10px;
+    font-size: 0.86rem;
+    color: #111827;
+    text-align: center;
+}
+
+.ur-terms-link {
+    color: #303030;
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+.ur-terms-link:hover {
+    color: #000000;
 }
 
 /* Bottom helper links */

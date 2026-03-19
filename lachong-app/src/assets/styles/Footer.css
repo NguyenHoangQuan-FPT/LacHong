@@ -158,11 +158,10 @@
 
 .footer-bottom-row {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     max-width: 1300px;
     margin: 0 auto;
-    padding: 18px 48px;
     flex-wrap: wrap;
     font-size: 15px;
     color: #222;

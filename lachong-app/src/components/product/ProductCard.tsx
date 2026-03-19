@@ -23,6 +23,11 @@ export type ProductItem = {
     [key: string]: any;
 };
 
+export type ProductRatingInfo = {
+    avg: number;
+    count: number;
+};
+
 const normalizeImageUrl = (url?: string) => {
     if (!url) return "https://via.placeholder.com/320x240?text=No+Image";
     if (/^https?:\/\//i.test(url)) return url;
@@ -31,7 +36,13 @@ const normalizeImageUrl = (url?: string) => {
 };
 
 
-export default function ProductCard({ product }: { product: ProductItem }) {
+export default function ProductCard({
+    product,
+    rating,
+}: {
+    product: ProductItem;
+    rating?: ProductRatingInfo;
+}) {
     const priceVal = Number(product.price || 0);
     const discount = Number(product.discount ?? product.discountPercent ?? 0);
     const priceAfter = discount > 0 ? Math.round(priceVal * (1 - discount / 100)) : priceVal;
@@ -43,6 +54,11 @@ export default function ProductCard({ product }: { product: ProductItem }) {
     useEffect(() => {
         let ignore = false;
         async function fetchRating() {
+            if (rating) {
+                setAvgRating(Number(rating.avg) || 0);
+                setReviewCount(Number(rating.count) || 0);
+                return;
+            }
             if (!product._id) return;
             try {
                 const res = await reviewService.getReviewsByProductId(product._id);
@@ -68,13 +84,14 @@ export default function ProductCard({ product }: { product: ProductItem }) {
         }
         fetchRating();
         return () => { ignore = true; };
-    }, [product._id]);
+    }, [product._id, rating?.avg, rating?.count]);
 
     // Render sao
     const renderStars = (rating: number) => {
         const val = Math.max(0, Math.min(5, Number(rating) || 0));
+        const filled = Math.round(val);
         return Array.from({ length: 5 }).map((_, i) => (
-            <span key={i} style={{ color: i < val ? '#ffc107' : '#e4e5e9', fontSize: 16 }}>
+            <span key={i} style={{ color: i < filled ? '#ffc107' : '#e4e5e9', fontSize: 16 }}>
                 ★
             </span>
         ));
@@ -123,6 +140,7 @@ export default function ProductCard({ product }: { product: ProductItem }) {
 
     return (
         <div className="product-card">
+            <span className="product-discount">{discount}%</span>
             {!product.status && <span className="product-unavailable">Ngừng bán</span>}
             {product.stock === 0 && <span className="product-out">Hết hàng</span>}
 
@@ -133,7 +151,7 @@ export default function ProductCard({ product }: { product: ProductItem }) {
             <div className="product-info">
                 <Link to={`/product/detail?id=${product._id}`} className="product-name">{product.productName || product.name}</Link>
                 {/* Hiển thị rating trung bình */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, margin: '4px 0' }}>
+                <div className="product-rating-row" style={{ display: 'flex', alignItems: 'center', gap: 4, margin: '4px 0' }}>
                     {renderStars(avgRating)}
                     <span style={{ fontSize: 13, color: '#888' }}>{avgRating > 0 ? avgRating.toFixed(1) : "Chưa có"}</span>
                     <span style={{ fontSize: 12, color: '#aaa' }}>({reviewCount})</span>
@@ -143,7 +161,6 @@ export default function ProductCard({ product }: { product: ProductItem }) {
                         <>
                             <span className="price-card">{priceAfter.toLocaleString()} VND</span>
                             <span className="price-old">{priceVal.toLocaleString()} VND</span>
-                            <span className="product-discount">{discount}%</span>
                         </>
                     ) : (
                         <span className="price-card">{priceVal.toLocaleString()} VND</span>

@@ -12,7 +12,7 @@
 /* ===== STAT ===== */
 .dashboard-stats {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 16px;
     margin-bottom: 24px;
 }
@@ -22,21 +22,74 @@
     padding: 18px;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    min-height: 92px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
 }
 
 .stat-card p {
     color: #888;
     font-size: 14px;
+    margin: 0;
 }
 
 .stat-card h3 {
     margin-top: 8px;
     font-size: 24px;
+    margin-bottom: 0;
 }
 
 .stat-card.highlight {
     background: linear-gradient(135deg, #4f46e5, #6366f1);
     color: #fff;
+    border-color: transparent;
+}
+
+/* Color modifiers (match dashboard indigo tone) */
+.stat-card.stat-card1 {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #fff;
+    border-color: transparent;
+}
+
+.stat-card.stat-card2 {
+    background: linear-gradient(135deg, #4f46e5, #4338ca);
+    color: #fff;
+    border-color: transparent;
+}
+
+.stat-card.stat-card3 {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff;
+    border-color: transparent;
+}
+
+.stat-card.stat-card4 {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    border-color: transparent;
+}
+
+.stat-card.stat-card5 {
+    background: linear-gradient(135deg, #f43f5e, #e11d48);
+    color: #fff;
+    border-color: transparent;
+}
+
+.stat-card.stat-card1 p,
+.stat-card.stat-card2 p,
+.stat-card.stat-card3 p,
+.stat-card.stat-card4 p,
+.stat-card.stat-card5 p {
+    color: rgba(255, 255, 255, 0.88);
 }
 
 .stat-card.highlight p {
@@ -48,6 +101,10 @@
     background: #fff;
     border-radius: 10px;
     padding: 20px;
+}
+
+.dashboard-chart {
+    margin-top: 12px;
 }
 
 .table-wrapper {
@@ -74,6 +131,11 @@ td {
 
 .locked {
     color: red;
+    font-weight: 500;
+}
+
+.pending {
+    color: #d97706;
     font-weight: 500;
 }
 

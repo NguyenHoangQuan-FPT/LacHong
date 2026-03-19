@@ -16,12 +16,12 @@
 
 /* Page background and centering */
 .profile-customer-page {
-    padding: 48px 20px;
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 800px;
     border-radius: 12px;
+
 }
 
 /* Card */
@@ -75,6 +75,12 @@
 
 .avatar-fallback {
     background: linear-gradient(180deg, rgba(37, 99, 235, 0.08), rgba(59, 130, 246, 0.05));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1d4ed8;
 }
 
 .avatar-actions {
